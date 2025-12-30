@@ -100,8 +100,7 @@ typedef struct Bigint Bigint;
 
 
 static Bigint*
-Balloc(int k)
-{
+Balloc(int k) {
 	int x;
 	Bigint* rv;
 	unsigned int len;
@@ -123,8 +122,7 @@ Balloc(int k)
 /* Free a Bigint allocated with Balloc */
 
 static void
-Bfree(Bigint* v)
-{
+Bfree(Bigint* v) {
 	if (v) {
 		FREE((void*)v);
 	}
@@ -153,7 +151,8 @@ multadd(Bigint* b, int m, int a)       /* multiply by m and add a */
 		y = *x * (ULLong)m + carry;
 		carry = y >> 32;
 		*x++ = (ULong)(y & FFFFFFFF);
-	} while (++i < wds);
+	}
+	while (++i < wds);
 	if (carry) {
 		if (wds >= b->maxwds) {
 			b1 = Balloc(b->k + 1);
@@ -178,8 +177,7 @@ multadd(Bigint* b, int m, int a)       /* multiply by m and add a */
    NULL on failure. */
 
 static Bigint*
-s2b(const char* s, int nd0, int nd, ULong y9)
-{
+s2b(const char* s, int nd0, int nd, ULong y9) {
 	Bigint* b;
 	int i, k;
 	Long x, y;
@@ -213,8 +211,7 @@ s2b(const char* s, int nd0, int nd, ULong y9)
 /* count leading 0 bits in the 32-bit integer x. */
 
 static int
-hi0bits(ULong x)
-{
+hi0bits(ULong x) {
 	int k = 0;
 
 	if (!(x & 0xffff0000)) {
@@ -245,8 +242,7 @@ hi0bits(ULong x)
    number of bits. */
 
 static int
-lo0bits(ULong* y)
-{
+lo0bits(ULong* y) {
 	int k;
 	ULong x = *y;
 
@@ -290,8 +286,7 @@ lo0bits(ULong* y)
 /* convert a small nonnegative integer to a Bigint */
 
 static Bigint*
-i2b(int i)
-{
+i2b(int i) {
 	Bigint* b;
 
 	b = Balloc(1);
@@ -306,8 +301,7 @@ i2b(int i)
    the signs of a and b. */
 
 static Bigint*
-mult(Bigint* a, Bigint* b)
-{
+mult(Bigint* a, Bigint* b) {
 	Bigint* c;
 	int k, wa, wb, wc;
 	ULong* x, * xa, * xae, * xb, * xbe, * xc, * xc0;
@@ -353,7 +347,8 @@ mult(Bigint* a, Bigint* b)
 				z = *x++ * (ULLong)y + *xc + carry;
 				carry = z >> 32;
 				*xc++ = (ULong)(z & FFFFFFFF);
-			} while (x < xae);
+			}
+			while (x < xae);
 			*xc = (ULong)carry;
 		}
 	}
@@ -364,8 +359,7 @@ mult(Bigint* a, Bigint* b)
 
 
 static Bigint*
-pow5mult(Bigint* b, int k)
-{
+pow5mult(Bigint* b, int k) {
 	Bigint* b1, * p5, ** p5s;
 	int i;
 	static const int p05[3] = { 5, 25, 125 };
@@ -398,8 +392,7 @@ pow5mult(Bigint* b, int k)
 
 
 static Bigint*
-lshift(Bigint* b, int k)
-{
+lshift(Bigint* b, int k) {
 	int i, k1, n, n1;
 	Bigint* b1;
 	ULong* x, * x1, * xe, z;
@@ -428,7 +421,8 @@ lshift(Bigint* b, int k)
 		do {
 			*x1++ = *x << k | z;
 			z = *x++ >> k1;
-		} while (x < xe);
+		}
+		while (x < xe);
 		if ((*x1 = z))
 			++n1;
 	}
@@ -444,8 +438,7 @@ lshift(Bigint* b, int k)
    1 if a > b.  Ignores signs of a and b. */
 
 static int
-cmp(Bigint* a, Bigint* b)
-{
+cmp(Bigint* a, Bigint* b) {
 	ULong* xa, * xa0, * xb, * xb0;
 	int i, j;
 
@@ -471,8 +464,7 @@ cmp(Bigint* a, Bigint* b)
    result is set appropriately. */
 
 static Bigint*
-diff(Bigint* a, Bigint* b)
-{
+diff(Bigint* a, Bigint* b) {
 	Bigint* c;
 	int i, wa, wb;
 	ULong* xa, * xae, * xb, * xbe, * xc;
@@ -511,7 +503,8 @@ diff(Bigint* a, Bigint* b)
 		y = (ULLong)*xa++ - *xb++ - borrow;
 		borrow = y >> 32 & (ULong)1;
 		*xc++ = (ULong)(y & FFFFFFFF);
-	} while (xb < xbe);
+	}
+	while (xb < xbe);
 	while (xa < xae) {
 		y = *xa++ - borrow;
 		borrow = y >> 32 & (ULong)1;
@@ -524,8 +517,7 @@ diff(Bigint* a, Bigint* b)
 }
 
 
-static double ulp(U* x)
-{
+static double ulp(U* x) {
 	Long L;
 	U u;
 
@@ -538,8 +530,7 @@ static double ulp(U* x)
 /* Convert a Bigint to a double plus an exponent */
 
 static double
-b2d(Bigint* a, int* e)
-{
+b2d(Bigint* a, int* e) {
 	ULong* xa, * xa0, w, y, z;
 	int k;
 	U d;
@@ -574,8 +565,7 @@ ret_d:
 
 
 static Bigint*
-sd2b(U* d, int scale, int* e)
-{
+sd2b(U* d, int scale, int* e) {
 	Bigint* b;
 
 	b = Balloc(1);
@@ -625,8 +615,7 @@ sd2b(U* d, int scale, int* e)
  */
 
 static Bigint*
-d2b(U* d, int* e, int* bits)
-{
+d2b(U* d, int* e, int* bits) {
 	Bigint* b;
 	int de, k;
 	ULong* x, y, z;
@@ -673,8 +662,7 @@ d2b(U* d, int* e, int* bits)
    error of up to 2.5 ulps. */
 
 static double
-ratio(Bigint* a, Bigint* b)
-{
+ratio(Bigint* a, Bigint* b) {
 	U da, db;
 	int k, ka, kb;
 
@@ -714,8 +702,7 @@ static const double tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128,
 
 
 static int
-dshift(Bigint* b, int p2)
-{
+dshift(Bigint* b, int p2) {
 	int rv = hi0bits(b->x[b->wds - 1]) - 4;
 	if (p2 > 0)
 		rv -= p2;
@@ -727,8 +714,7 @@ dshift(Bigint* b, int p2)
    bits (28--31) are zero and bit 27 is set. */
 
 static int
-quorem(Bigint* b, Bigint* S)
-{
+quorem(Bigint* b, Bigint* S) {
 	int n;
 	ULong* bx, * bxe, q, * sx, * sxe;
 	ULLong borrow, carry, y, ys;
@@ -758,7 +744,8 @@ quorem(Bigint* b, Bigint* S)
 			y = *bx - (ys & FFFFFFFF) - borrow;
 			borrow = y >> 32 & (ULong)1;
 			*bx++ = (ULong)(y & FFFFFFFF);
-		} while (sx <= sxe);
+		}
+		while (sx <= sxe);
 		if (!*bxe) {
 			bx = b->x;
 			while (--bxe > bx && !*bxe)
@@ -778,7 +765,8 @@ quorem(Bigint* b, Bigint* S)
 			y = *bx - (ys & FFFFFFFF) - borrow;
 			borrow = y >> 32 & (ULong)1;
 			*bx++ = (ULong)(y & FFFFFFFF);
-		} while (sx <= sxe);
+		}
+		while (sx <= sxe);
 		bx = b->x;
 		bxe = bx + n;
 		if (!*bxe) {
@@ -792,8 +780,7 @@ quorem(Bigint* b, Bigint* S)
 
 
 static double
-sulp(U* x, BCinfo* bc)
-{
+sulp(U* x, BCinfo* bc) {
 	U u;
 
 	if (bc->scale && 2 * P + 1 > (int)((word0(x) & Exp_mask) >> Exp_shift)) {
@@ -809,8 +796,7 @@ sulp(U* x, BCinfo* bc)
 
 
 static int
-bigcomp(U* rv, const char* s0, BCinfo* bc)
-{
+bigcomp(U* rv, const char* s0, BCinfo* bc) {
 	Bigint* b, * d;
 	int b2, d2, dd, i, nd, nd0, odd, p2, p5;
 
@@ -1437,7 +1423,7 @@ double _alif_dgStrToDouble(const char* s00, char** se) { // 1383
 				}
 			}
 			else if (!(word0(&rv) & Bndry_mask) && !word1(&rv)) {
-			drop_down:
+drop_down:
 				/* boundary case -- decrement exponent */
 				if (bc.scale) {
 					L = word0(&rv) & Exp_mask;
@@ -1553,7 +1539,7 @@ double _alif_dgStrToDouble(const char* s00, char** se) { // 1383
 						break;
 				}
 		}
-	cont:
+cont:
 		Bfree(bb); bb = NULL;
 		Bfree(bd); bd = NULL;
 		Bfree(bs); bs = NULL;
@@ -1612,8 +1598,7 @@ done:
 
 
 static char*
-rv_alloc(int i)
-{ // 2108
+rv_alloc(int i) { // 2108
 	int j, k, * r;
 
 	j = sizeof(ULong);
@@ -1629,8 +1614,7 @@ rv_alloc(int i)
 }
 
 static char*
-nrv_alloc(const char* s, char** rve, int n)
-{ // 2125
+nrv_alloc(const char* s, char** rve, int n) { // 2125
 	char* rv, * t;
 
 	rv = rv_alloc(n);
@@ -1644,16 +1628,14 @@ nrv_alloc(const char* s, char** rve, int n)
 }
 
 void
-_alif_dgFreeDoubleToASCII(char* s)
-{ // 2146
+_alif_dgFreeDoubleToASCII(char* s) { // 2146
 	Bigint* b = (Bigint*)((int*)s - 1);
 	b->maxwds = 1 << (b->k = *(int*)b);
 	Bfree(b);
 }
 
 char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
-	int* decpt, int* sign, char** rve)
-{ // 2192
+	AlifIntT* decpt, AlifIntT* sign, char** rve) { // 2192
 	/*  Arguments ndigits, decpt, sign are similar to those
 		of ecvt and fcvt; trailing zeros are suppressed from
 		the returned string.  If not null, *rve is set to point
@@ -1714,8 +1696,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 		*sign = 0;
 
 	/* quick return for Infinities, NaNs and zeros */
-	if ((word0(&u) & Exp_mask) == Exp_mask)
-	{
+	if ((word0(&u) & Exp_mask) == Exp_mask) {
 		/* Infinity or NaN */
 		*decpt = 9999;
 		if (!word1(&u) && !(word0(&u) & 0xfffff))
@@ -1936,7 +1917,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 				}
 			}
 		}
-	fast_failed:
+fast_failed:
 		s = s0;
 		dval(&u) = dval(&d2);
 		k = k0;
@@ -1964,7 +1945,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 			if (i == ilim) {
 				dval(&u) += dval(&u);
 				if (dval(&u) > ds || (dval(&u) == ds && L & 1)) {
-				bump_up:
+bump_up:
 					while (*--s == '9')
 						if (s == s0) {
 							k++;
@@ -2089,7 +2070,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 	if (ilim <= 0 && (mode == 3 || mode == 5)) {
 		if (ilim < 0) {
 			/* no digits, fcvt style */
-		no_digits:
+no_digits:
 			k = -1 - ndigits;
 			goto ret;
 		}
@@ -2100,7 +2081,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 			if (cmp(b, S) <= 0)
 				goto no_digits;
 		}
-	one_digit:
+one_digit:
 		*s++ = '1';
 		k++;
 		goto ret;
@@ -2162,13 +2143,13 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 						&& dig++ == '9')
 						goto round_9_up;
 				}
-			accept_dig:
+accept_dig:
 				*s++ = dig;
 				goto ret;
 			}
 			if (j1 > 0) {
 				if (dig == '9') { /* possible if i == 1 */
-				round_9_up:
+round_9_up:
 					*s++ = '9';
 					goto roundoff;
 				}
@@ -2216,7 +2197,7 @@ char* _alif_dgDoubletoASCII(double dd, int mode, int ndigits,
 		goto failed_malloc;
 	j = cmp(b, S);
 	if (j > 0 || (j == 0 && dig & 1)) {
-	roundoff:
+roundoff:
 		while (*--s == '9')
 			if (s == s0) {
 				k++;

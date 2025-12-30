@@ -18,7 +18,7 @@
 
 static const char* code_eventName(AlifCodeEvent _event) { // 20
 	switch (_event) {
-		#define CASE(_op)                \
+	#define CASE(_op)                \
         case Alif_Code_Event_##_op:         \
             return "Alif_Code_Event_" #_op;
 		ALIF_FOREACH_CODE_EVENT(CASE)
@@ -45,25 +45,10 @@ static void notify_codeWatchers(AlifCodeEvent _event, AlifCodeObject* _co) { // 
 	}
 }
 
-static AlifIntT should_internString(AlifObject* _o) { // 106
-	AlifInterpreter* interp = _alifInterpreter_get();
-	if (alifAtomic_loadInt(&interp->gc.immortalize) < 0) {
-		return 1;
-	}
-
-	const unsigned char* s_{}, * e_{};
-
-	if (!ALIFUSTR_IS_ASCII(_o))
-		return 0;
-
-	s_ = ALIFUSTR_1BYTE_DATA(_o);
-	e_ = s_ + ALIFUSTR_GET_LENGTH(_o);
-	for (; s_ != e_; s_++) {
-		if (!ALIF_ISALNUM(*s_) and *s_ != '_')
-			return 0;
-	}
-	return 1;
-}
+//static AlifIntT should_internString(AlifObject* _o) { // 106
+//	// The free-threaded build interns (and immortalizes) all string constants
+//	return 1;
+//}
 
 static AlifObject* intern_oneConstant(AlifObject*); // 133
 
@@ -89,16 +74,17 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 	for (AlifSizeT i = ALIFTUPLE_GET_SIZE(_tuple); --i >= 0; ) {
 		AlifObject* v = ALIFTUPLE_GET_ITEM(_tuple, i);
 		if (ALIFUSTR_CHECKEXACT(v)) {
-			if (should_internString(v)) {
-				AlifObject* w = v;
-				alifUStr_internMortal(interp, &v);
-				if (w != v) {
-					ALIFTUPLE_SET_ITEM(_tuple, i, v);
-					if (_modified) {
-						*_modified = 1;
-					}
+			//if (should_internString(v)) { //* alif
+			// The free-threaded build interns (and immortalizes) all string constants
+			AlifObject* w = v;
+			alifUStr_internMortal(interp, &v);
+			if (w != v) {
+				ALIFTUPLE_SET_ITEM(_tuple, i, v);
+				if (_modified) {
+					*_modified = 1;
 				}
 			}
+			//}
 		}
 		else if (ALIFTUPLE_CHECKEXACT(v)) {
 			if (intern_constants(v, nullptr) < 0) {
@@ -162,11 +148,10 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 			ALIF_DECREF(tmp);
 		}
 
-		AlifThread* tstate = alifThread_get();
-		if (!ALIF_ISIMMORTAL(v) and !ALIFCODE_CHECK(v) and
-			!ALIFUSTR_CHECKEXACT(v) and
-			alifAtomic_loadInt(&tstate->interpreter->gc.immortalize) >= 0)
-		{
+		// Intern non-string constants in the free-threaded build
+		AlifThreadImpl* thread = (AlifThreadImpl*)_alifThread_get();
+		if (!alif_isImmortal(v) and !ALIFCODE_CHECK(v) and
+			!ALIFUSTR_CHECKEXACT(v) and !thread->suppressCoConstImmortalization) {
 			AlifObject* interned = intern_oneConstant(v);
 			if (interned == nullptr) {
 				return -1;
@@ -183,6 +168,23 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 	return 0;
 }
 
+
+
+static AlifIntT init_coCached(AlifCodeObject* _self) { // 307
+	if (_self->cached == nullptr) {
+		_self->cached = ((AlifCoCached*)alifMem_dataAlloc(sizeof(AlifCoCached))); //* alif
+		if (_self->cached == nullptr) {
+			//alifErr_noMemory();
+			return -1;
+		}
+		_self->cached->code = nullptr;
+		_self->cached->cellVars = nullptr;
+		_self->cached->freeVars = nullptr;
+		_self->cached->varNames = nullptr;
+	}
+	return 0;
+
+}
 
 
 void alifSet_localsPlusInfo(AlifIntT _offset, AlifObject* _name,
@@ -519,7 +521,8 @@ static AlifIntT previous_codeDelta(AlifCodeAddressRange* bounds) { // 1012
 static void retreat(AlifCodeAddressRange* bounds) { // 1059
 	do {
 		bounds->opaque.loNext--;
-	} while (((*bounds->opaque.loNext) & 128) == 0);
+	}
+	while (((*bounds->opaque.loNext) & 128) == 0);
 	bounds->opaque.computedLine -= get_lineDelta(bounds->opaque.loNext);
 	bounds->end = bounds->start;
 	bounds->start -= previous_codeDelta(bounds);
@@ -543,7 +546,8 @@ static void advance(AlifCodeAddressRange* bounds) { // 1079
 	bounds->end += next_codeDelta(bounds);
 	do {
 		bounds->opaque.loNext++;
-	} while (bounds->opaque.loNext < bounds->opaque.limit &&
+	}
+	while (bounds->opaque.loNext < bounds->opaque.limit &&
 		((*bounds->opaque.loNext) & 128) == 0);
 }
 
@@ -571,6 +575,46 @@ AlifIntT _alifLineTable_nextAddressRange(AlifCodeAddressRange* range) { // 1190
 
 
 
+
+
+static void deopt_code(AlifCodeObject* _code, AlifCodeUnit* _instructions) { // 1634
+	AlifSizeT len = ALIF_SIZE(_code);
+	for (AlifIntT i = 0; i < len; i++) {
+		AlifCodeUnit inst = _alif_getBaseCodeUnit(_code, i);
+		AlifIntT caches = _alifOpcodeCaches_[inst.op.code];
+		_instructions[i] = inst;
+		for (AlifIntT j = 1; j <= caches; j++) {
+			_instructions[i + j].cache = 0;
+		}
+		i += caches;
+	}
+}
+
+AlifObject* _alifCode_getCode(AlifCodeObject* _co) { // 1650
+	if (init_coCached(_co)) {
+		return nullptr;
+	}
+	if (_co->cached->code != nullptr) {
+		return ALIF_NEWREF(_co->cached->code);
+	}
+	AlifObject* code = alifBytes_fromStringAndSize((const char*)ALIFCODE_CODE(_co),
+		ALIFCODE_NBYTES(_co));
+	if (code == nullptr) {
+		return nullptr;
+	}
+	deopt_code(_co, (AlifCodeUnit*)ALIFBYTES_AS_STRING(code));
+	_co->cached->code = ALIF_NEWREF(code);
+	return code;
+}
+
+
+
+
+
+
+
+
+
 AlifTypeObject _alifCodeType_ = { // 2292
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "شفرة",
@@ -591,8 +635,7 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 		or ALIFLONG_CHECKEXACT(_op)
 		or ALIFUSTR_CHECKEXACT(_op)
 		or ALIFSLICE_CHECK(_op)
-		or ALIFCODE_CHECK(_op))
-	{
+		or ALIFCODE_CHECK(_op)) {
 		key_ = ALIF_NEWREF(_op);
 	}
 	else if (ALIFBOOL_CHECK(_op) or ALIFBYTES_CHECKEXACT(_op)) {
@@ -701,7 +744,7 @@ static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
 	AlifHashTableT* consts = interp->codeState.constants;
 	AlifHashTableEntryT* entry = _alifHashTable_getEntry(consts, _op);
 	if (entry == nullptr) {
-		if (alifHashTable_set(consts, _op, _op) != 0) {
+		if (_alifHashTable_set(consts, _op, _op) != 0) {
 			return nullptr;
 		}
 
@@ -742,8 +785,7 @@ static AlifIntT compare_constants(const void* _key1, const void* _key2) { // 249
 		AlifObject* obj1{}, * obj2{};
 		AlifHashT hash1{}, hash2{};
 		while ((alifSet_nextEntry(op1, &pos1, &obj1, &hash1)) and
-			(alifSet_nextEntry(op2, &pos2, &obj2, &hash2)))
-		{
+			(alifSet_nextEntry(op2, &pos2, &obj2, &hash2))) {
 			if (obj1 != obj2) {
 				return 0;
 			}
@@ -805,7 +847,7 @@ static void destroy_key(void* _key) { // 2604
 
 AlifStatus alifCode_init(AlifInterpreter* _interp) { // 2611
 	AlifCodeState* state = &_interp->codeState;
-	state->constants = alifHashTable_newFull(&hash_const, &compare_constants,
+	state->constants = _alifHashTable_newFull(&hash_const, &compare_constants,
 		&destroy_key, nullptr, nullptr);
 	if (state->constants == nullptr) {
 		return ALIFSTATUS_NO_MEMORY();

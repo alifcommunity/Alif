@@ -7,7 +7,7 @@
 
 
 
-typedef AlifIntT (*AlifPendingCallFunc)(void*); // 15
+typedef AlifIntT(*AlifPendingCallFunc)(void*); // 15
 
 class PendingCall { // 17
 public:
@@ -40,11 +40,11 @@ public:
 
 
 
-class EvalDureRunState { // 83
+class EvalRuntimeState { // 83
 public:
 	class {
 	public:
-#ifdef ALIF_HAVE_PERF_TRAMPOLINE
+	#ifdef ALIF_HAVE_PERF_TRAMPOLINE
 		PerfStatusT status{};
 		AlifIntT perfTrampolineType{};
 		AlifSizeT extraCodeIndex{};
@@ -52,9 +52,9 @@ public:
 		TrampolineApiST trampolineAPI{};
 		FILE* mapFile{};
 		AlifSizeT persistAfterFork{};
-#else
+	#else
 		AlifIntT notUsed{};
-#endif
+	#endif
 	} perf;
 
 	PendingCalls pendingMainThread{};
@@ -70,7 +70,7 @@ class AlifEval { // 119
 public:
 	uintptr_t instrumentationVersion{};
 	AlifIntT recursionLimit{};
-	GILDureRunState* gil_{};
+	GILRuntimeState* gil_{};
 	AlifIntT ownGIL{};
 	PendingCalls pending{};
 };

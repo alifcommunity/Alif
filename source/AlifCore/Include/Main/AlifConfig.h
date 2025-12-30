@@ -33,13 +33,13 @@
 	#endif
 #elif defined(__APPLE__)
 	#define _MAC
-	#if defined(__i386__) or defined (_M_IX86)
+	#if (defined(__i386__) or defined (_M_IX86))
 		#define _MAC32
 		#define _OS32
-	#elif defined(_M_X64) or defined(__amd64__)
+	#elif (defined(__x86_64__) or defined(_M_X64))
 		#define _MAC64
 		#define _OS64
-	#elif defined(__aarch64) or defined(_M_ARM64)
+	#elif (defined(__arm64__) or defined(__aarch64__) or defined(_M_ARM64))
 		#define _MAC64_ARM
 		#define _OS64
 	#endif 
@@ -190,7 +190,6 @@
 	using AlifSizeT = int64_t;
 	using AlifUSizeT = uint64_t;
 	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN LLONG_MIN
 	#define SIZEOF_SIZE_T 8
 	#define ALIGNOF_SIZE_T 8
 	#define SIZEOF_VOID_P 8
@@ -200,13 +199,12 @@
 
 	#define HAVE_LARGEFILE_SUPPORT
 #else
-	using AlifIntT = int16_t;
-	using AlifUIntT = uint16_t;
-	using AlifSizeT = int32_t;
-	using AlifUSizeT = uint32_t;
+	using AlifIntT = int;
+	using AlifUIntT = unsigned int;
+	using AlifSizeT = long;
+	using AlifUSizeT = unsigned long;
 	#define ALIF_SIZET INT_MAX
-	#define ALIF_SIZET_MAX LLONG_MAX
-	#define ALIF_SIZET_MIN LLONG_MIN
+	#define ALIF_SIZET_MAX INT_MAX
 	#define SIZEOF_VOID_P 4
 	#define ALIGNOF_SIZE_T 4
 	#define SIZEOF_SIZE_T 4

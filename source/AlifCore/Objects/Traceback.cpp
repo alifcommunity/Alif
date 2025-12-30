@@ -277,7 +277,7 @@ static AlifIntT tb_displayLine(AlifTracebackObject* tb,
 		return -1;
 	}
 
-	AlifObject* line = alifUStr_fromFormat("  File \"%U\", line %d, in %U\n",
+	AlifObject* line = alifUStr_fromFormat("  الملف \"%U\", السطر %d, في %U\n",
 		filename, lineno, name);
 	if (line == nullptr) {
 		return -1;

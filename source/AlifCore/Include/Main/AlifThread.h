@@ -11,7 +11,7 @@ enum AlifLockStatus_ { // 12
 };
 
 //void ALIF_NO_RETURN alifThread_exitThread(void); // 20
-AlifUIntT alifThread_getThreadID(); // 21
+unsigned long alifThread_getThreadID(); // 21
 
 // 23
 #if (defined(__APPLE__) or defined(__linux__) or defined(_WIN32) \

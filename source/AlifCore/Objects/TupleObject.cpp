@@ -3,6 +3,7 @@
 #include "AlifCore_Eval.h"
 #include "AlifCore_FreeList.h"
 #include "AlifCore_GC.h"
+#include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
 
 
@@ -198,7 +199,7 @@ error:
 
 
 
- // 304
+// 304
 #if SIZEOF_ALIF_UHASH_T > 4
 #define ALIFHASH_XXPRIME_1 ((AlifUHashT)11400714785074694791ULL)
 #define ALIFHASH_XXPRIME_2 ((AlifUHashT)14029467366897019727ULL)
@@ -255,7 +256,7 @@ static AlifObject* tuple_item(AlifObject* _op, AlifSizeT _i) { // 364
 }
 
 
-AlifObject* alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
+AlifObject* _alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 	if (_n == 0) {
 		return tuple_getEmpty();
 	}
@@ -306,7 +307,7 @@ static AlifObject* tuple_slice(AlifTupleObject* a, AlifSizeT ilow,
 	if (ilow == 0 and ihigh == ALIF_SIZE(a) and ALIFTUPLE_CHECKEXACT(a)) {
 		return ALIF_NEWREF(a);
 	}
-	return alifTuple_fromArray(a->item + ilow, ihigh - ilow);
+	return _alifTuple_fromArray(a->item + ilow, ihigh - ilow);
 }
 
 
@@ -320,10 +321,63 @@ AlifObject* alifTuple_getSlice(AlifObject* _op,
 }
 
 
+static AlifObject* tuple_subTypeNew(AlifTypeObject*, AlifObject*); // 690
 
 
+static AlifObject* tuple_newImpl(AlifTypeObject* _type, AlifObject* _iterable) { // 706
+	if (_type != &_alifTupleType_)
+		return tuple_subTypeNew(_type, _iterable);
 
+	if (_iterable == nullptr) {
+		return tuple_getEmpty();
+	}
+	else {
+		return alifSequence_tuple(_iterable);
+	}
+}
 
+static AlifObject* tuple_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 721
+	if (!_ALIFARG_NOKWNAMES("مترابطة", _kwnames)) {
+		return nullptr;
+	}
+
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (!_ALIFARG_CHECKPOSITIONAL("مترابطة", nargs, 0, 1)) {
+		return nullptr;
+	}
+
+	if (nargs) {
+		return tuple_newImpl(ALIFTYPE_CAST(_type), _args[0]);
+	}
+	else {
+		return tuple_getEmpty();
+	}
+}
+
+static AlifObject* tuple_subTypeNew(AlifTypeObject* _type, AlifObject* _iterable) { // 742
+	AlifObject* tmp{}, * newobj{}, * item{};
+	AlifSizeT i{}, n{};
+
+	tmp = tuple_newImpl(&_alifTupleType_, _iterable);
+	if (tmp == nullptr)
+		return nullptr;
+	newobj = _type->alloc(_type, n = ALIFTUPLE_GET_SIZE(tmp));
+	if (newobj == nullptr) {
+		ALIF_DECREF(tmp);
+		return nullptr;
+	}
+	for (i = 0; i < n; i++) {
+		item = ALIFTUPLE_GET_ITEM(tmp, i);
+		ALIFTUPLE_SET_ITEM(newobj, i, ALIF_NEWREF(item));
+	}
+	ALIF_DECREF(tmp);
+
+	if (!ALIFOBJECT_GC_IS_TRACKED(newobj)) {
+		ALIFOBJECT_GC_TRACK(newobj);
+	}
+	return newobj;
+}
 
 static AlifSequenceMethods tupleAsSequence = { // 777
 	tuple_length,
@@ -355,6 +409,7 @@ AlifTypeObject _alifTupleType_ = { // 865
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
 	.iter = tuple_iter,
 	.free = alifObject_gcDel,
+	.vectorCall = tuple_vectorCall,
 };
 
 

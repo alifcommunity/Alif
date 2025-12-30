@@ -1,6 +1,6 @@
 #include "alif.h"
 
-#include "AlifCore_Eval.h"
+#include "AlifCore_Dict.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
@@ -14,7 +14,7 @@ static void notify_funcWatchers(AlifInterpreter* _interp, AlifFunctionWatchEvent
 	while (bits) {
 		if (bits & 1) {
 			AlifFunctionWatchCallback cb_ = _interp->funcWatchers[i_];
-		
+
 			if (cb_(_event, _func, _newValue) < 0) {
 				//alifErr_formatUnraisable(
 					//"Exception ignored in %s watcher callback for function %U at %p",
@@ -55,8 +55,10 @@ AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr)
 		ALIF_XDECREF(module);
 		return nullptr;
 	}
-	op_->globals = ALIF_NEWREF(_constr->globals);
-	op_->builtins = ALIF_NEWREF(_constr->builtins);
+	_alif_increfDict(_constr->globals);
+	op_->globals = _constr->globals;
+	_alif_increfBuiltins(_constr->builtins);
+	op_->builtins = _constr->builtins;
 	op_->name = ALIF_NEWREF(_constr->name);
 	op_->qualname = ALIF_NEWREF(_constr->qualname);
 	_alif_incRefCode((AlifCodeObject*)_constr->code);
@@ -84,8 +86,7 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 	ALIF_INCREF(_globals);
 
 	AlifFunctionObject* op{}; //* alif
-
-	AlifThread* thread = _alifThread_get();
+	_alif_increfDict(_globals);
 
 	AlifCodeObject* codeObj = (AlifCodeObject*)_code;
 	_alif_incRefCode(codeObj);
@@ -117,11 +118,10 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 		goto error;
 	}
 
-	builtins = _alifEval_builtinsFromGlobals(thread, _globals); // borrowed ref
+	builtins = _alifDict_loadBuiltinsFromGlobals(_globals);
 	if (builtins == nullptr) {
 		goto error;
 	}
-	ALIF_INCREF(builtins);
 
 	op = ALIFOBJECT_GC_NEW(AlifFunctionObject, &_alifFunctionType_);
 	if (op == nullptr) {
@@ -191,8 +191,16 @@ AlifObject* alifFunction_new(AlifObject* _code, AlifObject* _globals) { // 370
 static AlifIntT func_clear(AlifObject* _self) { // 1053
 	AlifFunctionObject* op = ALIFFUNCTION_CAST(_self);
 	func_clearVersion(_alifInterpreter_get(), op);
-	ALIF_CLEAR(op->globals);
-	ALIF_CLEAR(op->builtins);
+	AlifObject* globals = op->globals;
+	op->globals = nullptr;
+	if (globals != nullptr) {
+		_alif_decrefDict(globals);
+	}
+	AlifObject* builtins = op->builtins;
+	op->builtins = nullptr;
+	if (builtins != nullptr) {
+		_alif_decrefBuiltins(builtins);
+	}
 	ALIF_CLEAR(op->module);
 	ALIF_CLEAR(op->defaults);
 	ALIF_CLEAR(op->kwDefaults);

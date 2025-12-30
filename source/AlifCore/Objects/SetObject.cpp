@@ -52,7 +52,8 @@ static SetEntry* set_lookKey(AlifSetObject* _so, AlifObject* _key, AlifHashT _ha
 				mask = _so->mask;
 			}
 			entry++;
-		} while (probes--);
+		}
+		while (probes--);
 		perturb >>= PERTURB_SHIFT;
 		i_ = (i_ * 5 + 1 + perturb) & mask;
 	}
@@ -90,7 +91,7 @@ restart:
 				if (startKey == _key)
 					goto foundActive;
 				if (ALIFUSTR_CHECKEXACT(startKey)
-					and ALIFUSTR_CHECKEXACT(_key) and uStr_eq(startKey, _key) )
+					and ALIFUSTR_CHECKEXACT(_key) and uStr_eq(startKey, _key))
 					goto foundActive;
 				table = _so->table;
 				ALIF_INCREF(startKey);
@@ -108,7 +109,8 @@ restart:
 				freesLot = entry;
 			}
 			entry++;
-		} while (probes--);
+		}
+		while (probes--);
 		perturb >>= PERTURB_SHIFT;
 		i_ = (i_ * 5 + 1 + perturb) & mask;
 	}
@@ -312,7 +314,7 @@ static void set_dealloc(AlifObject* _self) { // 492
 
 	alifObject_gcUnTrack(so);
 	ALIF_TRASHCAN_BEGIN(so, set_dealloc);
-	if(so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)so);
+	if (so->weakRefList != nullptr) alifObject_clearWeakRefs((AlifObject*)so);
 
 	for (entry = so->table; used > 0; entry++) {
 		if (entry->key and entry->key != DUMMY) {
@@ -529,55 +531,55 @@ static AlifIntT setUpdateDict_lockHeld(AlifSetObject* _so, AlifObject* _other) {
 	return 0;
 }
 
-static AlifIntT setUpdateIterable_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 961
+static AlifIntT setUpdateIterable_lockHeld(AlifSetObject* _so, AlifObject* _other) { // 961
 
 	AlifObject* it_ = alifObject_getIter(_other);
-    if (it_ == nullptr) {
-        return -1;
-    }
+	if (it_ == nullptr) {
+		return -1;
+	}
 
 	AlifObject* key_{};
-    while ((key_ = alifIter_next(it_)) != nullptr) {
-        if (set_addKey(_so, key_)) {
-            ALIF_DECREF(it_);
-            ALIF_DECREF(key_);
-            return -1;
-        }
-        ALIF_DECREF(key_);
-    }
-    ALIF_DECREF(it_);
-    //if (alifErr_occurred())
-        //return -1;
-    return 0;
+	while ((key_ = alifIter_next(it_)) != nullptr) {
+		if (set_addKey(_so, key_)) {
+			ALIF_DECREF(it_);
+			ALIF_DECREF(key_);
+			return -1;
+		}
+		ALIF_DECREF(key_);
+	}
+	ALIF_DECREF(it_);
+	//if (alifErr_occurred())
+		//return -1;
+	return 0;
 }
 
-static AlifIntT setUpdate_lockHeld(AlifSetObject *_so, AlifObject *_other) { // 986
-    if (ALIFANYSET_CHECK(_other)) {
-        return setMerge_lockHeld(_so, _other);
-    }
-    else if (ALIFDICT_CHECKEXACT(_other)) {
-        return setUpdateDict_lockHeld(_so, _other);
-    }
-    return setUpdateIterable_lockHeld(_so, _other);
+static AlifIntT setUpdate_lockHeld(AlifSetObject* _so, AlifObject* _other) { // 986
+	if (ALIFANYSET_CHECK(_other)) {
+		return setMerge_lockHeld(_so, _other);
+	}
+	else if (ALIFDICT_CHECKEXACT(_other)) {
+		return setUpdateDict_lockHeld(_so, _other);
+	}
+	return setUpdateIterable_lockHeld(_so, _other);
 }
 
 // set_update for a `_so` that is only visible to the current thread
-static AlifIntT set_updateLocal(AlifSetObject *_so, AlifObject *_other) { // 999
-    if (ALIFANYSET_CHECK(_other)) {
+static AlifIntT set_updateLocal(AlifSetObject* _so, AlifObject* _other) { // 999
+	if (ALIFANYSET_CHECK(_other)) {
 		AlifIntT rv_{};
-        ALIF_BEGIN_CRITICAL_SECTION(_other);
-        rv_ = setMerge_lockHeld(_so, _other);
-        ALIF_END_CRITICAL_SECTION();
-        return rv_;
-    }
-    else if (ALIFDICT_CHECKEXACT(_other)) {
+		ALIF_BEGIN_CRITICAL_SECTION(_other);
+		rv_ = setMerge_lockHeld(_so, _other);
+		ALIF_END_CRITICAL_SECTION();
+		return rv_;
+	}
+	else if (ALIFDICT_CHECKEXACT(_other)) {
 		AlifIntT rv_{};
-        ALIF_BEGIN_CRITICAL_SECTION(_other);
-        rv_ = setUpdateDict_lockHeld(_so, _other);
-        ALIF_END_CRITICAL_SECTION();
-        return rv_;
-    }
-    return setUpdateIterable_lockHeld(_so, _other);
+		ALIF_BEGIN_CRITICAL_SECTION(_other);
+		rv_ = setUpdateDict_lockHeld(_so, _other);
+		ALIF_END_CRITICAL_SECTION();
+		return rv_;
+	}
+	return setUpdateIterable_lockHeld(_so, _other);
 }
 
 
@@ -750,7 +752,7 @@ AlifIntT alifSet_contains(AlifObject* _anySet, AlifObject* _key) { // 2628
 }
 
 AlifIntT alifSet_discard(AlifObject* _set, AlifObject* _key) { // 2643
- 	if (!ALIFSET_CHECK(_set)) {
+	if (!ALIFSET_CHECK(_set)) {
 		//ALIFERR_BADINTERNALCALL();
 		return -1;
 	}
@@ -793,7 +795,7 @@ AlifIntT alifSet_nextEntry(AlifObject* _set,
 
 
 AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
-	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2689
+	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2714
 	SetEntry* entry{};
 
 	if (!ALIFANYSET_CHECK(_set)) {
@@ -808,14 +810,13 @@ AlifIntT _alifSet_nextEntryRef(AlifObject* _set,
 }
 
 
-AlifObject* alifSet_pop(AlifObject* _set) { // 2706
+AlifObject* alifSet_pop(AlifObject* _set) { // 2730
 	if (!ALIFSET_CHECK(_set)) {
 		//ALIFERR_BADINTERNALCALL();
 		return nullptr;
 	}
 	return set_pop((AlifSetObject*)_set, nullptr);
 }
-
 
 
 static AlifTypeObject _alifSetDummyType_ = { // 2743

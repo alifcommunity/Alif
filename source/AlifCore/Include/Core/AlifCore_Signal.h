@@ -5,7 +5,7 @@
 #include <signal.h>               // NSIG
 
 
- // 24
+// 24
 #ifdef _SIG_MAXSIG
 #  define ALIF_NSIG _SIG_MAXSIG
 #elif defined(NSIG)
@@ -23,7 +23,7 @@
 #define INVALID_FD (-1)
 
 
-class SignalsDureRunState { // 39
+class SignalsRuntimeState { // 39
 public:
 	class {
 	public:
@@ -32,18 +32,18 @@ public:
 	} handlers[ALIF_NSIG]{};
 
 	volatile struct {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		volatile int fd{};
-#elif defined(__VXWORKS__)
+	#elif defined(__VXWORKS__)
 		AlifIntT fd{};
-#else
+	#else
 		sig_atomic_t fd{};
-#endif
+	#endif
 
 		AlifIntT warnOnFullBuffer{};
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		AlifIntT useSend{};
-#endif
+	#endif
 	} wakeup;
 
 	AlifIntT isTripped{};

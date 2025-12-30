@@ -104,29 +104,39 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 			millis = (DWORD)div;
 		}
 	}
-	wait = WaitForSingleObjectEx(sema->platformSem, millis, FALSE);
+	HANDLE sigint_event = _alifOS_sigintEvent();
+	HANDLE handles[2] = { sema->platformSem, sigint_event };
+	DWORD count = sigint_event != nullptr ? 2 : 1;
+	wait = WaitForMultipleObjects(count, handles, FALSE, millis);
 	if (wait == WAIT_OBJECT_0) {
 		res = Alif_Park_Ok;
+	}
+	else if (wait == WAIT_OBJECT_0 + 1) {
+		ResetEvent(sigint_event);
+		res = Alif_Park_Intr;
 	}
 	else if (wait == WAIT_TIMEOUT) {
 		res = Alif_Park_Timeout;
 	}
 	else {
-		res = Alif_Park_Intr;
+		//_alif_fatalErrorFormat(__func__,
+		//	"unexpected error from semaphore: %u (error: %u)",
+		//	wait, GetLastError());
+		return -1; //* alif
 	}
 #elif defined(ALIF_USE_SEMAPHORES)
 	AlifIntT err{};
 	if (timeout >= 0) {
 		struct timespec ts;
 
-#if defined(CLOCK_MONOTONIC) and defined(HAVE_SEM_CLOCKWAIT)and !defined(ALIF_THREAD_SANITIZER)
+	#if defined(CLOCK_MONOTONIC) and defined(HAVE_SEM_CLOCKWAIT)and !defined(ALIF_THREAD_SANITIZER)
 		AlifTimeT now{};
 		(void)alifTime_monotonicRaw(&now);
 		AlifTimeT deadline = _alifTime_add(now, timeout);
 		alifTime_asTimeSpecClamp(deadline, &ts);
 
 		err = sem_clockwait(&sema->platformSem, CLOCK_MONOTONIC, &ts);
-#else
+	#else
 		AlifTimeT now{};
 		(void)alifTime_timeRaw(&now);
 		AlifTimeT deadline = _alifTime_add(now, timeout);
@@ -134,7 +144,7 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 		alifTime_asTimeSpecClamp(deadline, &ts);
 
 		err = sem_timedwait(&sema->platformSem, &ts);
-#endif
+	#endif
 	}
 	else {
 		err = sem_wait(&sema->platformSem);
@@ -157,23 +167,23 @@ static AlifIntT alifSemaphore_platformWait(AlifSemaphore* sema, AlifTimeT timeou
 	else {
 		res = Alif_Park_Ok;
 	}
-//#else
+#else
 	pthread_mutex_lock(&sema->mutex);
 	AlifIntT err = 0;
 	if (sema->counter == 0) {
 		if (timeout >= 0) {
 			struct timespec ts;
-#if defined(HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP)
+		#if defined(HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP)
 			alifTime_asTimeSpecClamp(timeout, &ts);
 			err = pthread_cond_timedwait_relative_np(&sema->cond, &sema->mutex, &ts);
-#else
+		#else
 			AlifTimeT now{};
 			(void)alifTime_timeRaw(&now);
 			AlifTimeT deadline = _alifTime_add(now, timeout);
-			alifTime_asTimeSpecClamp(deadline, &ts);
+			_alifTime_asTimeSpecClamp(deadline, &ts);
 
 			err = pthread_cond_timedwait(&sema->cond, &sema->mutex, &ts);
-#endif // HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
+		#endif // HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
 		}
 		else {
 			err = pthread_cond_wait(&sema->cond, &sema->mutex);
@@ -320,7 +330,8 @@ AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT 
 		alifRawMutex_unlock(&bucket->mutex);
 		do {
 			res = alifSemaphore_wait(&wait.sema, -1, detach);
-		} while (res != Alif_Park_Ok);
+		}
+		while (res != Alif_Park_Ok);
 		goto done;
 	}
 	else {

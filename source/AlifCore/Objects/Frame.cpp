@@ -83,3 +83,13 @@ void _alifFrame_clearExceptCode(AlifInterpreterFrame* _frame) { // 105
 	_alifFrame_clearLocals(_frame);
 	ALIFSTACKREF_CLEAR(_frame->funcObj);
 }
+
+
+
+
+
+
+AlifIntT alifUnstable_interpreterFrameGetLine(AlifInterpreterFrame* _frame) { // 143
+	AlifIntT addr = ALIFINTERPRETERFRAME_LASTI(_frame) * sizeof(AlifCodeUnit);
+	return alifCode_addr2Line(_alifFrame_getCode(_frame), addr);
+}

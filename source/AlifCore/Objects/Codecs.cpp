@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_State.h"
+#include "AlifCore_Call.h"
 
 
 
@@ -24,12 +25,11 @@ static AlifObject* normalize_string(const char* string) { // 90
 	if (encoding == nullptr)
 		//return alifErr_noMemory();
 
-	if (!_alif_normalizeEncoding(string, encoding, len + 1))
-	{
-		//alifErr_setString(_alifExcRuntimeError_, "_alif_normalizeEncoding() failed");
-		alifMem_dataFree(encoding);
-		return nullptr;
-	}
+		if (!_alif_normalizeEncoding(string, encoding, len + 1)) {
+			//alifErr_setString(_alifExcRuntimeError_, "_alif_normalizeEncoding() failed");
+			alifMem_dataFree(encoding);
+			return nullptr;
+		}
 
 	v = alifUStr_fromString(encoding);
 	alifMem_dataFree(encoding);
@@ -39,17 +39,17 @@ static AlifObject* normalize_string(const char* string) { // 90
 
 
 
-AlifObject* _alifCodec_lookup(const char* encoding) { // 133
+AlifObject* _alifCodec_lookup(const char* _encoding) { // 133
 
 	AlifSizeT len{}; //* alif
 
-	if (encoding == nullptr) {
+	if (_encoding == nullptr) {
 		//ALIFERR_BADARGUMENT();
 		return nullptr;
 	}
 
 	AlifInterpreter* interp = _alifInterpreter_get();
-	AlifObject* v = normalize_string(encoding);
+	AlifObject* v = normalize_string(_encoding);
 	if (v == nullptr) {
 		return nullptr;
 	}
@@ -140,6 +140,28 @@ static AlifObject* args_tuple(AlifObject* object,
 		ALIFTUPLE_SET_ITEM(args, 1, v);
 	}
 	return args;
+}
+
+
+static AlifObject* codec_makeIncrementalCodec(AlifObject* _codecInfo,
+	const char* _errors, const char* _attrName) { // 283
+	AlifObject* ret{}, * inccodec{};
+
+	inccodec = alifObject_getAttrString(_codecInfo, _attrName);
+	if (inccodec == nullptr)
+		return nullptr;
+	if (_errors)
+		ret = alifObject_callFunction(inccodec, "s", _errors);
+	else
+		ret = _alifObject_callNoArgs(inccodec);
+	ALIF_DECREF(inccodec);
+	return ret;
+}
+
+AlifObject* _alifCodecInfo_getIncrementalEncoder(AlifObject* _codecInfo,
+	const char* _errors) { // 349
+	return codec_makeIncrementalCodec(_codecInfo, _errors,
+		"incrementalencoder");
 }
 
 
@@ -245,7 +267,7 @@ AlifObject* _alifCodec_lookupTextEncoding(const char* _encoding,
 						//"'%.400s' is not a text encoding; "
 						//"use %s to handle arbitrary codecs",
 						//_encoding, _alternateCommand);
-				return nullptr;
+					return nullptr;
 			}
 		}
 	}
@@ -274,8 +296,7 @@ static AlifObject* _alifCodec_textEncoder(const char* encoding) { // 567
 }
 
 
-static AlifObject* _alifCodec_textDecoder(const char* _encoding)
-{
+static AlifObject* _alifCodec_textDecoder(const char* _encoding) {
 	return codec_getItemChecked(_encoding, "codecs.decode()", 1);
 }
 
@@ -300,4 +321,192 @@ AlifObject* _alifCodec_decodeText(AlifObject* _object,
 		return nullptr;
 
 	return _alifCodec_decodeInternal(_object, decoder, _encoding, _errors);
+}
+
+
+
+
+AlifObject* alifCodec_strictErrors(AlifObject* exc) { // 669
+	if (ALIFEXCEPTIONINSTANCE_CHECK(exc))
+		alifErr_setObject(ALIFEXCEPTIONINSTANCE_CLASS(exc), exc);
+	else
+		alifErr_setString(_alifExcTypeError_, "codec must pass exception instance");
+	return nullptr;
+}
+
+AlifObject* alifCodec_ignoreErrors(AlifObject* _exc) {
+	AlifSizeT end{};
+
+	//if (ALIFOBJECT_TYPECHECK(_exc, (AlifTypeObject*)_alifExcUnicodeEncodeError_)) {
+	//	if (alifUnicodeEncodeError_getEnd(_exc, &end))
+	//		return nullptr;
+	//}
+	//else if (ALIFOBJECT_TYPECHECK(_exc, (AlifTypeObject*)_alifExcUnicodeDecodeError_)) {
+	//	if (alifUnicodeDecodeError_getEnd(_exc, &end))
+	//		return nullptr;
+	//}
+	//else if (ALIFOBJECT_TYPECHECK(_exc, (AlifTypeObject*)alifExc_unicodeTranslateError)) {
+	//	if (alifUnicodeTranslateError_getEnd(_exc, &end))
+	//		return nullptr;
+	//}
+	//else {
+	//	wrong_exceptionType(_exc);
+	//	return nullptr;
+	//}
+	//return alif_buildValue("(Nn)", alif_getConstant(ALIF_CONSTANT_EMPTY_STR), end);
+	return nullptr; //* alif
+}
+
+
+
+static AlifObject* strict_errors(AlifObject* _self, AlifObject* _exc) { // 1316
+	return alifCodec_strictErrors(_exc);
+}
+
+static AlifObject* ignore_errors(AlifObject* _self, AlifObject* _exc) {
+	return alifCodec_ignoreErrors(_exc);
+}
+
+static AlifObject* replace_errors(AlifObject* _self, AlifObject* _exc) {
+	//return alifCodec_replaceErrors(_exc);
+	return nullptr;
+}
+
+static AlifObject* nameReplace_errors(AlifObject* _self, AlifObject* _exc) {
+	//return alifCodec_nameReplaceErrors(_exc);
+	return nullptr; //* alif
+}
+
+static AlifObject* surrogatePass_errors(AlifObject* _self, AlifObject* _exc) {
+	//return alifCodec_surrogatePassErrors(_exc);
+	return nullptr; //* alif
+}
+
+static AlifObject* surrogateEscape_errors(AlifObject* _self, AlifObject* _exc) { // 1400
+	//return alifCodec_surrogateEscapeErrors(_exc);
+	return nullptr; //* alif
+}
+
+AlifStatus _alifCodec_initRegistry(AlifInterpreter* _interp) { // 1405
+	static struct {
+		const char* name;
+		AlifMethodDef def;
+	} methods[] =
+	{
+		{
+			"strict",
+			{
+				"strict_errors",
+				strict_errors,
+				METHOD_O,
+				//ALIFDOC_STR("Implements the 'strict' error handling, which "
+				//		  "raises a UnicodeError on coding errors.")
+			}
+		},
+		{
+			"ignore",
+			{
+				"ignore_errors",
+				ignore_errors,
+				METHOD_O,
+				//ALIFDOC_STR("Implements the 'ignore' error handling, which "
+				//		  "ignores malformed data and continues.")
+			}
+		},
+		{
+			"replace",
+			{
+				"replace_errors",
+				replace_errors,
+				METHOD_O,
+				//ALIFDOC_STR("Implements the 'replace' error handling, which "
+				//		  "replaces malformed data with a replacement marker.")
+			}
+		},
+		//{
+		//	"xmlcharrefreplace",
+		//	{
+		//		"xmlcharrefreplace_errors",
+		//		xmlcharrefreplace_errors,
+		//		METHOD_O,
+		//		ALIFDOC_STR("Implements the 'xmlcharrefreplace' error handling, "
+		//				  "which replaces an unencodable character with the "
+		//				  "appropriate XML character reference.")
+		//	}
+		//},
+		//{
+		//	"backslashreplace",
+		//	{
+		//		"backslashreplace_errors",
+		//		backslashreplace_errors,
+		//		METHOD_O,
+		//		ALIFDOC_STR("Implements the 'backslashreplace' error handling, "
+		//				  "which replaces malformed data with a backslashed "
+		//				  "escape sequence.")
+		//	}
+		//},
+		{
+			"namereplace",
+			{
+				"namereplace_errors",
+				nameReplace_errors,
+				METHOD_O,
+				//ALIFDOC_STR("Implements the 'namereplace' error handling, "
+				//		  "which replaces an unencodable character with a "
+				//		  "\\N{...} escape sequence.")
+			}
+		},
+		{
+			"surrogatepass",
+			{
+				"surrogatepass",
+				surrogatePass_errors,
+				METHOD_O
+			}
+		},
+		{
+			"surrogateescape",
+			{
+				"surrogateescape",
+				surrogateEscape_errors,
+				METHOD_O
+			}
+		}
+	};
+
+	_interp->codecs.searchPath = alifList_new(0);
+	if (_interp->codecs.searchPath == nullptr) {
+		return alifStatus_noMemory();
+	}
+	_interp->codecs.searchCache = alifDict_new();
+	if (_interp->codecs.searchCache == nullptr) {
+		return alifStatus_noMemory();
+	}
+	_interp->codecs.errorRegistry = alifDict_new();
+	if (_interp->codecs.errorRegistry == nullptr) {
+		return alifStatus_noMemory();
+	}
+	for (AlifUSizeT i = 0; i < ALIF_ARRAY_LENGTH(methods); ++i) {
+		AlifObject* func = ALIFCPPFUNCTION_NEWEX(&methods[i].def, nullptr, nullptr);
+		if (func == nullptr) {
+			return alifStatus_noMemory();
+		}
+
+		AlifIntT res = alifDict_setItemString(_interp->codecs.errorRegistry,
+			methods[i].name, func);
+		ALIF_DECREF(func);
+		if (res < 0) {
+			return alifStatus_error("Failed to insert into codec error registry");
+		}
+	}
+
+	_interp->codecs.initialized = 1;
+
+	//AlifObject* mod = alifImport_importModule("encodings");
+	//if (mod == NULL) {
+	//	return alifStatus_error("Failed to import encodings module");
+	//}
+	//ALIF_DECREF(mod);
+
+	return alifStatus_ok();
 }

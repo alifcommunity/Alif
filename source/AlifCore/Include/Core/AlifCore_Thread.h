@@ -7,7 +7,7 @@
 
 
 
- // 15
+// 15
 #if (defined(HAVE_UNISTD_H) and !defined(_POSIX_THREADS) \
                             and !defined(_POSIX_SEMAPHORES))
 #  include <unistd.h>             // _POSIX_THREADS, _POSIX_SEMAPHORES
@@ -35,7 +35,7 @@ public:
 
 
 
-class AlifThreadDureRunState { // 59
+class AlifThreadRuntimeState { // 59
 public:
 	AlifIntT initialized{};
 
@@ -45,10 +45,10 @@ public:
 	public:
 		/* nullptr when pthread_condattr_setclock(CLOCK_MONOTONIC) is not supported. */
 		pthread_condattr_t* ptr;
-# ifdef CONDATTR_MONOTONIC
+	# ifdef CONDATTR_MONOTONIC
 		/* The value to which condattr_monotonic is set. */
 		pthread_condattr_t val;
-# endif
+	# endif
 	} condAttrMonotonic;
 
 #endif  // USE_PTHREADS
@@ -66,7 +66,7 @@ public:
 
 
 // 85
-#define ALIFTHREAD_DURERUN_INIT(_threads) \
+#define ALIFTHREAD_RUNTIME_INIT(_threads) \
     { \
         .handles = LLIST_INIT(_threads.handles), \
     }

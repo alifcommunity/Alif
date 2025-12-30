@@ -242,6 +242,11 @@ AlifIntT alifObject_delItem(AlifObject* _o, AlifObject* _key) { // 256
 }
 
 
+AlifIntT alifObject_checkBuffer(AlifObject* _obj) { // 310
+	AlifBufferProcs* tpAsBuffer = ALIF_TYPE(_obj)->asBuffer;
+	return (tpAsBuffer != nullptr and tpAsBuffer->getBuffer != nullptr);
+}
+
 
 AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags) { // 425
 	if (flags != ALIFBUF_SIMPLE) {  /* fast path */
@@ -617,7 +622,7 @@ static AlifObject* ternary_op(AlifObject* _v, AlifObject* _w, AlifObject* _z,
 }
 
 
- // 1110
+// 1110
 #define BINARY_FUNC(_func, _op, _opName) \
     AlifObject* _func(AlifObject *_v, AlifObject *_w) { \
         return binary_op(_v, _w, NB_SLOT(_op), _opName); \
@@ -741,7 +746,7 @@ static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
 	return ternary_op(_v, _w, _z, _opSlot/*, _opName*/);
 }
 
- // 1276
+// 1276
 #define INPLACE_BINOP(_func, _iop, _op) \
     AlifObject * _func(AlifObject *_v, AlifObject *_w) { \
         return binary_iop(_v, _w, NB_SLOT(_iop), NB_SLOT(_op)); \
@@ -808,7 +813,7 @@ AlifObject* _alifNumber_inPlacePowerNoMod(AlifObject* _lhs, AlifObject* _rhs) { 
 	return alifNumber_inPlacePower(_lhs, _rhs, ALIF_NONE);
 }
 
- // 1361
+// 1361
 #define UNARY_FUNC(_func, _op, _methName, _descr)                           \
     AlifObject* _func(AlifObject *o) {                                                  \
         if (o == nullptr) {                                                 \
@@ -832,7 +837,7 @@ UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "abs()")
 UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "sqrt()") //* alif
 
 
-AlifObject* _alifNumber_index(AlifObject * _item) { // 1397
+AlifObject* _alifNumber_index(AlifObject* _item) { // 1397
 	if (_item == nullptr) {
 		return null_error();
 	}
@@ -1127,12 +1132,12 @@ AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 	for (j = 0; ; ++j) {
 		AlifObject* item = alifIter_next(it);
 		if (item == nullptr) {
-			//if (alifErr_occurred())
-			//	goto Fail;
+			if (alifErr_occurred())
+				goto Fail;
 			break;
 		}
 		if (j >= n) {
-			size_t newn = (size_t)n;
+			AlifUSizeT newn = (AlifUSizeT)n;
 			/* The over-allocation strategy can grow a bit faster
 			   than for lists because unlike lists the
 			   over-allocation isn't permanent -- we reclaim
@@ -1592,15 +1597,14 @@ static AlifIntT iter_next(AlifObject* _iter, AlifObject** _item) { // 2871
 	}
 
 	AlifThread* threadState = _alifThread_get();
-	//if (!alifErr_occurred(threadState)) {
-		//return 0;
-	//}
-	//if (alifErr_exceptionMatches(threadState, _alifExcStopIteration_)) {
-		//alifErr_clear(threadState);
-		//return 0;
-	//}
+	if (!_alifErr_occurred(threadState)) {
+		return 0;
+	}
+	if (_alifErr_exceptionMatches(threadState, _alifExcStopIteration_)) {
+		_alifErr_clear(threadState);
+		return 0;
+	}
 
-	return 0; // temp
 	return -1;
 }
 

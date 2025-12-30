@@ -9,8 +9,20 @@
 
 
 
+// 271
+#if defined(_IO__TEXTIOBASE_ERRORS_GETSETDEF)
+#  undef _IO__TEXTIOBASE_ERRORS_GETSETDEF
+#  define _IO__TEXTIOBASE_ERRORS_GETSETDEF {"Errors", (Getter)_io_TextIOBase_errorsGet, (Setter)_io_TextIOBase_errorsSet},
+#else
+#  define _IO__TEXTIOBASE_ERRORS_GETSETDEF {"Errors", (Getter)_io_TextIOBase_errorsGet, nullptr},
+#endif
 
+static AlifObject* _io_TextIOBase_errorsGetImpl(AlifObject*);
 
+static AlifObject* _io_TextIOBase_errorsGet(AlifObject* self,
+	void* ALIF_UNUSED(context)) { // 281
+	return _io_TextIOBase_errorsGetImpl(self);
+}
 
 
 
@@ -93,7 +105,7 @@ static AlifIntT _ioTextIOWrapper___init__(AlifObject* self,
 #define KWTUPLE (&_kwtuple.objBase.objBase)
 
 
-	static const char* const _keywords[] = { "buffer", "encoding", "errors", "newline", "line_buffering", "write_through", nullptr };
+	static const char* const _keywords[] = { "Buffer", "Encoding", "Errors", "Newline", "LineBuffering", "write_through", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "TextIOWrapper",
@@ -200,7 +212,7 @@ exit:
 #define _IO_TEXTIOWRAPPER_WRITE_METHODDEF    \
     {"اكتب", (AlifCPPFunction)_ioTextIOWrapper_write, METHOD_O},
 
-//static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text);
+static AlifObject* _ioTextIOWrapper_writeImpl(TextIO* self, AlifObject* text);
 
 static AlifObject* _ioTextIOWrapper_write(TextIO* self, AlifObject* arg) { // 759
 	AlifObject* returnValue = nullptr;
@@ -212,7 +224,7 @@ static AlifObject* _ioTextIOWrapper_write(TextIO* self, AlifObject* arg) { // 75
 	}
 	text = arg;
 	ALIF_BEGIN_CRITICAL_SECTION(self);
-	//returnValue = _ioTextIOWrapper_writeImpl(self, text);
+	returnValue = _ioTextIOWrapper_writeImpl(self, text);
 	ALIF_END_CRITICAL_SECTION();
 
 exit:
@@ -287,6 +299,39 @@ exit:
 	return returnValue;
 }
 
+// 978
+#define _IO_TEXTIOWRAPPER_FILENO_METHODDEF    \
+    {"Fileno", (AlifCPPFunction)_ioTextIOWrapper_fileno, METHOD_NOARGS},
+
+static AlifObject* _ioTextIOWrapper_filenoImpl(TextIO*);
+
+static AlifObject* _ioTextIOWrapper_fileno(TextIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 984
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_filenoImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
+// 1093
+#define _IO_TEXTIOWRAPPER_FLUSH_METHODDEF    \
+    {"Flush", (AlifCPPFunction)_ioTextIOWrapper_flush, METHOD_NOARGS},
+
+static AlifObject* _ioTextIOWrapper_flushImpl(TextIO*);
+
+static AlifObject* _ioTextIOWrapper_flush(TextIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 1099
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_flushImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
 
 
 // 1116
@@ -295,11 +340,35 @@ exit:
 
 static AlifObject* _ioTextIOWrapper_closeImpl(TextIO*);
 
-static AlifObject* _ioTextIOWrapper_close(TextIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 1122
+static AlifObject* _ioTextIOWrapper_close(TextIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 1122
 	AlifObject* returnValue = nullptr;
 
 	ALIF_BEGIN_CRITICAL_SECTION(self);
 	returnValue = _ioTextIOWrapper_closeImpl(self);
+	ALIF_END_CRITICAL_SECTION();
+
+	return returnValue;
+}
+
+
+
+
+// 1220
+#if defined(_IO_TEXTIOWRAPPER_ERRORS_GETSETDEF)
+#  undef _IO_TEXTIOWRAPPER_ERRORS_GETSETDEF
+#  define _IO_TEXTIOWRAPPER_ERRORS_GETSETDEF {"Errors", (Getter)_ioTextIOWrapper_errorsGet, (Setter)_ioTextIOWrapper_errorsSet},
+#else
+#  define _IO_TEXTIOWRAPPER_ERRORS_GETSETDEF {"Errors", (Getter)_ioTextIOWrapper_errorsGet, nullptr},
+#endif
+
+static AlifObject* _ioTextIOWrapper_errorsGetImpl(TextIO*);
+
+static AlifObject* _ioTextIOWrapper_errorsGet(TextIO* self, void* ALIF_UNUSED(context)) { // 1230
+	AlifObject* returnValue = nullptr;
+
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _ioTextIOWrapper_errorsGetImpl(self);
 	ALIF_END_CRITICAL_SECTION();
 
 	return returnValue;

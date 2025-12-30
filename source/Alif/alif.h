@@ -17,6 +17,10 @@
 #pragma warning(disable : 4996) // for disable unsafe functions error
 #endif
 
+#ifndef _WINDOWS
+#include <unistd.h>
+#endif
+
 #include "AlifPort.h"
 #include "AlifMacro.h"
 #include "AlifMath.h"
@@ -61,6 +65,7 @@
 #include "AlifTime.h"
 #include "IterObject.h"
 #include "AlifState.h"
+#include "GenObject.h"
 #include "WeakRefObject.h"
 #include "StructSeq.h"
 #include "GenericAliasObject.h"
@@ -71,6 +76,7 @@
 #include "Abstract.h"
 #include "AlifCppType.h"
 #include "SysModule.h"
+#include "Audit.h"
 #include "OSModule.h"
 #include "Import.h"
 #include "BltinModule.h"

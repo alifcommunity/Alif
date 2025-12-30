@@ -31,8 +31,8 @@ public:
 class AlifHashTableT; // 41 
 typedef class AlifHashTableT AlifHashTableT; // 42
 
-typedef AlifUHashT (*AlifHashTableHashFunc) (const void*);
-typedef AlifIntT (*AlifHashTableCompareFunc) (const void*, const void*);
+typedef AlifUHashT(*AlifHashTableHashFunc) (const void*);
+typedef AlifIntT(*AlifHashTableCompareFunc) (const void*, const void*);
 typedef void (*AlifHashTableDestroyFunc) (void*);
 typedef AlifHashTableEntryT* (*AlifHashTableGetEntryFunc)(AlifHashTableT*, const void*); // 47
 
@@ -58,15 +58,17 @@ public:
 };
 
 
-AlifUHashT alifHashTable_hashPtr(const void*); // 79
+AlifUHashT _alifHashTable_hashPtr(const void*); // 79
 
-AlifIntT alifHashTable_compareDirect(const void*, const void*); // 82
+AlifIntT _alifHashTable_compareDirect(const void*, const void*); // 82
 
-AlifHashTableT* alifHashTable_newFull(AlifHashTableHashFunc,
+AlifHashTableT* _alifHashTable_newFull(AlifHashTableHashFunc,
 	AlifHashTableCompareFunc, AlifHashTableDestroyFunc,
 	AlifHashTableDestroyFunc, AlifHashTableAllocatorT*); // 86
 
-AlifIntT alifHashTable_set(AlifHashTableT* , const void* , void*); // 114
+void _alifHashTable_destroy(AlifHashTableT*); // 93
+
+AlifIntT _alifHashTable_set(AlifHashTableT*, const void*, void*); // 114
 
 
 static inline AlifHashTableEntryT* _alifHashTable_getEntry(AlifHashTableT* _ht, const void* _key) { // 123

@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Audit.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_Exceptions.h"
 #include "AlifCore_FileUtils.h"
@@ -13,6 +14,7 @@
 #include "AlifCore_State.h"
 #include "AlifCore_Runtime.h"
 #include "AlifCore_RuntimeInit.h"
+#include "AlifCore_SysModule.h"
 
 
 
@@ -30,7 +32,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread); // 73
 
 
 
-AlifRuntime _alifRuntime_ = ALIF_DURERUNSTATE_INIT(_alifRuntime_); // 103
+AlifRuntime _alifRuntime_ = ALIF_RUNTIMESTATE_INIT(_alifRuntime_); // 103
 
 static AlifIntT runtimeInitialized = 0; // 110
 
@@ -308,7 +310,7 @@ static void initInterpreter_createGIL(AlifThread* tstate, int gil) { // 607
 	alifEval_initGIL(tstate, ownGIL);
 }
 
-static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
+static AlifStatus alifCore_createInterpreter(AlifRuntime* _runtime,
 	const AlifConfig* _config, AlifThread** _threadP) { // 637
 
 	AlifStatus status{};
@@ -335,6 +337,11 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
 		return status;
 	}
 
+	//status = _alifObject_initState(interpreter);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
+
 	if (alifInterpreterMem_init(interpreter) < 1) {
 		return ALIFSTATUS_NO_MEMORY();
 	}
@@ -345,7 +352,7 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _dureRun,
 		return ALIFSTATUS_ERR("can't make first thread");
 	}
 
-	_dureRun->mainThread = thread;
+	_runtime->mainThread = thread;
 	alifThread_bind(thread);
 
 	initInterpreter_createGIL(thread, config.gil);
@@ -635,7 +642,7 @@ static AlifStatus alifInit_core(AlifRuntime* _runtime,
 		status = alifInit_config(_runtime, _threadPtr, &config);
 	}
 	else {
-		//status = alifInit_coreReconfig(_dureRun, _threadPtr, &config);
+		//status = alifInit_coreReconfig(_runtime, _threadPtr, &config);
 	}
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
@@ -668,8 +675,8 @@ static AlifStatus initInterpreter_main(AlifThread* _thread) { // 1156
 	//status = alifImport_initExternal(_thread);
 	//if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	//status = alifUnicode_initEncoding(_thread);
-	//if (ALIFSTATUS_EXCEPTION(status)) return status;
+	status = _alifUnicode_initEncodings(_thread);
+	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	if (isMainInterpreter) {
 		if (_alifSignal_init(config->installSignalHandlers) < 0) {
@@ -750,7 +757,9 @@ AlifStatus alif_initFromConfig(const AlifConfig* _config) { // 1383
 
 
 
-
+void alif_finalize(void) { // 2213
+	//(void)_alif_finalize(&_alifRuntime_);
+}
 
 
 
@@ -846,19 +855,19 @@ static AlifObject* create_stdio(const AlifConfig* config, AlifObject* io,
 		goto error;
 	}
 
-	//AlifObject* errors_str;
-	//errors_str = alifUStr_fromWideChar(errors, -1);
-	//if (errors_str == nullptr) {
-	//	ALIF_CLEAR(buf);
-	//	ALIF_CLEAR(encoding_str);
-	//	goto error;
-	//}
+	AlifObject* errors_str;
+	errors_str = alifUStr_fromWideChar(errors, -1);
+	if (errors_str == nullptr) {
+		ALIF_CLEAR(buf);
+		ALIF_CLEAR(encoding_str);
+		goto error;
+	}
 
 	stream = _alifObject_callMethod(io, &ALIF_STR(TextIOWrapper), "OOOsOO", buf,
-		encoding_str, nullptr/*errors_str*/, newline, line_buffering, write_through);
+		encoding_str, errors_str, newline, line_buffering, write_through);
 	ALIF_CLEAR(buf);
 	ALIF_CLEAR(encoding_str);
-	//ALIF_CLEAR(errors_str);
+	ALIF_CLEAR(errors_str);
 	if (stream == nullptr)
 		goto error;
 
@@ -923,7 +932,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	AlifObject* iomod = nullptr;
 	AlifObject* std = nullptr;
 	AlifIntT fd{};
-	AlifObject* encoding_attr;
+	AlifObject* encodingAttr;
 	AlifStatus res = ALIFSTATUS_OK();
 	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
 
@@ -941,54 +950,54 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 
 	/* Set sys.stdin */
 	fd = fileno(stdin);
-	//std = create_stdio(config, iomod, fd, 0, "<stdin>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
-	//alifSys_setObject("__stdin__", std);
-	//_alifSys_setAttr(&ALIF_ID(Stdin), std);
-	//ALIF_DECREF(std);
+	std = create_stdio(config, iomod, fd, 0, "<stdin>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
+	alifSys_setObject("__stdin__", std);
+	_alifSys_setAttr(&ALIF_ID(Stdin), std);
+	ALIF_DECREF(std);
 
 	///* Set sys.stdout */
 	fd = fileno(stdout);
-	//std = create_stdio(config, iomod, fd, 1, "<stdout>",
-	//	config->stdioEncoding,
-	//	config->stdioErrors);
-	//if (std == nullptr)
-	//	goto error;
-	//alifSys_setObject("__stdout__", std);
-	//_alifSys_setAttr(&ALIF_ID(stdout), std);
-	//ALIF_DECREF(std);
+	std = create_stdio(config, iomod, fd, 1, "<stdout>",
+		config->stdioEncoding,
+		config->stdioErrors);
+	if (std == nullptr)
+		goto error;
+	alifSys_setObject("__stdout__", std);
+	_alifSys_setAttr(&ALIF_ID(Stdout), std);
+	ALIF_DECREF(std);
 
 	///* Set sys.stderr, replaces the preliminary stderr */
-	//fd = fileno(stderr);
-	//std = create_stdio(config, iomod, fd, 1, "<stderr>",
-	//	config->stdioEncoding,
-	//	L"backslashreplace");
-	//if (std == nullptr)
-	//	goto error;
+	fd = fileno(stderr);
+	std = create_stdio(config, iomod, fd, 1, "<stderr>",
+		config->stdioEncoding,
+		L"backslashreplace");
+	if (std == nullptr)
+		goto error;
 
-	//encoding_attr = alifObject_getAttrString(std, "encoding");
-	//if (encoding_attr != nullptr) {
-	//	const char* std_encoding = alifUStr_asUTF8(encoding_attr);
-	//	if (std_encoding != nullptr) {
-	//		AlifObject* codec_info = _alifCodec_lookup(std_encoding);
-	//		ALIF_XDECREF(codec_info);
-	//	}
-	//	ALIF_DECREF(encoding_attr);
-	//}
+	encodingAttr = alifObject_getAttrString(std, "Encoding");
+	if (encodingAttr != nullptr) {
+		const char* stdEncoding = alifUStr_asUTF8(encodingAttr);
+		if (stdEncoding != nullptr) {
+			AlifObject* codec_info = _alifCodec_lookup(stdEncoding);
+			ALIF_XDECREF(codec_info);
+		}
+		ALIF_DECREF(encodingAttr);
+	}
 	//_alifErr_clear(_thread);  /* Not a fatal error if codec isn't available */
 
-	//if (alifSys_setObject("__stderr__", std) < 0) {
-	//	ALIF_DECREF(std);
-	//	goto error;
-	//}
-	//if (_alifSys_setAttr(&ALIF_ID(stderr), std) < 0) {
-	//	ALIF_DECREF(std);
-	//	goto error;
-	//}
-	//ALIF_DECREF(std);
+	if (alifSys_setObject("__stderr__", std) < 0) {
+		ALIF_DECREF(std);
+		goto error;
+	}
+	if (_alifSys_setAttr(&ALIF_ID(Stderr), std) < 0) {
+		ALIF_DECREF(std);
+		goto error;
+	}
+	ALIF_DECREF(std);
 
 	goto done;
 

@@ -18,6 +18,13 @@ public:
 	AlifIntT exitcode{};
 };
 
+AlifStatus alifStatus_ok(void);
+AlifStatus alifStatus_error(const char*);
+AlifStatus alifStatus_noMemory(void);
+AlifStatus alifStatus_exit(AlifIntT);
+
+AlifIntT alifStatus_exception(AlifStatus);
+
 /* --------------------------------- AlifWStringList --------------------------------- */
 class AlifWStringList { // 31
 public:
@@ -148,7 +155,7 @@ public:
 
 
 void alifConfig_initAlifConfig(AlifConfig*); // 239
-
+void alifConfig_initIsolatedConfig(AlifConfig*); // 240
 void alifConfig_clear(AlifConfig*); // 241
 AlifStatus alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
 

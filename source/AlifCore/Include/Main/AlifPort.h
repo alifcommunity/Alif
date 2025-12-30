@@ -42,7 +42,7 @@
 
 
 
-
+#define ALIF_SIZET_MIN (-ALIF_SIZET_MAX-1) // 155
 
 typedef AlifSizeT AlifHashT;
 #define SIZEOF_ALIF_UHASH_T SIZEOF_SIZE_T

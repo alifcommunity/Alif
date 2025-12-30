@@ -4,6 +4,7 @@
 
 extern AlifTypeSpec _bufferedIOBaseSpec_; // 12
 extern AlifTypeSpec _bufferedReaderSpec_; // 14
+extern AlifTypeSpec _bufferedWriterSpec_; // 16
 extern AlifTypeSpec _fileIOSpec_;
 extern AlifTypeSpec _ioBaseSpec_; // 20
 extern AlifTypeSpec _nlDecoderSpec_;
@@ -21,6 +22,7 @@ extern AlifTypeSpec _winConsoleIOSpec_;
 typedef class IOState AlifIOState; // 35
 extern AlifObject* _alifIOBase_checkReadable(AlifIOState*, AlifObject*, AlifObject*); // 36
 
+extern AlifObject* _alifIOBase_checkWritable(AlifIOState*, AlifObject*, AlifObject*); // 38
 
 extern AlifObject* _alifIOBase_checkClosed(AlifObject*, AlifObject*); // 42
 extern AlifIntT _alifFileIO_closed(AlifObject*); // 52

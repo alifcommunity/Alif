@@ -25,7 +25,7 @@
 
 
 
-
+#define BUFMAX (32*1024*1024) // 44
 
 #define SMALLBUF 4 // 49
 
@@ -131,6 +131,21 @@ char _alifIO_getConsoleType(AlifObject* _pathOrFd) { // 66
 
 
 
+static DWORD _find_lastUTF8Boundary(const char* _buf, DWORD _len) { // 137
+	DWORD count = 1;
+	if (_len == 0 or (_buf[_len - 1] & 0x80) == 0) {
+		return _len;
+	}
+	for (;; count++) {
+		if (count > 3 or count >= _len) {
+			return _len;
+		}
+		if ((_buf[_len - count] & 0xc0) != 0x80) {
+			return _len - count;
+		}
+	}
+}
+
 
 
 
@@ -159,7 +174,7 @@ static AlifIntT internal_close(WinConsoleIO* _self) { // 184
 	if (_self->fd != -1) {
 		if (_self->closefd) {
 			ALIF_BEGIN_SUPPRESS_IPH
-			close(_self->fd);
+				close(_self->fd);
 			ALIF_END_SUPPRESS_IPH
 		}
 		_self->fd = -1;
@@ -170,7 +185,8 @@ static AlifIntT internal_close(WinConsoleIO* _self) { // 184
 
 
 
-static AlifObject* winconsoleio_new(AlifTypeObject* _type, AlifObject* _args, AlifObject* _kwds) { // 237
+static AlifObject* winconsoleio_new(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwds) { // 237
 	WinConsoleIO* self{};
 
 	self = (WinConsoleIO*)_type->alloc(_type, 0);
@@ -373,11 +389,95 @@ static AlifObject* err_closed(void) { // 476
 }
 
 
+static AlifObject* _io_WindowsConsoleIO_filenoImpl(WinConsoleIO* self) { // 497
+	if (self->fd < 0)
+		return err_closed();
+	return alifLong_fromLong(self->fd);
+}
+
 
 static AlifObject* _io_windowsConsoleIO_readableImpl(WinConsoleIO* self) { // 512
 	if (self->fd == -1)
 		return err_closed();
 	return alifBool_fromLong((long)self->readable);
+}
+
+static AlifObject* _io_WindowsConsoleIO_writableImpl(WinConsoleIO* _self) { // 527
+	if (_self->fd == -1)
+		return err_closed();
+	return alifBool_fromLong((long)_self->writable);
+}
+
+
+
+
+
+static AlifObject* _io_WindowsConsoleIO_writeImpl(WinConsoleIO* self,
+	AlifTypeObject* cls, AlifBuffer* b) { // 995
+	BOOL res = TRUE;
+	wchar_t* wbuf{};
+	DWORD len, wlen, n = 0;
+	HANDLE handle;
+
+	if (self->fd == -1)
+		return err_closed();
+	if (!self->writable) {
+		AlifIOState* state = getIOState_byCls(cls);
+		//return err_mode(state, "writing");
+	}
+
+	handle = _alifGet_osfHandle(self->fd);
+	if (handle == INVALID_HANDLE_VALUE)
+		return nullptr;
+
+	if (!b->len) {
+		return alifLong_fromLong(0);
+	}
+	if (b->len > BUFMAX)
+		len = BUFMAX;
+	else
+		len = (DWORD)b->len;
+
+	ALIF_BEGIN_ALLOW_THREADS;
+	wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, nullptr, 0);
+
+	while (wlen > 32766 / sizeof(wchar_t)) {
+		len /= 2;
+		len = _find_lastUTF8Boundary((const char*)b->buf, len);
+		wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, nullptr, 0);
+	}
+	ALIF_END_ALLOW_THREADS;
+
+	//if (!wlen)
+	//	return alifErr_setFromWindowsErr(0);
+
+	wbuf = (wchar_t*)alifMem_dataAlloc(wlen * sizeof(wchar_t));
+
+	ALIF_BEGIN_ALLOW_THREADS;
+	wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len, wbuf, wlen);
+	if (wlen) {
+		res = WriteConsoleW(handle, wbuf, wlen, &n, nullptr);
+		if (res and n < wlen) {
+			len = WideCharToMultiByte(CP_UTF8, 0, wbuf, n,
+				nullptr, 0, nullptr, nullptr);
+			if (len) {
+				wlen = MultiByteToWideChar(CP_UTF8, 0, (LPCCH)b->buf, len,
+					nullptr, 0);
+			}
+		}
+	}
+	else
+		res = 0;
+	ALIF_END_ALLOW_THREADS;
+
+	if (!res) {
+		DWORD err = GetLastError();
+		alifMem_dataFree(wbuf);
+		//return alifErr_setFromWindowsErr(err);
+	}
+
+	alifMem_dataFree(wbuf);
+	return alifLong_fromSizeT(len);
 }
 
 
@@ -398,16 +498,35 @@ static AlifMethodDef _winConsoleIOMethods_[] = { // 1121
 	//_IO__WINDOWSCONSOLEIO_READ_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_READALL_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_READINTO_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
+	_IO__WINDOWSCONSOLEIO_WRITE_METHODDEF
 	//_IO__WINDOWSCONSOLEIO_CLOSE_METHODDEF
 	_IO__WINDOWSCONSOLEIO_READABLE_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
-	//_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
+	_IO__WINDOWSCONSOLEIO_WRITABLE_METHODDEF
+	_IO__WINDOWSCONSOLEIO_FILENO_METHODDEF
 	_IO__WINDOWSCONSOLEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", (AlifCPPFunction)_io_windowsConsoleIOIsAtty, METHOD_NOARGS},
 	{nullptr, nullptr}             /* sentinel */
 };
 
+static AlifObject* get_closed(WinConsoleIO* _self, void* cl_osure) { // 1137
+	return alifBool_fromLong((long)(_self->fd == -1));
+}
+
+static AlifObject* get_closefd(WinConsoleIO* _self, void* _closure) { // 1143
+	return alifBool_fromLong((long)(_self->closefd));
+}
+
+static AlifObject* get_mode(WinConsoleIO* _self, void* _closure) {
+	return alifUStr_fromString(_self->readable ? "rb" : "wb");
+}
+
+static AlifGetSetDef _winConsoleIOGetSetList_[] = { // 1155
+	{"Closed", (Getter)get_closed, nullptr, "True if the file is closed"},
+	{"Closefd", (Getter)get_closefd, nullptr,
+		"True if the file descriptor will be closed by close()."},
+	{"Mode", (Getter)get_mode, nullptr, "String giving the file mode"},
+	{nullptr},
+};
 
 static AlifMemberDef _winConsoleIOMembers_[] = { // 1163
 	{"_blksize", ALIF_T_UINT, offsetof(WinConsoleIO, blkSize), 0},
@@ -423,6 +542,7 @@ static AlifTypeSlot _winConsoleIOSlots_[] = { // 1171
 	{ALIF_TP_TRAVERSE, winconsoleio_traverse},
 	{ALIF_TP_METHODS, _winConsoleIOMethods_},
 	{ALIF_TP_MEMBERS, _winConsoleIOMembers_},
+	{ALIF_TP_GETSET, _winConsoleIOGetSetList_},
 	{ALIF_TP_INIT, _io_windowsConsoleIO__init__},
 	{ALIF_TP_NEW, winconsoleio_new},
 	{0, nullptr},

@@ -1,0 +1,40 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Alif Windows Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: "winBuild/Alif.sln"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: [Win-MSBuild]
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILD-CONFIGURATION: [Debug, Release]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          # lfs: true
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Build
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: msbuild /m /p:Configuration=${{matrix.BUILD-CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}

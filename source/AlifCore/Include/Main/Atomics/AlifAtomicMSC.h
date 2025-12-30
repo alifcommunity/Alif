@@ -2,6 +2,11 @@
 
 #include <intrin.h>
 
+
+static inline int64_t alifAtomic_loadInt64Relaxed(const int64_t*);
+static inline AlifIntT alifAtomic_compareExchangeInt64(int64_t*, int64_t*, int64_t);
+static inline uint64_t alifAtomic_loadUint64Relaxed(const uint64_t*);
+
 static inline int16_t alifAtomic_addInt16(int16_t* _obj, int16_t _value) { // 31
 	return (int16_t)_InterlockedExchangeAdd16((volatile short*)_obj, (short)_value);
 }

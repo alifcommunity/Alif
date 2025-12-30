@@ -2,6 +2,7 @@
 
 #include "AlifCore_Eval.h"
 #include "AlifCore_Code.h"
+#include "AlifCore_Dict.h"
 #include "AlifCore_Function.h"
 #include "AlifCore_ModuleObject.h"
 #include "AlifCore_Object.h"
@@ -69,19 +70,4 @@ AlifCodeObject* alifFrame_getCode(AlifFrameObject* _frame) { // 2074
 }
 
 
-
-AlifObject* _alifEval_builtinsFromGlobals(AlifThread* _thread, AlifObject* _globals) { // 2131
-	AlifObject* builtins = alifDict_getItemWithError(_globals, &ALIF_ID(__builtins__));
-	if (builtins) {
-		if (ALIFMODULE_CHECK(builtins)) {
-			builtins = alifModule_getDict(builtins);
-		}
-		return builtins;
-	}
-	if (alifErr_occurred()) {
-		return nullptr;
-	}
-
-	return _alifEval_getBuiltins(_thread);
-}
 

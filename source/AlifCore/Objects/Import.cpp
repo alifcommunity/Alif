@@ -81,9 +81,21 @@ static AlifObject* import_getModule(AlifThread* _thread, AlifObject* _name) { //
 		return nullptr;
 	}
 
+	/* //* alif //* todo
+		تمت إضافة هذا المتغير فقط من اجل
+		هذا السطر في ملف AlifLifeCycle
+		winconsoleio_type = (AlifTypeObject*)_alifImport_getModuleAttr(
+		&ALIF_STR(_io), &ALIF_STR(_windowsConsoleIO));
+		حيث _io ليس بترميز عريض
+		وبالتالي نظام الاستيراد يستطيع التعامل معها
+		ولكن alifMapping_getOptionalItem
+		لا يستطيع التعامل معها إن لم تكن ذات ترميز عريض
+	*/
+	AlifObject* name = alifUStr_fromString(alifUStr_asUTF8(_name));
+
 	AlifObject* m{};
 	ALIF_INCREF(modules);
-	(void)alifMapping_getOptionalItem(modules, _name, &m);
+	(void)alifMapping_getOptionalItem(modules, name, &m);
 	ALIF_DECREF(modules);
 	return m;
 }
@@ -427,7 +439,7 @@ static void hashtable_destroyStr(void* _ptr) { // 1188
 
 static AlifIntT _extensions_cacheInit(void) { // 1231
 	AlifHashTableAllocatorT alloc = { alifMem_dataAlloc, alifMem_dataFree };
-	EXTENSIONS.hashtable = alifHashTable_newFull(
+	EXTENSIONS.hashtable = _alifHashTable_newFull(
 		hashtable_hashStr,
 		hashtable_compareStr,
 		hashtable_destroyStr,  // key
@@ -523,7 +535,7 @@ static ExtensionsCacheValue* _extensions_cacheSet(AlifObject* path,
 
 	if (entry == nullptr) {
 		/* It was never added. */
-		if (alifHashTable_set(EXTENSIONS.hashtable, key, newvalue) < 0) {
+		if (_alifHashTable_set(EXTENSIONS.hashtable, key, newvalue) < 0) {
 			//alifErr_noMemory();
 			goto finally;
 		}
@@ -896,8 +908,7 @@ main_finally:
 		else {
 			AlifObject* modules = get_modulesDict(tstate, true);
 			if (finish_singlephaseExtension(
-				tstate, mod, cached, info->name, modules) < 0)
-			{
+				tstate, mod, cached, info->name, modules) < 0) {
 				goto error;
 			}
 		}
@@ -998,7 +1009,7 @@ static AlifObject* create_builtin(AlifThread* _thread,
 		_extensions_cacheDelete(info.path, info.name);
 	}
 
-	
+
 	for (InitTable* p = INITTABLE; p->name != nullptr; p++) {
 		//if (alifUStr_equalToASCIIString(info.name, p->name)) {
 		if (alifUStr_equalToUTF8(info.name, p->name)) { //* alif
@@ -1028,7 +1039,7 @@ static AlifObject* create_builtin(AlifThread* _thread,
 	//	goto finally;
 	//}
 
-finally:
+	finally:
 	_alifExtModule_loaderInfoClear(&info);
 	return mod;
 }
@@ -1125,7 +1136,7 @@ enum FrozenStatus { // 2820
 	Frozen_Disabled,
 	Frozen_Excluded,
 
-	Frozen_Invalid,  
+	Frozen_Invalid,
 };
 
 
@@ -1423,7 +1434,7 @@ static AlifIntT init_importLib(AlifThread* tstate, AlifObject* sysmod) { // 3150
 AlifIntT _alifImport_initDefaultImportFunc(AlifInterpreter* _interp) { // 3338
 	// Get the __import__ function
 	AlifObject* importFunc{};
-	if (alifDict_getItemStringRef(_interp->builtins, "_استورد_", &importFunc) <= 0) {
+	if (alifDict_getItemStringRef(_interp->builtins, "__استورد__", &importFunc) <= 0) {
 		return -1;
 	}
 	IMPORT_FUNC(_interp) = importFunc;
@@ -1683,13 +1694,13 @@ AlifObject* alifImport_import(AlifObject* _moduleName) { // 3888
 
 	/* Get the __import__ function from the builtins */
 	if (ALIFDICT_CHECK(builtins)) {
-		import = alifObject_getItem(builtins, &ALIF_STR(__import__));
+	import = alifObject_getItem(builtins, &ALIF_STR(__import__));
 		if (import == nullptr) {
 			//_alifErr_setObject(tstate, _alifExcKeyError_, &ALIF_STR(__import__));
 		}
 	}
 	else {
-		import = alifObject_getAttr(builtins, &ALIF_STR(__import__));
+	import = alifObject_getAttr(builtins, &ALIF_STR(__import__));
 	}
 	if (import == nullptr)
 		goto err;
@@ -2104,14 +2115,14 @@ static AlifObject* load_package(const char* name, char* pathname) { // 1035
 	if (err != 0)
 		goto error;
 	buf[0] = '\0';
-	fdp = find_module(name, "_تهيئة_", path, buf, sizeof(buf), &fp, nullptr);
+	fdp = find_module(name, "__تهيئة__", path, buf, sizeof(buf), &fp, nullptr);
 	if (fdp == nullptr) {
 		//if (alifErr_exceptionMatches(_alifExcImportError_)) {
 		//	alifErr_clear();
 		//	ALIF_INCREF(m);
 		//}
 		//else {
-			m = nullptr;
+		m = nullptr;
 		//}
 		goto cleanup;
 	}
@@ -2212,9 +2223,9 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 		/* no hook was found, use builtin import */
 
 		if (len > 0 and _buf[len - 1] != SEP
-#ifdef ALTSEP
+		#ifdef ALTSEP
 			and _buf[len - 1] != ALTSEP
-#endif
+		#endif
 			)
 			_buf[len++] = SEP;
 		strcpy(_buf + len, name);
@@ -2223,7 +2234,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 		if (stat(_buf, &statbuf) == 0 and         /* it exists */
 			S_ISDIR(statbuf.st_mode) and         /* it's a directory */
 			case_ok(_buf, len, namelen, name)) { /* case matches */
-			if (find_initModule(_buf)) { /* and has _تهيئة_.aliflib */
+			if (find_initModule(_buf)) { /* and has __تهيئة__.aliflib */
 				ALIF_XDECREF(copy);
 				return &fd_package;
 			}
@@ -2247,7 +2258,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 				filemode = "r"; // "b";
 			fp = fopen(_buf, filemode);
 			if (fp != nullptr) {
-					break;
+				break;
 			}
 		}
 		ALIF_XDECREF(copy);
@@ -2324,11 +2335,11 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 		char* nameWithExt = buf + len - namelen;
 		while ((dp = readdir(dirp)) != nullptr) {
 			const int thislen =
-#ifdef _DIRENT_HAVE_D_NAMELEN
+			#ifdef _DIRENT_HAVE_D_NAMELEN
 				dp->d_namlen;
-#else
+		#else
 				strlen(dp->d_name);
-#endif
+		#endif
 			if (thislen >= namelen &&
 				strcmp(dp->d_name, nameWithExt) == 0) {
 				(void)closedir(dirp);
@@ -2348,7 +2359,7 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 static AlifIntT find_initModule(char* buf) { // 1715
 	const AlifUSizeT save_len = strlen(buf);
 	AlifUSizeT i = save_len;
-	char* pname{};  /* pointer to start of _تهيئة_ */
+	char* pname{};  /* pointer to start of __تهيئة__ */
 	struct stat statbuf;
 
 	/*      For calling case_ok(buf, len, namelen, name):
@@ -2363,11 +2374,11 @@ static AlifIntT find_initModule(char* buf) { // 1715
 		return 0;
 	buf[i++] = SEP;
 	pname = buf + i;
-	strcpy(pname, "_تهيئة_.aliflib");
+	strcpy(pname, "__تهيئة__.aliflib");
 	if (stat(buf, &statbuf) == 0) {
 		if (case_ok(buf,
-			save_len + 9,               /* len("/_تهيئة_") */
-			8,                              /* len("_تهيئة_") */
+			save_len + 9,               /* len("/__تهيئة__") */
+			8,                              /* len("__تهيئة__") */
 			pname)) {
 			buf[save_len] = '\0';
 			return 1;
@@ -2400,9 +2411,9 @@ static AlifObject* load_module(const char* _name, FILE* fp,
 	case ALIF_SOURCE:
 		m = load_sourceModule(_name, pathname, fp);
 		break;
-	//case ALIF_COMPILED:
-	//	m = load_compiled_module(name, pathname, fp);
-	//	break;
+		//case ALIF_COMPILED:
+		//	m = load_compiled_module(name, pathname, fp);
+		//	break;
 	case PKG_DIRECTORY:
 		m = load_package(_name, pathname);
 		break;
@@ -2519,9 +2530,9 @@ static AlifObject* import_moduleLevel(const char* _name, AlifObject* _globals, A
 	AlifObject* parent{}, * head{}, * next{}, * tail{};
 
 	if (strchr(_name, '/') != nullptr
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		or strchr(_name, '\\') != nullptr
-#endif
+	#endif
 		) {
 		//alifErr_setString(_alifExcImportError_,
 		//	"Import by filename is not supported.");
@@ -2766,7 +2777,7 @@ static AlifObject* load_next(AlifObject* mod, AlifObject* altmod,
 
 	if (strlen(name) == 0) {
 		/* completely empty module name should only happen in
-		   'من . استورد' (or '_استورد_("")')*/
+		   'من . استورد' (or '__استورد__("")')*/
 		ALIF_INCREF(mod);
 		*p_name = nullptr;
 		return mod;

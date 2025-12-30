@@ -20,7 +20,7 @@
 #endif
 
 
-
+#include "ConfigCommon.h"
 
 /* --------------------------------------------- AlifConfig setters --------------------------------------------- */
 
@@ -72,8 +72,8 @@ public:
 };
 
 // 85
-#define SPEC(_member, _type, _visibility, _sys) \
-    {#_member, offsetof(AlifConfig, _member), \
+#define SPEC(_name, _member, _type, _visibility, _sys) \
+    {#_name, offsetof(AlifConfig, _member), \
      Alif_Config_Member_##_type, Alif_Config_Member_##_visibility, _sys}
 
 #define SYS_ATTR(name) {name, -1, nullptr}
@@ -81,88 +81,88 @@ public:
 #define SYS_FLAG(index) SYS_FLAG_SETTER(index, nullptr)
 #define NO_SYS SYS_ATTR(nullptr)
 
-static const AlifConfigSpec _alifConfigSpec_[] = { // 95
+static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 
 	// --- Public options -----------
-	SPEC(argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
-	SPEC(baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
-	SPEC(baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("_baseExecutable")),
-	SPEC(basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
-	SPEC(bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
-	SPEC(execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
-	SPEC(executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
-	SPEC(inspect, BOOL, PUBLIC, SYS_FLAG(1)),
-	SPEC(intMaxStrDigits, UINT, PUBLIC, NO_SYS),
-	SPEC(interactive, BOOL, PUBLIC, SYS_FLAG(2)),
-	SPEC(moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
-	SPEC(optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
-	SPEC(parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
-	SPEC(platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
-	SPEC(prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
-	SPEC(alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
-	SPEC(quiet, BOOL, PUBLIC, SYS_FLAG(10)),
-	SPEC(stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
-	SPEC(useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
-	SPEC(verbose, UINT, PUBLIC, SYS_FLAG(8)),
-	SPEC(warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
-	SPEC(writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
-	SPEC(xoptions, WSTR_LIST, PUBLIC, SYS_ATTR("xoptions")),
+	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
+	SPEC(سابقة_اساسية_تنفيذي, baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
+	SPEC(تنفيذي_اساسي, baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecutable")),
+	SPEC(سابقة_اساسية, basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
+	SPEC(bytesWarning, bytesWarning, UINT, PUBLIC, SYS_FLAG(9)),
+	SPEC(سابقة_التنفيذي, execPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("execPrefix")),
+	SPEC(تنفيذي, executable, WSTR_OPT, PUBLIC, SYS_ATTR("executable")),
+	SPEC(inspect, inspect, BOOL, PUBLIC, SYS_FLAG(1)),
+	SPEC(intMaxStrDigits, intMaxStrDigits, UINT, PUBLIC, NO_SYS),
+	SPEC(interactive, interactive, BOOL, PUBLIC, SYS_FLAG(2)),
+	SPEC(مسارات_البحث_الوحدة, moduleSearchPaths, WSTR_LIST, PUBLIC, SYS_ATTR("path")),
+	SPEC(optimizationLevel, optimizationLevel, UINT, PUBLIC, SYS_FLAG(3)),
+	SPEC(parserDebug, parserDebug, BOOL, PUBLIC, SYS_FLAG(0)),
+	SPEC(مجلد_مكتبة_المنصة, platLibDir, WSTR, PUBLIC, SYS_ATTR("platLibDir")),
+	SPEC(السابقة, prefix, WSTR_OPT, PUBLIC, SYS_ATTR("prefix")),
+	SPEC(alifCachePrefix, alifCachePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("alifCachePrefix")),
+	SPEC(quiet, quiet, BOOL, PUBLIC, SYS_FLAG(10)),
+	SPEC(مجلد_المكتبة_القياسية, stdLibDir, WSTR_OPT, PUBLIC, SYS_ATTR("stdLibDir")),
+	SPEC(استخدم_البيئة, useEnvironment, BOOL, PUBLIC, SYS_FLAG_SETTER(7, config_sysFlagNot)),
+	SPEC(verbose, verbose, UINT, PUBLIC, SYS_FLAG(8)),
+	SPEC(warnoptions, warnoptions, WSTR_LIST, PUBLIC, SYS_ATTR("warnoptions")),
+	SPEC(writeBytecode, writeBytecode, BOOL, PUBLIC, SYS_FLAG_SETTER(4, config_sysFlagNot)),
+	SPEC(xoptions, xoptions, WSTR_LIST, PUBLIC, SYS_ATTR("xoptions")),
 
 	// --- Read-only options -----------
 
 #ifdef ALIF_STATS
 	SPEC(_alifstats, BOOL, READ_ONLY, NO_SYS),
 #endif
-	SPEC(bufferedStdio, BOOL, READ_ONLY, NO_SYS),
-	SPEC(checkHashAlifCSMode, WSTR, READ_ONLY, NO_SYS),
-	SPEC(codeDebugRanges, BOOL, READ_ONLY, NO_SYS),
-	SPEC(configureCStdio, BOOL, READ_ONLY, NO_SYS),
-	SPEC(cpuCount, INT, READ_ONLY, NO_SYS),
-	SPEC(devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.devMode
-	SPEC(dumpRefs, BOOL, READ_ONLY, NO_SYS),
-	SPEC(dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(faultHandler, BOOL, READ_ONLY, NO_SYS),
-	SPEC(fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
-	SPEC(fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
-	SPEC(hashSeed, ULONG, READ_ONLY, NO_SYS),
-	SPEC(home, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(importTime, BOOL, READ_ONLY, NO_SYS),
-	SPEC(installSignalHandlers, BOOL, READ_ONLY, NO_SYS),
-	SPEC(isolated, BOOL, READ_ONLY, NO_SYS),  // sys.flags.isolated
+	SPEC(bufferedStdio, bufferedStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(checkHashAlifCSMode, checkHashAlifCSMode, WSTR, READ_ONLY, NO_SYS),
+	SPEC(codeDebugRanges, codeDebugRanges, BOOL, READ_ONLY, NO_SYS),
+	SPEC(configureCStdio, configureCStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(cpuCount, cpuCount, INT, READ_ONLY, NO_SYS),
+	SPEC(devMode, devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.devMode
+	SPEC(dumpRefs, dumpRefs, BOOL, READ_ONLY, NO_SYS),
+	SPEC(dumpRefsFile, dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(faultHandler, faultHandler, BOOL, READ_ONLY, NO_SYS),
+	SPEC(fileSystemEncoding, fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(fileSystemErrors, fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(hashSeed, hashSeed, ULONG, READ_ONLY, NO_SYS),
+	SPEC(الرئيسية, home, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(importTime, importTime, BOOL, READ_ONLY, NO_SYS),
+	SPEC(installSignalHandlers, installSignalHandlers, BOOL, READ_ONLY, NO_SYS),
+	SPEC(isolated, isolated, BOOL, READ_ONLY, NO_SYS),  // sys.flags.isolated
 #ifdef _WINDOWS
-	SPEC(legacyWindowsStdio, BOOL, READ_ONLY, NO_SYS),
+	SPEC(legacyWindowsStdio, legacyWindowsStdio, BOOL, READ_ONLY, NO_SYS),
 #endif
-	SPEC(mallocStats, BOOL, READ_ONLY, NO_SYS),
-	SPEC(origArgv, WSTR_LIST, READ_ONLY, SYS_ATTR("origArgv")),
-	SPEC(parseArgv, BOOL, READ_ONLY, NO_SYS),
-	SPEC(pathConfigWarnings, BOOL, READ_ONLY, NO_SYS),
-	SPEC(perfProfiling, UINT, READ_ONLY, NO_SYS),
-	SPEC(programName, WSTR, READ_ONLY, NO_SYS),
-	SPEC(runCommand, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(runFilename, WSTR_OPT, READ_ONLY, NO_SYS),
-	SPEC(runModule, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(mallocStats, mallocStats, BOOL, READ_ONLY, NO_SYS),
+	SPEC(الوسيطات_الرئيسية, origArgv, WSTR_LIST, READ_ONLY, SYS_ATTR("origArgv")),
+	SPEC(parseArgv, parseArgv, BOOL, READ_ONLY, NO_SYS),
+	SPEC(pathConfigWarnings, pathConfigWarnings, BOOL, READ_ONLY, NO_SYS),
+	SPEC(perfProfiling, perfProfiling, UINT, READ_ONLY, NO_SYS),
+	SPEC(اسم_البرنامج, programName, WSTR, READ_ONLY, NO_SYS),
+	SPEC(runCommand, runCommand, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runFilename, runFilename, WSTR_OPT, READ_ONLY, NO_SYS),
+	SPEC(runModule, runModule, WSTR_OPT, READ_ONLY, NO_SYS),
 
-	SPEC(safePath, BOOL, READ_ONLY, NO_SYS),
-	SPEC(showRefCount, BOOL, READ_ONLY, NO_SYS),
-	SPEC(siteImport, BOOL, READ_ONLY, NO_SYS),
-	SPEC(skipFirstLine, BOOL, READ_ONLY, NO_SYS),
-	SPEC(stdioEncoding, WSTR, READ_ONLY, NO_SYS),
-	SPEC(stdioErrors, WSTR, READ_ONLY, NO_SYS),
-	SPEC(tracemalloc, UINT, READ_ONLY, NO_SYS),
-	SPEC(useFrozenModules, BOOL, READ_ONLY, NO_SYS),
-	SPEC(useHashSeed, BOOL, READ_ONLY, NO_SYS),
-	SPEC(userSiteDirectory, BOOL, READ_ONLY, NO_SYS),
-	SPEC(warnDefaultEncoding, BOOL, READ_ONLY, NO_SYS),
+	SPEC(safePath, safePath, BOOL, READ_ONLY, NO_SYS),
+	SPEC(showRefCount, showRefCount, BOOL, READ_ONLY, NO_SYS),
+	SPEC(siteImport, siteImport, BOOL, READ_ONLY, NO_SYS),
+	SPEC(skipFirstLine, skipFirstLine, BOOL, READ_ONLY, NO_SYS),
+	SPEC(stdioEncoding, stdioEncoding, WSTR, READ_ONLY, NO_SYS),
+	SPEC(stdioErrors, stdioErrors, WSTR, READ_ONLY, NO_SYS),
+	SPEC(tracemalloc, tracemalloc, UINT, READ_ONLY, NO_SYS),
+	SPEC(useFrozenModules, useFrozenModules, BOOL, READ_ONLY, NO_SYS),
+	SPEC(useHashSeed, useHashSeed, BOOL, READ_ONLY, NO_SYS),
+	SPEC(userSiteDirectory, userSiteDirectory, BOOL, READ_ONLY, NO_SYS),
+	SPEC(warnDefaultEncoding, warnDefaultEncoding, BOOL, READ_ONLY, NO_SYS),
 
 	// --- Init-only options -----------
 
-	SPEC(configInit, UINT, INIT_ONLY, NO_SYS),
-	SPEC(initMain, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(installImportLib, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
-	SPEC(alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
-	SPEC(sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),
+	SPEC(configInit, configInit, UINT, INIT_ONLY, NO_SYS),
+	SPEC(initMain, initMain, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(installImportLib, installImportLib, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(هل_ألف_بناء, isAlifBuild, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(ضبط_مسارات_البحث_الوحدة, moduleSearchPathsSet, BOOL, INIT_ONLY, NO_SYS),
+	SPEC(alifPathEnv, alifPathEnv, WSTR_OPT, INIT_ONLY, NO_SYS),
+	SPEC(sysPath0, sysPath0, WSTR_OPT, INIT_ONLY, NO_SYS),
 
 	// Array terminator
 	{nullptr, 0, (AlifConfigMemberType_)0, (AlifConfigMemberVisibility)0, NO_SYS},
@@ -180,6 +180,10 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95
 #undef SYS_FLAG
 #undef NO_SYS
 
+
+// Forward declarations
+static AlifObject*
+config_get(const AlifConfig*, const AlifConfigSpec*, AlifIntT); // 225
 
 
 /* --------------------------------------- Command line options --------------------------------------- */
@@ -252,6 +256,36 @@ static void config_completeUsage(const wchar_t* _program) { // 2510
 	putchar('\n');
 	config_xoptionsUsage();
 }
+
+
+
+
+/* ----------------------------------- AlifStatus ----------------------------------- */
+
+AlifStatus alifStatus_ok(void) { // 533
+	return ALIFSTATUS_OK();
+}
+
+AlifStatus alifStatus_error(const char* _errMsg) { // 536
+	return {
+		.type = AlifStatus::AlifStatus_Type_ERROR,
+		.errMsg = _errMsg
+	};
+}
+
+AlifStatus alifStatus_noMemory(void) { // 543
+	return alifStatus_error("لم يتمكن من الحجز في الذاكرة");
+}
+
+AlifStatus alifStatus_exit(AlifIntT _exitcode) { // 546
+	return ALIFSTATUS_EXIT(_exitcode);
+}
+
+AlifIntT alifStatus_exception(AlifStatus _status) { // 556
+	return ALIFSTATUS_EXCEPTION(_status);
+}
+
+
 
 
 void _alifWStringList_clear(AlifWStringList* _list) { // 608
@@ -376,6 +410,29 @@ AlifObject* _alifWStringList_asList(const AlifWStringList* _list) { // 729
 	return alifList;
 }
 
+static AlifObject* _alifWStringList_asTuple(const AlifWStringList* _list) { // 751
+	AlifObject* tuple = alifTuple_new(_list->length);
+	if (tuple == nullptr) {
+		return nullptr;
+	}
+
+	for (AlifSizeT i = 0; i < _list->length; i++) {
+		AlifObject* item = alifUStr_fromWideChar(_list->items[i], -1);
+		if (item == nullptr) {
+			ALIF_DECREF(tuple);
+			return nullptr;
+		}
+		ALIFTUPLE_SET_ITEM(tuple, i, item);
+	}
+	return tuple;
+}
+
+
+/* ---------------------------------------- AlifConfig ---------------------------------------- */
+
+#define MAX_HASH_SEED 4294967295UL
+
+
 void alifConfig_clear(AlifConfig* _config) { // 773
 #define CLEAR(_attr) \
     do { \
@@ -499,6 +556,26 @@ void alifConfig_initAlifConfig(AlifConfig* config) { // 1011
 	config->parseArgv = 1;
 }
 
+void alifConfig_initIsolatedConfig(AlifConfig* _config) { // 1022
+	config_initDefaults(_config);
+
+	_config->configInit = (AlifIntT)ConfigInitEnum_::AlifConfig_Init_ISOLATED;
+	_config->isolated = 1;
+	_config->useEnvironment = 0;
+	_config->userSiteDirectory = 0;
+	_config->devMode = 0;
+	_config->installSignalHandlers = 0;
+	_config->useHashSeed = 0;
+	_config->tracemalloc = 0;
+	_config->perfProfiling = 0;
+	_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS;
+	_config->safePath = 1;
+	_config->pathConfigWarnings = 0;
+#ifdef _WINDOWS
+	_config->legacyWindowsStdio = 0;
+#endif
+}
+
 /* duplicate the string */
 AlifStatus alifConfig_setString(AlifConfig* _config,
 	wchar_t** _configStr, const wchar_t* _str) { // 933
@@ -519,7 +596,7 @@ AlifStatus alifConfig_setString(AlifConfig* _config,
 		str2 = nullptr;
 	}
 
-	free(*_configStr);
+	alifMem_dataFree(*_configStr);
 	*_configStr = str2;
 	return ALIFSTATUS_OK();
 }
@@ -606,6 +683,258 @@ AlifStatus _alifConfig_copy(AlifConfig* _config, const AlifConfig* _config2) { /
 		}
 	}
 	return ALIFSTATUS_OK();
+}
+
+
+AlifObject* _alifConfig_asDict(const AlifConfig* _config) { // 1179
+	AlifObject* dict = alifDict_new();
+	if (dict == nullptr) {
+		return nullptr;
+	}
+
+	const AlifConfigSpec* spec = _alifConfigSpec_;
+	for (; spec->name != nullptr; spec++) {
+		AlifObject* obj = config_get(_config, spec, 0);
+		if (obj == nullptr) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+
+		AlifIntT res = alifDict_setItemString(dict, spec->name, obj);
+		ALIF_DECREF(obj);
+		if (res < 0) {
+			ALIF_DECREF(dict);
+			return nullptr;
+		}
+	}
+	return dict;
+}
+
+
+static void config_dictInvalidValue(const char* _name) { // 1206
+	alifErr_format(_alifExcValueError_, "invalid config value: %s", _name);
+}
+
+static AlifIntT config_dictGetInt(AlifObject* _dict,
+	const char* _name, AlifIntT* _result) { // 1213
+	AlifObject* item = config_dictGet(_dict, _name);
+	if (item == nullptr) {
+		return -1;
+	}
+	AlifIntT value = alifLong_asInt(item);
+	ALIF_DECREF(item);
+	if (value == -1 and alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcTypeError_)) {
+			config_dictInvalidType(_name);
+		}
+		else if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+			config_dictInvalidValue(_name);
+		}
+		return -1;
+	}
+	*_result = value;
+	return 0;
+}
+
+
+static AlifIntT config_dictGetULong(AlifObject* dict,
+	const char* name, unsigned long* result) { // 1236
+	AlifObject* item = config_dictGet(dict, name);
+	if (item == nullptr) {
+		return -1;
+	}
+	unsigned long value = alifLong_asUnsignedLong(item);
+	ALIF_DECREF(item);
+	if (value == (unsigned long)-1 and alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcTypeError_)) {
+			config_dictInvalidType(name);
+		}
+		else if (alifErr_exceptionMatches(_alifExcOverflowError_)) {
+			config_dictInvalidValue(name);
+		}
+		return -1;
+	}
+	*result = value;
+	return 0;
+}
+
+static AlifIntT config_dictGetWStr(AlifObject* _dict, const char* _name,
+	AlifConfig* _config, wchar_t** _result) { // 1259
+	AlifObject* item = config_dictGet(_dict, _name);
+	if (item == nullptr) {
+		return -1;
+	}
+
+	AlifStatus status{};
+	if (item == ALIF_NONE) {
+		status = alifConfig_setString(_config, _result, nullptr);
+	}
+	else if (!ALIFUSTR_CHECK(item)) {
+		config_dictInvalidType(_name);
+		goto error;
+	}
+	else {
+		wchar_t* wstr = alifUStr_asWideCharString(item, nullptr);
+		if (wstr == nullptr) {
+			goto error;
+		}
+		status = alifConfig_setString(_config, _result, wstr);
+		alifMem_dataFree(wstr);
+	}
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		//alifErr_noMemory();
+		goto error;
+	}
+	ALIF_DECREF(item);
+	return 0;
+
+error:
+	ALIF_DECREF(item);
+	return -1;
+}
+
+static AlifIntT config_dictGetWStrList(AlifObject* _dict, const char* _name,
+	AlifConfig* _config, AlifWStringList* _result) { // 1297
+	AlifObject* list = config_dictGet(_dict, _name);
+	if (list == nullptr) {
+		return -1;
+	}
+
+	AlifIntT isList = ALIFLIST_CHECKEXACT(list);
+	if (!isList and !ALIFTUPLE_CHECKEXACT(list)) {
+		ALIF_DECREF(list);
+		config_dictInvalidType(_name);
+		return -1;
+	}
+
+	AlifWStringList wstrlist = ALIFWIDESTRINGLIST_INIT;
+	AlifSizeT len = isList ? ALIFLIST_GET_SIZE(list) : ALIFTUPLE_GET_SIZE(list);
+	for (AlifSizeT i = 0; i < len; i++) {
+		AlifObject* item = isList ? ALIFLIST_GET_ITEM(list, i) : ALIFTUPLE_GET_ITEM(list, i);
+
+		if (item == ALIF_NONE) {
+			config_dictInvalidValue(_name);
+			goto error;
+		}
+		else if (!ALIFUSTR_CHECK(item)) {
+			config_dictInvalidType(_name);
+			goto error;
+		}
+		wchar_t* wstr = alifUStr_asWideCharString(item, nullptr);
+		if (wstr == nullptr) {
+			goto error;
+		}
+		AlifStatus status = alifWStringList_append(&wstrlist, wstr);
+		alifMem_dataFree(wstr);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			//alifErr_noMemory();
+			goto error;
+		}
+	}
+
+	if (_alifWStringList_copy(_result, &wstrlist) < 0) {
+		//alifErr_noMemory();
+		goto error;
+	}
+	_alifWStringList_clear(&wstrlist);
+	ALIF_DECREF(list);
+	return 0;
+
+error:
+	_alifWStringList_clear(&wstrlist);
+	ALIF_DECREF(list);
+	return -1;
+}
+
+AlifIntT _alifConfig_fromDict(AlifConfig* _config, AlifObject* _dict) { // 1413
+	if (!ALIFDICT_CHECK(_dict)) {
+		alifErr_setString(_alifExcTypeError_, "dict expected");
+		return -1;
+	}
+
+	const AlifConfigSpec* spec = _alifConfigSpec_;
+	for (; spec->name != nullptr; spec++) {
+		char* member = (char*)_config + spec->offset;
+		switch (spec->type) {
+		case AlifConfigMemberType_::Alif_Config_Member_INT:
+		case AlifConfigMemberType_::Alif_Config_Member_UINT:
+		case AlifConfigMemberType_::Alif_Config_Member_BOOL:
+		{
+			AlifIntT value{};
+			if (config_dictGetInt(_dict, spec->name, &value) < 0) {
+				return -1;
+			}
+			if (spec->type == AlifConfigMemberType_::Alif_Config_Member_BOOL
+				or spec->type == AlifConfigMemberType_::Alif_Config_Member_UINT) {
+				if (value < 0) {
+					config_dictInvalidValue(spec->name);
+					return -1;
+				}
+			}
+			*(AlifIntT*)member = value;
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_ULONG:
+		{
+			if (config_dictGetULong(_dict, spec->name,
+				(unsigned long*)member) < 0) {
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR:
+		{
+			wchar_t** wstr = (wchar_t**)member;
+			if (config_dictGetWStr(_dict, spec->name, _config, wstr) < 0) {
+				return -1;
+			}
+			if (*wstr == nullptr) {
+				config_dictInvalidValue(spec->name);
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR_OPT:
+		{
+			wchar_t** wstr = (wchar_t**)member;
+			if (config_dictGetWStr(_dict, spec->name, _config, wstr) < 0) {
+				return -1;
+			}
+			break;
+		}
+		case AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST:
+		{
+			if (strcmp(spec->name, "xoptions") == 0) {
+				//if (config_dictGetXoptions(_dict, spec->name, _config,
+				//	(AlifWStringList*)member) < 0) {
+				//	return -1;
+				//}
+			}
+			else {
+				if (config_dictGetWStrList(_dict, spec->name, _config,
+					(AlifWStringList*)member) < 0) {
+					return -1;
+				}
+			}
+			break;
+		}
+		default:
+			ALIF_UNREACHABLE();
+		}
+	}
+
+	if (!(_config->configInit == ConfigInitEnum_::AlifConfig_Init_COMPAT
+		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ALIF
+		or _config->configInit == ConfigInitEnum_::AlifConfig_Init_ISOLATED)) {
+		config_dictInvalidValue("_config_init");
+		return -1;
+	}
+
+	if (_config->hashSeed > MAX_HASH_SEED) {
+		config_dictInvalidValue("hash_seed");
+		return -1;
+	}
+	return 0;
 }
 
 
@@ -739,6 +1068,34 @@ static const wchar_t* config_getXOptionValue(const AlifConfig* _config,
 	}
 	const wchar_t* sep = wcschr(xoption, L'=');
 	return sep ? sep + 1 : L"";
+}
+
+
+static AlifStatus config_initIntMaxStrDigits(AlifConfig* _config) { // 1944
+	AlifIntT maxdigits{};
+
+	//* todo
+
+
+	if (_config->intMaxStrDigits < 0) {
+		_config->intMaxStrDigits = ALIF_LONG_DEFAULT_MAX_STR_DIGITS;
+	}
+	return ALIFSTATUS_OK();
+}
+
+static AlifStatus config_readComplexOptions(AlifConfig* _config) { // 2049
+
+	AlifStatus status{};
+
+	if (_config->intMaxStrDigits < 0) {
+		status = config_initIntMaxStrDigits(_config);
+		if (ALIFSTATUS_EXCEPTION(status)) {
+			return status;
+		}
+	}
+
+
+	return ALIFSTATUS_OK();
 }
 
 static const wchar_t* config_getStdioErrors(const AlifPreConfig* _preConfig) { // 2056
@@ -982,6 +1339,12 @@ static AlifStatus config_read(AlifConfig* _config, AlifIntT _computepathConfig) 
 	//	status = config_readEnvVars(_config);
 	//	if (ALIFSTATUS_EXCEPTION(status)) return status;
 	//}
+
+
+	status = config_readComplexOptions(_config);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	if (_config->installImportLib) {
 		status = config_initImport(_config, _computepathConfig); //* here
@@ -1550,4 +1913,104 @@ AlifStatus alifConfig_setArgv(AlifConfig* _config,
 		.bytesArgv = nullptr,
 		.wcharArgv = _argv };
 	return _alifConfig_setAlifArgv(_config, &args);
+}
+
+
+
+
+
+
+static AlifObject* config_getSys(const char* _name) { // 4029
+	AlifObject* value = alifSys_getObject(_name);
+	if (value == nullptr) {
+		//alifErr_format(_alifExcRuntimeError_, "lost sys.%s", _name);
+		return nullptr;
+	}
+	return ALIF_NEWREF(value);
+}
+
+static AlifIntT config_getSysWriteBytecode(const AlifConfig* _config, AlifIntT* _value) { // 4041
+	AlifObject* attr = config_getSys("dont_write_bytecode");
+	if (attr == nullptr) {
+		return -1;
+	}
+
+	AlifIntT isTrue = alifObject_isTrue(attr);
+	ALIF_DECREF(attr);
+	if (isTrue < 0) {
+		return -1;
+	}
+	*_value = (!isTrue);
+	return 0;
+}
+
+
+static AlifObject* config_get(const AlifConfig* _config,
+	const AlifConfigSpec* _spec, AlifIntT _useSys) { // 4059
+	if (_useSys) {
+		if (_spec->sys.attr != nullptr) {
+			return config_getSys(_spec->sys.attr);
+		}
+
+		if (strcmp(_spec->name, "writeBytecode") == 0) {
+			AlifIntT value;
+			if (config_getSysWriteBytecode(_config, &value) < 0) {
+				return nullptr;
+			}
+			return alifBool_fromLong(value);
+		}
+
+		if (strcmp(_spec->name, "intMaxStrDigits") == 0) {
+			AlifInterpreter* interp = _alifInterpreter_get();
+			return alifLong_fromLong(interp->longState.maxStrDigits);
+		}
+	}
+
+	void* member = config_getSpecMember(_config, _spec);
+	switch (_spec->type) {
+	case AlifConfigMemberType_::Alif_Config_Member_INT:
+	case AlifConfigMemberType_::Alif_Config_Member_UINT:
+	{
+		AlifIntT value = *(AlifIntT*)member;
+		return alifLong_fromLong(value);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_BOOL:
+	{
+		AlifIntT value = *(AlifIntT*)member;
+		return alifBool_fromLong(value != 0);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_ULONG:
+	{
+		unsigned long value = *(unsigned long*)member;
+		return alifLong_fromUnsignedLong(value);
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR:
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR_OPT:
+	{
+		wchar_t* wstr = *(wchar_t**)member;
+		if (wstr != nullptr) {
+			return alifUStr_fromWideChar(wstr, -1);
+		}
+		else {
+			return ALIF_NEWREF(ALIF_NONE);
+		}
+	}
+
+	case AlifConfigMemberType_::Alif_Config_Member_WSTR_LIST:
+	{
+		//if (strcmp(_spec->name, "xoptions") == 0) {
+		//	return _alifConfig_createXOptionsDict(_config);
+		//}
+		//else {
+		const AlifWStringList* list = (const AlifWStringList*)member;
+		return _alifWStringList_asTuple(list);
+		//}
+	}
+
+	default:
+		ALIF_UNREACHABLE();
+	}
 }

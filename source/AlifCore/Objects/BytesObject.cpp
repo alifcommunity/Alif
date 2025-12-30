@@ -44,7 +44,8 @@ static AlifObject* alifBytes_fromSize(AlifSizeT _size, AlifIntT _useCalloc) { //
 
 	if (_useCalloc) {
 		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size); // this calloc and need review
-	} else {
+	}
+	else {
 		op = (AlifBytesObject*)alifMem_objAlloc(ALIFBYTESOBJECT_SIZE + _size);
 	}
 	if (op == nullptr) {
@@ -381,14 +382,14 @@ void alifBytes_concat(AlifObject** _pv, AlifObject* _w) { // 3072
 			//alifErr_noMemory();
 			goto error;
 		}
-		if (alifBytes_resize(_pv, oldsize + wb.len) < 0)
+		if (_alifBytes_resize(_pv, oldsize + wb.len) < 0)
 			goto error;
 
 		memcpy(ALIFBYTES_AS_STRING(*_pv) + oldsize, wb.buf, wb.len);
 		alifBuffer_release(&wb);
 		return;
 
-	error:
+error:
 		alifBuffer_release(&wb);
 		ALIF_CLEAR(*_pv);
 		return;
@@ -403,7 +404,7 @@ void alifBytes_concat(AlifObject** _pv, AlifObject* _w) { // 3072
 }
 
 
-AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
+AlifIntT _alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
 	AlifObject* v{};
 	AlifBytesObject* sv{};
 	v = *_pv;
@@ -442,9 +443,9 @@ AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
 		return (*_pv == nullptr) ? -1 : 0;
 	}
 
-	* _pv = (AlifObject*)
+	*_pv = (AlifObject*)
 		alifMem_objRealloc(v, ALIFBYTESOBJECT_SIZE + _newSize);
-	if (*_pv == NULL) {
+	if (*_pv == nullptr) {
 		alifMem_objFree(v);
 		//alifErr_noMemory();
 		return -1;
@@ -453,7 +454,10 @@ AlifIntT alifBytes_resize(AlifObject** _pv, AlifSizeT _newSize) { // 3141
 	sv = (AlifBytesObject*)*_pv;
 	ALIF_SET_SIZE(sv, _newSize);
 	sv->val[_newSize] = '\0';
+	ALIF_COMP_DIAG_PUSH;
+	ALIF_COMP_DIAG_IGNORE_DEPR_DECLS;
 	sv->hash = -1;          /* invalidate cached hash value */
+	ALIF_COMP_DIAG_POP;
 	return 0;
 }
 
@@ -518,7 +522,7 @@ void* alifBytesWriter_resize(AlifBytesWriter* _writer, void* _str, AlifSizeT _si
 				goto error;
 		}
 		else {
-			if (alifBytes_resize(&_writer->buffer, allocated))
+			if (_alifBytes_resize(&_writer->buffer, allocated))
 				goto error;
 		}
 	}
@@ -619,7 +623,7 @@ AlifObject* alifBytesWriter_finish(AlifBytesWriter* _writer, void* _str) { // 35
 				}
 			}
 			else {
-				if (alifBytes_resize(&result, size)) {
+				if (_alifBytes_resize(&result, size)) {
 					return nullptr;
 				}
 			}

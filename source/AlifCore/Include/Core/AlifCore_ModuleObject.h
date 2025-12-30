@@ -6,7 +6,8 @@
 
 
 extern AlifIntT _alifModuleSpec_isInitializing(AlifObject*); // 13
-
+extern AlifIntT _alifModuleSpec_getFileOrigin(AlifObject*, AlifObject**);
+extern AlifIntT _alifModule_isPossiblyShadowing(AlifObject*); // 15
 
 
 

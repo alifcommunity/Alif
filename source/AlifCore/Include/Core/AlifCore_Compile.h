@@ -26,8 +26,8 @@ AlifCodeObject* _alifAST_compile(Module*, AlifObject*,
 
 extern AlifIntT alifAST_optimize(Module*, AlifASTMem*, AlifIntT, AlifIntT);
 
-
-
+extern AlifIntT _alifCompile_astOptimize(ModuleTy, AlifObject*,
+	AlifCompilerFlags*, AlifIntT, AlifASTMem*);
 
 
 
@@ -45,11 +45,11 @@ public:
 	AlifObject* name{};
 	AlifObject* qualname{};
 
-	AlifObject* consts{};    
-	AlifObject* names{};     
-	AlifObject* varnames{};  
-	AlifObject* cellvars{};  
-	AlifObject* freevars{};  
+	AlifObject* consts{};
+	AlifObject* names{};
+	AlifObject* varnames{};
+	AlifObject* cellvars{};
+	AlifObject* freevars{};
 	AlifObject* fasthidden{};
 
 	AlifSizeT argCount{};
@@ -133,7 +133,7 @@ AlifIntT _alifCompiler_resolveNameOp(AlifCompiler*, AlifObject*, AlifIntT,
 
 
 
-
+AlifIntT _alifCompile_scopeType(AlifCompiler*);
 AlifIntT _alifCompiler_isInInlinedComp(AlifCompiler*);
 
 AlifIntT _alifCompiler_optimizationLevel(AlifCompiler*);
@@ -183,9 +183,8 @@ AlifIntT _alifCompiler_ensureArrayLargeEnough(AlifIntT,
 
 
 
-
 AlifIntT _alifCompiler_constCacheMergeOne(AlifObject*, AlifObject**);
 
 AlifCodeObject* _alifCompiler_optimizeAndAssemble(AlifCompiler*, AlifIntT);
-
 AlifSizeT _alifCompiler_dictAddObj(AlifObject*, AlifObject*);
+AlifIntT _alifCompiler_error(AlifCompiler*, Location, const char*, ...);

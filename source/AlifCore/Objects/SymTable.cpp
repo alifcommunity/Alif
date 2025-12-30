@@ -96,7 +96,7 @@ static SymTableEntry* ste_new(AlifSymTable* _st, AlifObject* _name, BlockType_ _
 		goto fail;
 	}
 	ste_->table = _st;
-	ste_->id = k_; 
+	ste_->id = k_;
 
 	ste_->name = ALIF_NEWREF(_name);
 
@@ -183,9 +183,10 @@ AlifTypeObject _alifSTEntryType_ = { // 192
 static AlifIntT symtable_analyze(AlifSymTable*); // 233
 static AlifIntT symtable_enterBlock(AlifSymTable*, AlifObject*, BlockType_, void*, AlifSourceLocation); // 234
 static AlifIntT symtable_exitBlock(AlifSymTable*); // 236
-static AlifIntT symtable_visitStmt(AlifSymTable* , StmtTy ); // 237
-static AlifIntT symtable_visitExpr(AlifSymTable* , ExprTy ); // 238
+static AlifIntT symtable_visitStmt(AlifSymTable*, StmtTy); // 237
+static AlifIntT symtable_visitExpr(AlifSymTable*, ExprTy); // 238
 static AlifIntT symtable_visitTypeParam(AlifSymTable*, TypeParamTy); // 239
+static AlifIntT symtable_visitGenExpr(AlifSymTable*, ExprTy); // 240
 static AlifIntT symtable_visitListComp(AlifSymTable*, ExprTy); // 241
 static AlifIntT symtable_visitArguments(AlifSymTable*, ArgumentsTy); // 244
 static AlifIntT symtable_visitExcepthandler(AlifSymTable*, ExcepthandlerTy); // 245
@@ -742,8 +743,8 @@ error:
 }
 
 
-static AlifIntT analyze_childBlock(SymTableEntry* , AlifObject* , AlifObject* ,
-	AlifObject* , AlifObject* , SymTableEntry* , AlifObject** ); // 1092
+static AlifIntT analyze_childBlock(SymTableEntry*, AlifObject*, AlifObject*,
+	AlifObject*, AlifObject*, SymTableEntry*, AlifObject**); // 1092
 
 
 static AlifIntT analyze_block(SymTableEntry* _ste, AlifObject* _bound, AlifObject* _free,
@@ -755,7 +756,7 @@ static AlifIntT analyze_block(SymTableEntry* _ste, AlifObject* _bound, AlifObjec
 	AlifIntT success = 0;
 	AlifSizeT i_{}, pos_ = 0;
 
-	local = alifSet_new(nullptr);  
+	local = alifSet_new(nullptr);
 	if (!local)
 		goto error;
 	scopes = alifDict_new();
@@ -844,8 +845,7 @@ static AlifIntT analyze_block(SymTableEntry* _ste, AlifObject* _bound, AlifObjec
 			!_ste->canSeeClassScope;
 
 		if (!analyze_childBlock(entry, newBound, newFree, newGlobal,
-			_typeParams, newClassEntry, &childFree))
-		{
+			_typeParams, newClassEntry, &childFree)) {
 			goto error;
 		}
 		if (inlineComp) {
@@ -867,8 +867,7 @@ static AlifIntT analyze_block(SymTableEntry* _ste, AlifObject* _bound, AlifObjec
 		SymTableEntry* entry = (SymTableEntry*)c_;
 		if (entry->compInlined and
 			alifList_setSlice(_ste->children, i_, i_ + 1,
-				entry->children) < 0)
-		{
+				entry->children) < 0) {
 			goto error;
 		}
 	}
@@ -980,7 +979,7 @@ static AlifIntT symtable_enterExistingBlock(AlifSymTable* _st, SymTableEntry* _s
 	if (prev) {
 		_ste->compIterExpr = prev->compIterExpr;
 	}
-	
+
 	if (prev and prev->mangledNames != nullptr and _ste->type != BlockType_::Class_Block) {
 		_ste->mangledNames = ALIF_NEWREF(prev->mangledNames);
 	}
@@ -1301,8 +1300,7 @@ static AlifIntT check_importFrom(AlifSymTable* st, StmtTy s) { // 1776
 	if (s->V.importFrom.module and s->V.importFrom.level == 0 &&
 		alifUStr_equalToASCIIString(s->V.importFrom.module, "__future__") and
 		((s->lineNo > fut.lineNo) or
-			((s->lineNo == fut.endLineNo) and (s->colOffset > fut.endColOffset))))
-	{
+			((s->lineNo == fut.endLineNo) and (s->colOffset > fut.endColOffset)))) {
 		//alifErr_setString(_alifExcSyntaxError_,
 		//	"from __future__ imports must occur "
 		//	"at the beginning of the file");
@@ -1528,7 +1526,7 @@ static AlifIntT symtable_visitStmt(AlifSymTable* _st, StmtTy _s) { // 1812
 }
 
 static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
-	
+
 	ENTER_RECURSIVE(_st);
 	switch (_e->type) {
 	case ExprK_::BoolOpK:
@@ -1552,6 +1550,10 @@ static AlifIntT symtable_visitExpr(AlifSymTable* _st, ExprTy _e) { // 2334
 		break;
 	case ExprK_::SetK:
 		VISIT_SEQ(_st, Expr, _e->V.set.elts);
+		break;
+	case ExprK_::GeneratorExprK:
+		if (!symtable_visitGenExpr(_st, _e))
+			return 0;
 		break;
 	case ExprK_::ListCompK:
 		if (!symtable_visitListComp(_st, _e))
@@ -1659,16 +1661,16 @@ static AlifIntT symtable_visitTypeParam(AlifSymTable* _st, TypeParamTy _tp) { //
 		//}
 		break;
 	}
-	//case TypeParamK::ParamSpecK:
-	//	if (!symtable_addDef(_st, _tp->V.paramSpec.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(_tp))) {
-	//		return 0;
-	//	}
+	case TypeParamK::ParamSpecK:
+		//	if (!symtable_addDef(_st, _tp->V.paramSpec.name, DEF_TYPE_PARAM | DEF_LOCAL, LOCATION(_tp))) {
+		//		return 0;
+		//	}
 
-	//	if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.paramSpec.defaultValue, _tp->V.paramSpec.name,
-	//		(void*)_tp, "a ParamSpec default")) {
-	//		return 0;
-	//	}
-	//	break;
+		//	if (!symtable_visitTypeParamBoundOrDefault(_st, _tp->V.paramSpec.defaultValue, _tp->V.paramSpec.name,
+		//		(void*)_tp, "a ParamSpec default")) {
+		//		return 0;
+		//	}
+		break;
 	}
 	LEAVE_RECURSIVE(_st);
 	return 1;
@@ -1687,7 +1689,7 @@ static AlifIntT symtable_implicitArg(AlifSymTable* _st, AlifIntT _pos) { // 2650
 }
 
 
-static AlifIntT symtable_visitParams(AlifSymTable* _st, ASDLArgSeq* _args){ // 2664
+static AlifIntT symtable_visitParams(AlifSymTable* _st, ASDLArgSeq* _args) { // 2664
 	AlifSizeT i{};
 
 	for (i = 0; i < ASDL_SEQ_LEN(_args); i++) {
@@ -1877,8 +1879,7 @@ static AlifIntT symtable_handleComprehension(AlifSymTable* st, ExprTy e,
 	if (is_async and
 		!IS_ASYNC_DEF(st) and
 		st->cur->comprehension == AlifComprehensionType::No_Comprehension and
-		!allows_topLevelAwait(st))
-	{
+		!allows_topLevelAwait(st)) {
 		//alifErr_setString(_alifExcSyntaxError_, "asynchronous comprehension outside of "
 		//	"an asynchronous function");
 		//SET_ERROR_LOCATION(st->fileName, LOCATION(e));
@@ -1890,6 +1891,12 @@ static AlifIntT symtable_handleComprehension(AlifSymTable* st, ExprTy e,
 	return 1;
 }
 
+
+static AlifIntT symtable_visitGenExpr(AlifSymTable* _st, ExprTy _e) { // 2958
+	return symtable_handleComprehension(_st, _e, &ALIF_ID(GenExpr),
+		_e->V.generatorExp.generators,
+		_e->V.generatorExp.elt, nullptr);
+}
 
 static AlifIntT symtable_visitListComp(AlifSymTable* _st, ExprTy _e) { // 2966
 	return symtable_handleComprehension(_st, _e, &ALIF_ID(ListComp),

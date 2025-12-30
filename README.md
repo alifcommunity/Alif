@@ -1,5 +1,7 @@
 <div dir="rtl">
 
+[![Win-MSBuild](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml/badge.svg)](https://github.com/Shad7ows/Alif/actions/workflows/msbuild.yml) [![Alif Unix Build](https://github.com/Shad7ows/Alif/actions/workflows/makebuild.yml/badge.svg)](https://github.com/Shad7ows/Alif/actions/workflows/makebuild.yml) [![Telegram Badge](https://telegram-badge.vercel.app/api/telegram-badge?channelId=%40aliflang&style=social&label=Telegram&color=2079ff)](https://t.me/aliflang)
+
 <br>
 
 <center style=font-family 'Tajawal'; font-size = 130px>

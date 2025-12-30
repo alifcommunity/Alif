@@ -717,7 +717,7 @@ AlifASTBlock* block_new(AlifUSizeT _size) {
 	b_->size_ = _size;
 	b_->mem_ = (void*)(b_ + 1);
 	b_->next_ = nullptr;
-	b_->offset_ = (char*)MEMORY_ALIGN_UP((AlifUSizeT)b_->mem_) - (char*)(b_->mem_);
+	b_->offset_ = (char*)MEMORY_ALIGN_UP((uintptr_t)b_->mem_) - (char*)(b_->mem_);
 
 	return b_;
 }

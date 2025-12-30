@@ -94,6 +94,8 @@ public:
 
 	uintptr_t criticalSection{};
 
+	AlifIntT coroutineOriginTrackingDepth{};
+
 	AlifSizeT id{};
 
 	AlifStackChunk* dataStackChunk{};
@@ -122,4 +124,4 @@ extern void alifThread_detach(AlifThread*); // 157
 AlifInterpreter* alifInterpreter_head(); // 263
 
 typedef AlifObject* (*AlifFrameEvalFunction)(AlifThread*,
-	AlifInterpreterFrame*, AlifIntT); // 271
+	class AlifInterpreterFrame*, AlifIntT); // 271

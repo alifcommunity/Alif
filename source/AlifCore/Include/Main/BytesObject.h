@@ -38,7 +38,7 @@ public:
 	 */
 };
 
-AlifIntT alifBytes_resize(AlifObject**, AlifSizeT); // 17
+AlifIntT _alifBytes_resize(AlifObject**, AlifSizeT); // 17
 
 // 20
 #define ALIFBYTES_CAST(op) \

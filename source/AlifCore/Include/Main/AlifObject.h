@@ -159,29 +159,29 @@ static inline void alif_setSize(AlifVarObject* _ob, AlifSizeT _size) { // 289
 typedef AlifObject* (*UnaryFunc)(AlifObject*); // 318
 typedef AlifObject* (*BinaryFunc)(AlifObject*, AlifObject*); // 319
 typedef AlifObject* (*TernaryFunc)(AlifObject*, AlifObject*, AlifObject*); // 320
-typedef AlifIntT (*Inquiry)(AlifObject*); // 321
-typedef AlifSizeT (*LenFunc)(AlifObject*); // 322
+typedef AlifIntT(*Inquiry)(AlifObject*); // 321
+typedef AlifSizeT(*LenFunc)(AlifObject*); // 322
 typedef AlifObject* (*SizeArgFunc)(AlifObject*, AlifSizeT); // 323
-typedef AlifIntT (*SizeObjArgProc)(AlifObject*, AlifSizeT, AlifObject*); // 325
-typedef AlifIntT (*ObjObjArgProc)(AlifObject*, AlifObject*, AlifObject*); // 327
+typedef AlifIntT(*SizeObjArgProc)(AlifObject*, AlifSizeT, AlifObject*); // 325
+typedef AlifIntT(*ObjObjArgProc)(AlifObject*, AlifObject*, AlifObject*); // 327
 typedef AlifIntT(*ObjObjProc)(AlifObject*, AlifObject*); // 329
-typedef AlifIntT (*VisitProc)(AlifObject*, void*); // 330
-typedef AlifIntT (*TraverseProc)(AlifObject*, VisitProc, void*); // 331
+typedef AlifIntT(*VisitProc)(AlifObject*, void*); // 330
+typedef AlifIntT(*TraverseProc)(AlifObject*, VisitProc, void*); // 331
 
 typedef void (*FreeFunc)(void*); // 334
 typedef void (*Destructor)(AlifObject*); // 335
 typedef AlifObject* (*GetAttrFunc)(AlifObject*, char*); // 336
 typedef AlifObject* (*GetAttroFunc)(AlifObject*, AlifObject*); // 337
-typedef AlifIntT (*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
+typedef AlifIntT(*SetAttrFunc)(AlifObject*, char*, AlifObject*); // 338
 typedef AlifIntT(*SetAttroFunc)(AlifObject*, AlifObject*, AlifObject*); // 339
 typedef AlifObject* (*ReprFunc)(AlifObject*); // 340
-typedef AlifHashT (*HashFunc)(AlifObject*); // 341
+typedef AlifHashT(*HashFunc)(AlifObject*); // 341
 typedef AlifObject* (*RichCmpFunc) (AlifObject*, AlifObject*, AlifIntT); // 342
 typedef AlifObject* (*GetIterFunc) (AlifObject*); // 343
 typedef AlifObject* (*IterNextFunc) (AlifObject*); // 344
 typedef AlifObject* (*DescrGetFunc) (AlifObject*, AlifObject*, AlifObject*); // 345
-typedef AlifIntT (*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
-typedef AlifIntT (*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
+typedef AlifIntT(*DescrSetFunc) (AlifObject*, AlifObject*, AlifObject*); // 346
+typedef AlifIntT(*InitProc)(AlifObject*, AlifObject*, AlifObject*); // 347
 typedef AlifObject* (*NewFunc)(AlifTypeObject*, AlifObject*, AlifObject*); // 348
 typedef AlifObject* (*AllocFunc)(AlifTypeObject*, AlifSizeT); // 349
 
@@ -205,6 +205,7 @@ public:
 };
 
 
+AlifObject* alifType_fromSpec(AlifTypeSpec*); // 375
 AlifObject* alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
 
 
@@ -243,16 +244,17 @@ extern AlifTypeObject _alifSuperType_; // 407 /* built-in 'super' */
 
 AlifIntT alifType_ready(AlifTypeObject*); // 411
 AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
+AlifObject* alifType_genericNew(AlifTypeObject*, AlifObject*, AlifObject*); // 423
 void alifType_modified(AlifTypeObject*); // 416
 
 AlifObject* alifObject_repr(AlifObject*); // 419
 AlifObject* alifObject_str(AlifObject*); // 420
-AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, AlifIntT); // 423
-AlifIntT alifObject_richCompareBool(AlifObject* , AlifObject* , AlifIntT ); // 424
-AlifObject* alifObject_getAttrString(AlifObject*, const char* ); // 425
+AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, AlifIntT); // 433
+AlifIntT alifObject_richCompareBool(AlifObject*, AlifObject*, AlifIntT); // 434
+AlifObject* alifObject_getAttrString(AlifObject*, const char*); // 425
 AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
 AlifObject* alifObject_getAttr(AlifObject*, AlifObject*); // 429
-AlifIntT alifObject_getOptionalAttr(AlifObject* , AlifObject* , AlifObject** ); // 431
+AlifIntT alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**); // 431
 AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
 AlifIntT alifObject_hasAttrWithError(AlifObject*, AlifObject*); // 438
 AlifObject* alifObject_selfIter(AlifObject*); // 441
@@ -272,7 +274,7 @@ void alif_reprLeave(AlifObject*); // 463
 
 
 
- // 466
+// 466
 #define ALIF_PRINT_RAW    1
 
 
@@ -349,11 +351,17 @@ extern AlifObject _alifNotImplementedClass_;  // 642
 #define ALIF_GE 5
 
 
+#if !defined(ALIF_LIMITED_API) or ALIF_LIMITED_API+0 >= 0x030A0000
+enum AlifSendResult { // 673
+	AlifGen_Return = 0,
+	AlifGen_Error = -1,
+	AlifGen_Next = 1,
+};
+#endif
 
 
 
-
- // 675
+// 675
 #define ALIF_RETURN_RICHCOMPARE(_val1, _val2, _op)                               \
     do {                                                                    \
         switch (_op) {                                                       \
@@ -389,7 +397,7 @@ void alif_newReference(AlifObject*); // 5
 void alif_newReferenceNoTotal(AlifObject*); // 6
 
 
-class AlifNumberMethods{ // 60
+class AlifNumberMethods { // 60
 public:
 	BinaryFunc add_{};
 	BinaryFunc subtract{};
@@ -434,7 +442,7 @@ public:
 	BinaryFunc inplaceMatrixMultiply{};
 };
 
-class AlifSequenceMethods{ // 107
+class AlifSequenceMethods { // 107
 public:
 
 	LenFunc length{};
@@ -450,7 +458,7 @@ public:
 	SizeArgFunc inplaceRepeat{};
 };
 
-class AlifMappingMethods{ // 121
+class AlifMappingMethods { // 121
 public:
 	LenFunc length{};
 	BinaryFunc subscript{};
@@ -458,7 +466,7 @@ public:
 };
 
 
-class AlifBufferProcs{ // 136
+class AlifBufferProcs { // 136
 public:
 	GetBufferProc getBuffer{};
 	ReleaseBufferProc releaseBuffer{};
@@ -564,7 +572,7 @@ public:
 
 const char* _alifType_name(AlifTypeObject*); // 280
 AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
-
+AlifIntT alifObject_print(AlifObject*, FILE*, AlifIntT); // 285
 void alifObject_callFinalizer(AlifObject*); // 291
 AlifIntT alifObject_callFinalizerFromDealloc(AlifObject*); // 292
 
@@ -595,7 +603,7 @@ void _alifTrashThread_destroyChain(AlifThread*); // 472
 
 #define ALIF_TRASHCAN_HEADROOM 50 // 480
 
- // 482
+// 482
 #define ALIF_TRASHCAN_BEGIN(_op, _dealloc) \
 do { \
     AlifThread* tstate = alifThread_get(); \
@@ -623,7 +631,7 @@ enum AlifRefTracerEvent_ { // 521
 	Alif_RefTracer_Destroy = 1,
 };
 
-typedef AlifIntT (*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
+typedef AlifIntT(*AlifRefTracer)(AlifObject*, AlifRefTracerEvent_ event, void*); // 526
 
 
 

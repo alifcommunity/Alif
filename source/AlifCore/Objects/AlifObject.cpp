@@ -10,6 +10,7 @@
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_HashTable.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_ObjectState.h"
 #include "AlifCore_Long.h"
 #include "AlifCore_Optimizer.h"
 #include "AlifCore_Memory.h"
@@ -37,7 +38,8 @@ void alif_decRefSharedDebug(AlifObject* _obj,
 			newShared = shared - (1 << ALIF_REF_SHARED_SHIFT);
 		}
 
-	} while (!alifAtomic_compareExchangeSize(&_obj->refShared,
+	}
+	while (!alifAtomic_compareExchangeSize(&_obj->refShared,
 		&shared, newShared));
 
 	if (shouldQueue) {
@@ -69,7 +71,8 @@ void alif_mergeZeroLocalRefcount(AlifObject* _op) { // 374
 	AlifSizeT newShared{};
 	do {
 		newShared = (shared & ~ALIFREF_SHARED_FLAG_MASK) | ALIF_REF_MERGED;
-	} while (!alifAtomic_compareExchangeSize(&_op->refShared,
+	}
+	while (!alifAtomic_compareExchangeSize(&_op->refShared,
 		&shared, newShared));
 
 	if (newShared == ALIF_REF_MERGED) {
@@ -142,6 +145,64 @@ AlifIntT alifObject_callFinalizerFromDealloc(AlifObject* _self) { // 500
 	//_alif_resurrectReference(self);
 
 	return -1;
+}
+
+AlifIntT alifObject_print(AlifObject* op, FILE* fp, AlifIntT flags) { // 535
+	AlifIntT ret = 0;
+	AlifIntT write_error = 0;
+	//if (alifErr_checkSignals())
+	//	return -1;
+#ifdef USE_STACKCHECK
+	if (alifOS_checkStack()) {
+		alifErr_setString(_alifExcMemoryError_, "stack overflow");
+		return -1;
+	}
+#endif
+	clearerr(fp); /* Clear any previous error condition */
+	if (op == nullptr) {
+		ALIF_BEGIN_ALLOW_THREADS
+			fprintf(fp, "<nil>");
+		ALIF_END_ALLOW_THREADS
+	}
+	else {
+		if (ALIF_REFCNT(op) <= 0) {
+			ALIF_BEGIN_ALLOW_THREADS
+				fprintf(fp, "<مرجع_رقم %zd في %p>", ALIF_REFCNT(op), (void*)op);
+			ALIF_END_ALLOW_THREADS
+		}
+		else {
+			AlifObject* s{};
+			if (flags & ALIF_PRINT_RAW)
+				s = alifObject_str(op);
+			else
+				s = alifObject_repr(op);
+			if (s == nullptr) {
+				ret = -1;
+			}
+			else {
+				const char* t{};
+				AlifSizeT len{};
+				t = alifUStr_asUTF8AndSize(s, &len);
+				if (t == nullptr) {
+					ret = -1;
+				}
+				else {
+					if (fwrite(t, 1, len, fp) != (AlifUSizeT)len) {
+						write_error = 1;
+					}
+				}
+				ALIF_DECREF(s);
+			}
+		}
+	}
+	if (ret == 0) {
+		if (write_error or ferror(fp)) {
+			//alifErr_setFromErrno(_alifExcOSError_);
+			clearerr(fp);
+			ret = -1;
+		}
+	}
+	return ret;
 }
 
 
@@ -408,23 +469,23 @@ AlifIntT alifObject_setAttrString(AlifObject* _v,
 }
 
 AlifIntT alifObject_setAttributeErrorContext(AlifObject* _v, AlifObject* _name) { // 1177
-	//if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
-		//return 0;
-	//}
-	//AlifObject* exc = alifErr_getRaisedException();
-	//if (!alifErr_givenExceptionMatches(exc, _alifExcAttributeError_)) {
-		//goto restore;
-	//}
-	//AlifAttributeErrorObject* theExc = (AlifAttributeErrorObject*)exc;
-	//if (theExc->name or theExc->obj) {
-		//goto restore;
-	//}
-	//if (alifObject_setAttr(exc, &ALIF_ID(_name), _name) or
-		//alifObject_setAttr(exc, &ALIF_ID(obj), _v)) {
-		//return 1;
-	//}
-//restore:
-	//alifErr_setRaisedException(exc);
+	if (!alifErr_exceptionMatches(_alifExcAttributeError_)) {
+		return 0;
+	}
+	AlifObject* exc = alifErr_getRaisedException();
+	if (!alifErr_givenExceptionMatches(exc, _alifExcAttributeError_)) {
+		goto restore;
+	}
+	AlifAttributeErrorObject* theExc; theExc = (AlifAttributeErrorObject*)exc;
+	if (theExc->name or theExc->obj) {
+		goto restore;
+	}
+	if (alifObject_setAttr(exc, &ALIF_STR(Name), _name) or
+		alifObject_setAttr(exc, &ALIF_STR(Obj), _v)) {
+		return 1;
+	}
+restore:
+	alifErr_setRaisedException(exc);
 	return 0;
 }
 
@@ -735,7 +796,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		if (f_ != nullptr and alifDescr_isData(descr)) {
 			res = f_(descr, _obj, (AlifObject*)ALIF_TYPE(_obj));
 			if (res == nullptr and _suppress
-				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				and alifErr_exceptionMatches(_alifExcAttributeError_)
 				) {
 				alifErr_clear();
 			}
@@ -777,7 +838,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 		}
 		else if (rc < 0) {
 			if (_suppress
-				/*and alifErr_exceptionMatches(alifExcAttributeError)*/
+				and alifErr_exceptionMatches(_alifExcAttributeError_)
 				) {
 				alifErr_clear();
 			}
@@ -804,9 +865,9 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 	}
 
 	if (!_suppress) {
-		//alifErr_format(_alifExcAttributeError_,
-		//	"'%.100s' object has no attribute '%U'",
-		//	tp->name, _name);
+		alifErr_format(_alifExcAttributeError_,
+			"'%.100s' الكائن لا يملك هذا المتغير '%U'",
+			tp->name, _name);
 
 		alifObject_setAttributeErrorContext(_obj, _name);
 	}
@@ -1022,7 +1083,7 @@ static AlifTypeObject* staticTypes[] = {
 	&_alifLongRangeIterType_,
 	&_alifLongType_,
 	//&_alifMapType_,
-	&_alifMemberDescrType_, 
+	&_alifMemberDescrType_,
 	//&_alifMemoryViewType_,
 	//&_alifMethodDescrType_,
 	&_alifMethodType_,
@@ -1080,8 +1141,8 @@ static AlifTypeObject* staticTypes[] = {
 	//&_alifUnionType_,
 
 	// class
-	&_alifBoolType_,       
-	&_alifCPPMethodType_,  
+	&_alifBoolType_,
+	&_alifCPPMethodType_,
 	//&_alifODictItemsType_,
 	//&_alifODictKeysType_,
 	//&_alifODictValuesType_,
@@ -1111,12 +1172,12 @@ AlifStatus alifTypes_initTypes(AlifInterpreter* _interp) { // 2362
 static inline void new_reference(AlifObject* _op) { // 2405
 	_op->threadID = alif_threadID();
 	_op->padding = 0;
-	_op->mutex = {.bits = 0};
+	_op->mutex = { .bits = 0 };
 	_op->gcBits = 0;
 	_op->refLocal = 1;
 	_op->refShared = 0;
 
-	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
+	RefTracerRuntimeState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Create, data);
@@ -1207,7 +1268,7 @@ void alif_reprLeave(AlifObject* _obj) { // 2724
 		}
 	}
 
-finally:
+	finally:
 	//alifErr_setRaisedException(exc);
 	return; //* delete
 }
@@ -1238,7 +1299,7 @@ void alif_dealloc(AlifObject* _op) { // 2868
 	AlifTypeObject* type = ALIF_TYPE(_op);
 	Destructor dealloc = type->dealloc;
 
-	RefTracerDureRunState* tracer = &_alifRuntime_.refTracer;
+	RefTracerRuntimeState* tracer = &_alifRuntime_.refTracer;
 	if (tracer->tracerFunc != nullptr) {
 		void* data = tracer->tracerData;
 		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);

@@ -117,8 +117,10 @@ AlifTypeObject _alifCPPFunctionType_ = { // 332
 	.basicSize = sizeof(AlifCPPFunctionObject),
 	.vectorCallOffset = offsetof(AlifCPPFunctionObject, vectorCall),
 	.call = cfunction_call,
+	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL,
+	.weakListOffset = offsetof(AlifCPPFunctionObject, weakRefList), /* tp_weaklistoffset */
 };
 
 

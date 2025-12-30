@@ -106,8 +106,16 @@ exit:
 	return return_value;
 }
 
+// 146
+#define _IO_FILEIO_FILENO_METHODDEF    \
+    {"Fileno", (AlifCPPFunction)_ioFileIO_fileno, METHOD_NOARGS},
 
+static AlifObject* _ioFileIO_filenoImpl(FileIO*);
 
+static AlifObject* _ioFileIO_fileno(FileIO* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 152
+	return _ioFileIO_filenoImpl(self);
+}
 
 
 
@@ -121,6 +129,15 @@ static AlifObject* _ioFileIO_readable(FileIO* self, AlifObject* ALIF_UNUSED(igno
 	return _ioFileIO_readableImpl(self);
 }
 
+// 182
+#define _IO_FILEIO_WRITABLE_METHODDEF    \
+    {"Writable", (AlifCPPFunction)_ioFileIO_writable, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_writableImpl(FileIO*);
+
+static AlifObject* _ioFileIO_writable(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 188
+	return _ioFileIO_writableImpl(self);
+}
 
 // 200
 #define _IO_FILEIO_SEEKABLE_METHODDEF    \
@@ -184,4 +201,62 @@ static AlifObject* _ioFileIO_readallImpl(FileIO*);
 
 static AlifObject* _ioFileIO_readall(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 278
 	return _ioFileIO_readallImpl(self);
+}
+
+
+
+// 347
+#define _IO_FILEIO_WRITE_METHODDEF    \
+    {"Write", ALIF_CPPFUNCTION_CAST(_ioFileIO_write), METHOD_METHOD|METHOD_FASTCALL|METHOD_KEYWORDS},
+
+static AlifObject* _ioFileIO_writeImpl(FileIO*, AlifTypeObject*, AlifBuffer*);
+
+static AlifObject* _ioFileIO_write(FileIO* self, AlifTypeObject* cls,
+	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) {
+	AlifObject* return_value = nullptr;
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
+#  define KWTUPLE (PyObject *)&_alifSingleton_(tupleEmpty)
+#else
+#  define KWTUPLE nullptr
+#endif
+
+	static const char* const _keywords[] = { "", nullptr };
+	static AlifArgParser _parser = {
+		.keywords = _keywords,
+		.fname = "write",
+		.kwTuple = KWTUPLE,
+	};
+#undef KWTUPLE
+	AlifObject* argsbuf[1];
+	AlifBuffer b = { nullptr, nullptr };
+
+	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	if (!args) {
+		goto exit;
+	}
+	if (alifObject_getBuffer(args[0], &b, ALIFBUF_SIMPLE) != 0) {
+		goto exit;
+	}
+	return_value = _ioFileIO_writeImpl(self, cls, &b);
+
+exit:
+	/* Cleanup for b */
+	if (b.obj) {
+		alifBuffer_release(&b);
+	}
+
+	return return_value;
+}
+
+
+
+
+// 516
+#define _IO_FILEIO_ISATTY_METHODDEF    \
+    {"isatty", (AlifCPPFunction)_ioFileIO_isAtty, METHOD_NOARGS},
+
+static AlifObject* _ioFileIO_isAttyImpl(FileIO*);
+
+static AlifObject* _ioFileIO_isAtty(FileIO* self, AlifObject* ALIF_UNUSED(ignored)) { // 522
+	return _ioFileIO_isAttyImpl(self);
 }

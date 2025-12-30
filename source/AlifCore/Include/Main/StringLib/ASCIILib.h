@@ -8,6 +8,9 @@
 #define STRINGLIB_SIZEOF_CHAR    1
 #define STRINGLIB_MAX_CHAR       0x7Fu
 #define STRINGLIB_CHAR           AlifUCS1
+#define STRINGLIB_ISSPACE        alifUStr_isSpace
+#define STRINGLIB_NEW(_str,_len) _alifUStr_fromASCII((const char*)(_str),(_len))
+#define STRINGLIB_CHECK_EXACT    ALIFUSTR_CHECKEXACT
 
 #define STRINGLIB_FAST_MEMCHR    memchr
 #define STRINGLIB_MUTABLE 0

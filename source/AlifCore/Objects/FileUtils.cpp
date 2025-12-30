@@ -218,31 +218,31 @@ AlifIntT alif_decodeLocaleEx(const char* _arg, wchar_t** _wstr, AlifUSizeT* _wle
 	#endif
 	}
 
-	//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-	//	return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-	//#else
-	//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-	//#ifdef _WINDOWS
-	//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-	//#endif
-	//	if (useUTF8) {
-	//		return _alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
-	//	}
-	//
-	//#ifdef USE_FORCE_ASCII
-	//	if (FORCE_ASCII == -1) {
-	//		FORCE_ASCII = check_forceASCII();
-	//	}
-	//
-	//	if (FORCE_ASCII) {
-	//		/* force ASCII encoding to workaround mbstowcs() issue */
-	//		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
-	//	}
-	//#endif
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+#else
+	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+#ifdef _WINDOWS
+	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+#endif
+	if (useUTF8) {
+		return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
+	}
+
+#ifdef USE_FORCE_ASCII
+	if (FORCE_ASCII == -1) {
+		FORCE_ASCII = check_forceASCII();
+	}
+
+	if (FORCE_ASCII) {
+		/* force ASCII encoding to workaround mbstowcs() issue */
+		return decode_ascii(_arg, _wstr, _wlen, _reason, _errors);
+	}
+#endif
 
 	return alif_decodeUTF8Ex(_arg, strlen(_arg), _wstr, _wlen, _reason, _errors);
 
-	//#endif
+#endif
 }
 
 wchar_t* alif_decodeLocale(const char* _arg, AlifUSizeT* _wlen) { // 663
@@ -367,33 +367,33 @@ static AlifIntT encode_localeEX(const wchar_t* _text, char** _str, AlifUSizeT* _
 	#endif
 	}
 
-	//#ifdef ALIF_FORCE_UTF8_FS_ENCODING
-	//	return _alif_encodeUTF8Ex(_text, _str, _errorpos, _reason,
-	//		_rawMalloc, _errors);
-	//#else
-	//	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
-	//#ifdef _WINDOWS
-	//	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
-	//#endif
-	//	if (useUTF8) {
-	//		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
-	//			_rawMalloc, _errors);
-	//	}
-	//
-	//#ifdef USE_FORCE_ASCII
-	//	if (FORCE_ASCII == -1) {
-	//		FORCE_ASCII = check_forceASCII();
-	//	}
-	//
-	//	if (FORCE_ASCII) {
-	//		return encode_ascii(_text, _str, _errorPos, _reason,
-	//			_rawMalloc, _errors);
-	//	}
-	//#endif
+#ifdef ALIF_FORCE_UTF8_FS_ENCODING
+	return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+		_rawMalloc, _errors);
+#else
+	AlifIntT useUTF8 = (_alifRuntime_.preConfig.utf8Mode >= 1);
+#ifdef _WINDOWS
+	useUTF8 |= (_alifRuntime_.preConfig.legacyWindowsFSEncoding == 0);
+#endif
+	if (useUTF8) {
+		return _alif_encodeUTF8Ex(_text, _str, _errorPos, _reason,
+			_rawMalloc, _errors);
+	}
+
+#ifdef USE_FORCE_ASCII
+	if (FORCE_ASCII == -1) {
+		FORCE_ASCII = check_forceASCII();
+	}
+
+	if (FORCE_ASCII) {
+		return encode_ascii(_text, _str, _errorPos, _reason,
+			_rawMalloc, _errors);
+	}
+#endif
 
 	return encode_currentLocale(_text, _str, _errorPos, _reason, _rawMalloc, _errors);
 
-	//#endif
+#endif
 }
 
 
@@ -461,6 +461,17 @@ wchar_t* _alif_getLocaleEncoding(void) { // 902
 #endif  // !ALIF_FORCE_UTF8_LOCALE
 }
 
+AlifObject* _alif_getLocaleEncodingObject(void) { // 938
+	wchar_t* encoding = _alif_getLocaleEncoding();
+	if (encoding == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	AlifObject* str = alifUStr_fromWideChar(encoding, -1);
+	alifMem_dataFree(encoding);
+	return str;
+}
 
 
 // 1049
@@ -625,10 +636,187 @@ AlifIntT _alif_wStat(const wchar_t* path, struct stat* buf) { // 1332
 }
 
 
+static AlifIntT get_inheritable(AlifIntT fd, AlifIntT raise) { // 1405
+#ifdef _WINDOWS
+	HANDLE handle;
+	DWORD flags;
+
+	handle = _alifGet_osfHandleNoRaise(fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (!GetHandleInformation(handle, &flags)) {
+		//if (raise)
+		//	alifErr_setFromWindowsErr(0);
+		return -1;
+	}
+
+	return (flags & HANDLE_FLAG_INHERIT);
+#else
+	int flags;
+
+	flags = fcntl(fd, F_GETFD, 0);
+	if (flags == -1) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return !(flags & FD_CLOEXEC);
+#endif
+}
+
+static AlifIntT set_inheritable(AlifIntT fd, AlifIntT inheritable,
+	AlifIntT raise, AlifIntT* atomic_flag_works) { // 1450
+#ifdef _WINDOWS
+	HANDLE handle;
+	DWORD flags;
+#else
+#if defined(HAVE_SYS_IOCTL_H) && defined(FIOCLEX) && defined(FIONCLEX)
+	static AlifIntT ioctl_works = -1;
+	AlifIntT request;
+	AlifIntT err;
+#endif
+	AlifIntT flags, new_flags;
+	AlifIntT res;
+#endif
+
+	if (atomic_flag_works != nullptr and !inheritable) {
+		if (*atomic_flag_works == -1) {
+			AlifIntT isInheritable = get_inheritable(fd, raise);
+			if (isInheritable == -1)
+				return -1;
+			*atomic_flag_works = !isInheritable;
+		}
+
+		if (*atomic_flag_works)
+			return 0;
+	}
+
+#ifdef _WINDOWS
+	handle = _alifGet_osfHandleNoRaise(fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (inheritable)
+		flags = HANDLE_FLAG_INHERIT;
+	else
+		flags = 0;
+
+	if (!SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags)) {
+		//if (raise)
+		//	alifErr_setFromWindowsErr(0);
+		return -1;
+	}
+	return 0;
+
+#else
+
+#if defined(HAVE_SYS_IOCTL_H) and defined(FIOCLEX) and defined(FIONCLEX)
+	if (raise != 0 and alifAtomic_loadIntRelaxed(&ioctl_works) != 0) {
+		if (inheritable)
+			request = FIONCLEX;
+		else
+			request = FIOCLEX;
+		err = ioctl(fd, request, nullptr);
+		if (!err) {
+			if (alifAtomic_loadIntRelaxed(&ioctl_works) == -1) {
+				alifAtomic_storeIntRelaxed(&ioctl_works, 1);
+			}
+			return 0;
+		}
+
+	#ifdef O_PATH
+		if (errno == EBADF) {
+		}
+		else
+		#endif
+			if (errno != ENOTTY && errno != EACCES) {
+				//if (raise)
+				//	alifErr_setFromErrno(_alifExcOSError_);
+				return -1;
+			}
+			else {
+				alifAtomic_storeIntRelaxed(&ioctl_works, 0);
+			}
+	}
+#endif
+
+	flags = fcntl(fd, F_GETFD);
+	if (flags < 0) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+
+	if (inheritable) {
+		new_flags = flags & ~FD_CLOEXEC;
+	}
+	else {
+		new_flags = flags | FD_CLOEXEC;
+	}
+
+	if (new_flags == flags) {
+		return 0;
+	}
+
+	res = fcntl(fd, F_SETFD, new_flags);
+	if (res < 0) {
+		//if (raise)
+		//	alifErr_setFromErrno(_alifExcOSError_);
+		return -1;
+	}
+	return 0;
+#endif
+}
+
+static AlifIntT make_nonInheritable(AlifIntT _fd) { // 1582
+	return set_inheritable(_fd, 0, 0, nullptr);
+}
+
+
 //AlifIntT _alif_setInheritable(AlifIntT fd,
 //	AlifIntT inheritable, AlifIntT* atomic_flag_works) { // 1604
 //	return set_inheritable(fd, inheritable, 1, atomic_flag_works);
 //}
+
+
+FILE* _alif_wfOpen(const wchar_t* _path, const wchar_t* _mode) { // 1716
+	FILE* f{};
+	//if (alifSys_audit("open", "uui", _path, _mode, 0) < 0) {
+	//	return nullptr;
+	//}
+#ifndef _WINDOWS
+	char* cpath{};
+	char cmode[10]{};
+	AlifUSizeT r{};
+	r = wcstombs(cmode, _mode, 10);
+	if (r == _decodeError_ or r >= 10) {
+		errno = EINVAL;
+		return nullptr;
+	}
+	cpath = _alif_encodeLocaleRaw(_path, nullptr);
+	if (cpath == nullptr) {
+		return nullptr;
+	}
+	f = fopen(cpath, cmode);
+	alifMem_dataFree(cpath);
+#else
+	f = _wfopen(_path, _mode);
+#endif
+	if (f == nullptr)
+		return nullptr;
+	if (make_nonInheritable(fileno(f)) < 0) {
+		fclose(f);
+		return nullptr;
+	}
+	return f;
+}
 
 
 FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
@@ -686,14 +874,14 @@ FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 
 	if (f == nullptr) {
 		errno = savedErrNo;
-		//alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, _path);
+		alifErr_setFromErrnoWithFilenameObject(_alifExcOSError_, _path);
 		return nullptr;
 	}
 
-	//if (set_inheritable(fileno(f), 0, 1, nullptr) < 0) {
-	//	fclose(f);
-	//	return nullptr;
-	//}
+	if (set_inheritable(fileno(f), 0, 1, nullptr) < 0) {
+		fclose(f);
+		return nullptr;
+	}
 	return f;
 }
 
@@ -739,6 +927,101 @@ AlifSizeT _alif_read(AlifIntT fd, void* buf, AlifUSizeT count) { // 1858
 	}
 
 	return n;
+}
+
+static AlifSizeT _alif_writeImpl(AlifIntT fd, const void* buf,
+	AlifUSizeT count, AlifIntT gil_held) { // 1917
+	AlifSizeT n{};
+	AlifIntT err{};
+	AlifIntT async_err = 0;
+
+	ALIF_BEGIN_SUPPRESS_IPH
+	#ifdef _WINDOWS
+		if (count > 32767) {
+			if (gil_held) {
+				ALIF_BEGIN_ALLOW_THREADS
+					if (isatty(fd)) {
+						count = 32767;
+					}
+				ALIF_END_ALLOW_THREADS
+			}
+			else {
+				if (isatty(fd)) {
+					count = 32767;
+				}
+			}
+		}
+
+#endif
+	if (count > ALIF_WRITE_MAX) {
+		count = ALIF_WRITE_MAX;
+	}
+
+	if (gil_held) {
+		do {
+			ALIF_BEGIN_ALLOW_THREADS
+				errno = 0;
+		#ifdef _WINDOWS
+			AlifIntT c = (AlifIntT)count;
+			do {
+				_doserrno = 0;
+				n = write(fd, buf, c);
+				if (n >= 0 or errno != ENOSPC or _doserrno != 0) {
+					break;
+				}
+				errno = EAGAIN;
+				c /= 2;
+			}
+			while (c > 0);
+		#else
+			n = write(fd, buf, count);
+		#endif
+			err = errno;
+			ALIF_END_ALLOW_THREADS
+		}
+		while (n < 0 and err == EINTR /*and
+			!(async_err = alifErr_checkSignals())*/);
+	}
+	else {
+		do {
+			errno = 0;
+		#ifdef _WINDOWS
+			AlifIntT c = (AlifIntT)count;
+			do {
+				_doserrno = 0;
+				n = write(fd, buf, c);
+				if (n >= 0 or errno != ENOSPC or _doserrno != 0) {
+					break;
+				}
+				errno = EAGAIN;
+				c /= 2;
+			}
+			while (c > 0);
+		#else
+			n = write(fd, buf, count);
+		#endif
+			err = errno;
+		}
+		while (n < 0 && err == EINTR);
+	}
+	ALIF_END_SUPPRESS_IPH
+
+		if (async_err) {
+			errno = err;
+			return -1;
+		}
+	if (n < 0) {
+		if (gil_held)
+			//alifErr_setFromErrno(_alifExcOSError_);
+			errno = err;
+		return -1;
+	}
+
+	return n;
+}
+
+AlifSizeT _alif_write(AlifIntT _fd, const void* _buf, AlifUSizeT _count) { // 2028
+	return _alif_writeImpl(_fd, _buf, _count, 1);
 }
 
 #ifdef HAVE_READLINK // 2054
@@ -1255,8 +1538,16 @@ void* _alifGet_osfHandleNoRaise(AlifIntT fd) { // 2836
 		return handle;
 }
 
+void* _alifGet_osfHandle(AlifIntT _fd) { // 2846
+	void* handle = _alifGet_osfHandleNoRaise(_fd);
+	if (handle == INVALID_HANDLE_VALUE) {
+		//alifErr_setFromErrno(_alifExcOSError_);
+	}
 
-AlifIntT _alifOpen_osfHandleNoRaise(void* handle, int flags) { // 2856
+	return handle;
+}
+
+AlifIntT _alifOpen_osfHandleNoRaise(void* handle, AlifIntT flags) { // 2856
 	AlifIntT fd{};
 	ALIF_BEGIN_SUPPRESS_IPH
 		fd = _open_osfhandle((intptr_t)handle, flags);

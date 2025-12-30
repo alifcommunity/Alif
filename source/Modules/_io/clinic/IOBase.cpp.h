@@ -8,8 +8,16 @@
 
 
 
+// 158
+#define _IO__IOBASE_FLUSH_METHODDEF    \
+    {"Flush", (AlifCPPFunction)_io_IOBase_flush, METHOD_NOARGS},
 
+static AlifObject* _io_IOBase_flushImpl(AlifObject*);
 
+static AlifObject* _io_IOBase_flush(AlifObject* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 164
+	return _io_IOBase_flushImpl(self);
+}
 
 // 178
 #define _IO__IOBASE_CLOSE_METHODDEF    \
@@ -21,7 +29,26 @@ static AlifObject* _io_IOBase_close(AlifObject* self, AlifObject* ALIF_UNUSED(ig
 	return _io_IOBase_closeImpl(self);
 }
 
+// 199
+#define _IO__IOBASE_SEEKABLE_METHODDEF    \
+    {"Seekable", (AlifCPPFunction)_io_IOBase_seekable, METHOD_NOARGS},
 
+static AlifObject* _io_IOBase_seekableImpl(AlifObject*);
+
+static AlifObject* _io_IOBase_seekable(AlifObject* _self, AlifObject* ALIF_UNUSED(ignored)) { // 205
+	return _io_IOBase_seekableImpl(_self);
+}
+
+
+// 219
+#define _IO__IOBASE_READABLE_METHODDEF    \
+    {"Readable", (AlifCPPFunction)_io_IOBase_readable, METHOD_NOARGS},
+
+static AlifObject* _io_IOBase_readableImpl(AlifObject*);
+
+static AlifObject* _io_IOBase_readable(AlifObject* _self, AlifObject* ALIF_UNUSED(ignored)) { // 225
+	return _io_IOBase_readableImpl(_self);
+}
 
 // 239
 #define _IO__IOBASE_WRITABLE_METHODDEF    \

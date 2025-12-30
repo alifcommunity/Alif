@@ -222,7 +222,7 @@ static AlifObject* method_vectorCallVarArgs(AlifObject* func,
 	if (method_checkArgs(func, args, nargs, kwnames)) {
 		return nullptr;
 	}
-	AlifObject* argstuple = alifTuple_fromArray(args + 1, nargs - 1);
+	AlifObject* argstuple = _alifTuple_fromArray(args + 1, nargs - 1);
 	if (argstuple == nullptr) {
 		return nullptr;
 	}
@@ -249,7 +249,7 @@ static AlifObject* method_vectorCallVarArgsKeywords(AlifObject* func,
 	if (method_checkArgs(func, args, nargs, nullptr)) {
 		return nullptr;
 	}
-	AlifObject* argstuple = alifTuple_fromArray(args + 1, nargs - 1);
+	AlifObject* argstuple = _alifTuple_fromArray(args + 1, nargs - 1);
 	if (argstuple == nullptr) {
 		return nullptr;
 	}

@@ -45,7 +45,7 @@ public:
 	signed int seekable : 2; /* -1 means unknown */
 	AlifUIntT closefd : 1;
 	char finalizing{};
-	struct AlifStatStruct* statAtOpen{};
+	class AlifStatStruct* statAtOpen{};
 	AlifObject* weakRefList{};
 	AlifObject* dict{};
 };
@@ -370,7 +370,7 @@ bad_mode:
 	}
 
 	alifMem_dataFree(self->statAtOpen);
-	self->statAtOpen = (struct AlifStatStruct*)alifMem_dataAlloc(sizeof(struct AlifStatStruct));
+	self->statAtOpen = (class AlifStatStruct*)alifMem_dataAlloc(sizeof(class AlifStatStruct));
 	if (self->statAtOpen == nullptr) {
 		//alifErr_noMemory();
 		goto error;
@@ -459,11 +459,23 @@ static AlifObject* err_closed(void) { // 580
 }
 
 
+static AlifObject* _ioFileIO_filenoImpl(FileIO * _self) { // 600
+	if (_self->fd < 0)
+		return err_closed();
+	return alifLong_fromLong((long)_self->fd);
+}
+
 
 static AlifObject* _ioFileIO_readableImpl(FileIO * self) { // 615
 	if (self->fd < 0)
 		return err_closed();
 	return alifBool_fromLong((long)self->readable);
+}
+
+static AlifObject* _ioFileIO_writableImpl(FileIO * _self) { // 630
+	if (_self->fd < 0)
+		return err_closed();
+	return alifBool_fromLong((long)_self->writable);
 }
 
 static AlifObject* _ioFileIO_seekableImpl(FileIO * self) { // 645
@@ -583,7 +595,7 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 			}
 
 			if (ALIFBYTES_GET_SIZE(result) < (AlifSizeT)bufsize) {
-				if (alifBytes_resize(&result, bufsize) < 0)
+				if (_alifBytes_resize(&result, bufsize) < 0)
 					return nullptr;
 			}
 		}
@@ -609,13 +621,37 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 	}
 
 	if (ALIFBYTES_GET_SIZE(result) > bytesRead) {
-		if (alifBytes_resize(&result, bytesRead) < 0)
+		if (_alifBytes_resize(&result, bytesRead) < 0)
 			return nullptr;
 	}
 	return result;
 }
 
+static AlifObject* _ioFileIO_writeImpl(FileIO * self,
+	AlifTypeObject * cls, AlifBuffer * b) { // 915
+	AlifSizeT n{};
+	AlifIntT err{};
 
+	if (self->fd < 0)
+		return err_closed();
+	if (!self->writable) {
+		AlifIOState* state = getIOState_byCls(cls);
+		//return err_mode(state, "writing");
+	}
+
+	n = _alif_write(self->fd, b->buf, b->len);
+	err = errno;
+
+	if (n < 0) {
+		if (err == EAGAIN) {
+			alifErr_clear();
+			return ALIF_NONE;
+		}
+		return nullptr;
+	}
+
+	return alifLong_fromSizeT(n);
+}
 
 static AlifObject* portable_lseek(FileIO * _self, AlifObject * _posObj,
 	AlifIntT _whence, bool _suppressPipeError) { // 947
@@ -686,16 +722,17 @@ static AlifObject* _ioFileIO_isAttyImpl(FileIO * self) { // 1202
 
 	if (self->fd < 0)
 		return err_closed();
-	ALIF_BEGIN_ALLOW_THREADS
-		ALIF_BEGIN_SUPPRESS_IPH
-		res = isatty(self->fd);
-	ALIF_END_SUPPRESS_IPH
-		ALIF_END_ALLOW_THREADS
-		return alifBool_fromLong(res);
+	ALIF_BEGIN_ALLOW_THREADS;
+	ALIF_BEGIN_SUPPRESS_IPH;
+	res = isatty(self->fd);
+	ALIF_END_SUPPRESS_IPH;
+	ALIF_END_ALLOW_THREADS;
+	return alifBool_fromLong(res);
 }
 
 
-static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op, AlifObject * ALIF_UNUSED(ignored)) { // 1226
+static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op,
+	AlifObject * ALIF_UNUSED(ignored)) { // 1226
 	FileIO* self = ALIFFILEIO_CAST(op);
 	if (self->statAtOpen != nullptr and !S_ISCHR(self->statAtOpen->st_mode)) {
 		ALIF_RETURN_FALSE;
@@ -708,9 +745,13 @@ static AlifObject* _ioFileIO_isAttyOpenOnly(AlifObject * op, AlifObject * ALIF_U
 static AlifMethodDef _fileIOMethods_[] = { // 1238
 	_IO_FILEIO_READALL_METHODDEF
 	_IO_FILEIO_READINTO_METHODDEF
+	_IO_FILEIO_WRITE_METHODDEF
 	_IO_FILEIO_CLOSE_METHODDEF
 	_IO_FILEIO_SEEKABLE_METHODDEF
 	_IO_FILEIO_READABLE_METHODDEF
+	_IO_FILEIO_WRITABLE_METHODDEF
+	_IO_FILEIO_FILENO_METHODDEF
+	_IO_FILEIO_ISATTY_METHODDEF
 	{"_isAttyOpenOnly", _ioFileIO_isAttyOpenOnly, METHOD_NOARGS},
 	{"_deallocWarn", fileIO_deallocWarn, METHOD_O},
 	{nullptr, nullptr}             /* sentinel */

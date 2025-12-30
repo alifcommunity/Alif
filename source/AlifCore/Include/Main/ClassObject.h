@@ -18,7 +18,7 @@ public:
 
 extern AlifTypeObject _alifMethodType_; // 20
 
-
+#define ALIFMETHOD_CHECK(_op) ALIF_IS_TYPE((_op), &_alifMethodType_) // 22
 
 AlifObject* alifMethod_new(AlifObject*, AlifObject*); // 24
 

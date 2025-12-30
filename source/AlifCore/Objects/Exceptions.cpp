@@ -77,7 +77,7 @@ static AlifObject* baseException_vectorCall(AlifObject* type_obj, AlifObject* co
 	self->context = nullptr;
 	self->suppressContext = 0;
 
-	self->args = alifTuple_fromArray(args, ALIFVECTORCALL_NARGS(nargsf));
+	self->args = _alifTuple_fromArray(args, ALIFVECTORCALL_NARGS(nargsf));
 	if (!self->args) {
 		ALIF_DECREF(self);
 		return nullptr;
@@ -171,6 +171,12 @@ AlifIntT alifException_setTraceback(AlifObject* self, AlifObject* tb) { // 419
 	return baseException_setTB(_alifBaseExceptionObject_cast(self), tb, nullptr);
 }
 
+/* Steals a reference to cause */
+void alifException_setCause(AlifObject* _self, AlifObject* _cause) { // 433
+	AlifBaseExceptionObject* base_self = _alifBaseExceptionObject_cast(_self);
+	base_self->suppressContext = 1;
+	ALIF_XSETREF(base_self->cause, _cause);
+}
 
 AlifObject* alifException_getContext(AlifObject* _self) { // 441
 	AlifObject* context = _alifBaseExceptionObject_cast(_self)->context;
@@ -184,7 +190,7 @@ void alifException_setContext(AlifObject* _self, AlifObject* _context) { // 449
 
 
 
- // 548
+// 548
 #define MIDDLINGEXTENDSEXCEPTIONEX(EXCBASE, EXCNAME, ALIFEXCNAME, EXCSTORE, EXCDOC) \
 AlifTypeObject _exc ## EXCNAME ## _ = { \
     .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
@@ -281,7 +287,7 @@ static AlifTypeObject _excBaseException_ = { // 483
 
 AlifObject* _alifExcBaseException_ = (AlifObject*)&_excBaseException_; // 528
 
- // 533
+// 533
 #define SIMPLEEXTENDSEXCEPTION(EXCBASE, EXCNAME, ALIFNAME, EXCDOC) \
 static AlifTypeObject _exc ## EXCNAME ## _ = { \
     .objBase = ALIFVAROBJECT_HEAD_INIT(nullptr, 0), \
@@ -423,14 +429,14 @@ static AlifObject* importError_str(AlifImportErrorObject* _self) { // 1623
 	}
 }
 
- // 1699
+// 1699
 COMPLEXEXTENDSEXCEPTION(_excException_, ImportError,
 	خطأ_استيراد, importError, 0 /* new */,
 	nullptr /*_importErrorMethods_*/, nullptr /*_importErrorMembers_*/,
 	0 /* getset */, importError_str,
 	"لا يمكن إيجاد وحدة الاستيراد, او لا يمكن إيجاد الاسم في الوحدة ");
 
- // 1710
+// 1710
 MIDDLINGEXTENDSEXCEPTION(_excImportError_, ModuleNotFoundError, خطأ_استيراد, ImportError,
 	"Module not found.");
 
@@ -470,7 +476,7 @@ static AlifIntT osError_parseArgs(AlifObject** p_args,
 			myerrno, strerror,
 			filename, winerror, filename2))
 			return -1;
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		if (*winerror and ALIFLONG_CHECK(*winerror)) {
 			long errcode{}, winerrcode{};
 			AlifObject* newargs{};
@@ -494,7 +500,7 @@ static AlifIntT osError_parseArgs(AlifObject** p_args,
 			ALIF_DECREF(args);
 			args = *p_args = newargs;
 		}
-#endif /* _WINDOWS */
+	#endif /* _WINDOWS */
 	}
 
 	return 0;
@@ -580,9 +586,9 @@ static AlifObject* osError_new(AlifTypeObject* type, AlifObject* args, AlifObjec
 
 		if (osError_parseArgs(&args, &myerrno, &strerror,
 			&filename, &filename2
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			, &winerror
-#endif
+		#endif
 		))
 			goto error;
 
@@ -609,9 +615,9 @@ static AlifObject* osError_new(AlifTypeObject* type, AlifObject* args, AlifObjec
 
 	if (!osError_useInit(type)) {
 		if (oserror_init(self, &args, myerrno, strerror, filename, filename2
-#ifdef _WINDOWS
+		#ifdef _WINDOWS
 			, winerror
-#endif
+		#endif
 		))
 			goto error;
 	}
@@ -646,16 +652,16 @@ static AlifIntT osError_init(AlifOSErrorObject* self, AlifObject* args, AlifObje
 
 	ALIF_INCREF(args);
 	if (osError_parseArgs(&args, &myerrno, &strerror, &filename, &filename2
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		, &winerror
-#endif
+	#endif
 	))
 		goto error;
 
 	if (oserror_init(self, &args, myerrno, strerror, filename, filename2
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		, winerror
-#endif
+	#endif
 	))
 		goto error;
 
@@ -668,19 +674,19 @@ error:
 
 
 
- // 2131
+// 2131
 static AlifMemberDef _osErrorMembers_[] = {
 	{"errno", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, myErrno), 0,
-		/*ALIFDOC_STR("POSIX exception code")*/},
-	{"strerror", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, strError), 0,
-		/*ALIFDOC_STR("exception strerror")*/},
-	{"filename", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, fileName), 0,
-		/*ALIFDOC_STR("exception filename")*/},
-	{"filename2", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, fileName2), 0,
-		/*ALIFDOC_STR("second exception filename")*/},
+	/*ALIFDOC_STR("POSIX exception code")*/},
+{"strerror", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, strError), 0,
+/*ALIFDOC_STR("exception strerror")*/},
+{"filename", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, fileName), 0,
+/*ALIFDOC_STR("exception filename")*/},
+{"filename2", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, fileName2), 0,
+/*ALIFDOC_STR("second exception filename")*/},
 #ifdef _WINDOWS
 	{"winerror", ALIF_T_OBJECT, offsetof(AlifOSErrorObject, winError), 0,
-		/*ALIFDOC_STR("Win32 exception code")*/},
+	/*ALIFDOC_STR("Win32 exception code")*/},
 #endif
 	{nullptr}  /* Sentinel */
 };
@@ -705,6 +711,54 @@ COMPLEXEXTENDSEXCEPTION(_excException_, OSError, خطأ_نظام,
 
 MIDDLINGEXTENDSEXCEPTION(_excOSError_, BlockingIOError, خطأ_نظام, OSError,
 	"I/O operation would block."); // 2169
+
+
+
+/*
+ *    RuntimeError extends Exception
+ */
+SIMPLEEXTENDSEXCEPTION(_excException_, RuntimeError, خطا_اثناء_التشغيل,
+	"خطأ غير محدد أثناء التشغيل.");
+
+
+static AlifIntT attributeError_init(AlifAttributeErrorObject* _self,
+	AlifObject* _args, AlifObject* _kwds) { // 2306
+	static const char* kwlist[] = { "name", "obj", nullptr };
+	AlifObject* name = nullptr;
+	AlifObject* obj = nullptr;
+
+	if (baseException_init((AlifBaseExceptionObject*)_self, _args, nullptr) == -1) {
+		return -1;
+	}
+
+	AlifObject* emptyTuple = alifTuple_new(0);
+	if (!emptyTuple) {
+		return -1;
+	}
+	//if (!alifArg_parseTupleAndKeywords(emptyTuple, _kwds, "|$OO:AttributeError", kwlist,
+	//	&name, &obj)) {
+	//	ALIF_DECREF(emptyTuple);
+	//	return -1;
+	//}
+	ALIF_DECREF(emptyTuple);
+
+	ALIF_XSETREF(_self->name, ALIF_XNEWREF(name));
+	ALIF_XSETREF(_self->obj, ALIF_XNEWREF(obj));
+
+	return 0;
+}
+
+static AlifMemberDef _attributeErrorMembers_[] = { // 2400
+	{"name", ALIF_T_OBJECT, offsetof(AlifAttributeErrorObject, name), 0/*, ALIFDOC_STR("attribute name")*/},
+	{"obj", ALIF_T_OBJECT, offsetof(AlifAttributeErrorObject, obj), 0/*, ALIFDOC_STR("object")*/},
+	{nullptr}  /* Sentinel */
+};
+
+// 2412
+COMPLEXEXTENDSEXCEPTION(_excException_, AttributeError,
+	خطأ_خاصية, attributeError, 0,
+	/*_attributeErrorMethods_*/ nullptr, _attributeErrorMembers_,
+	0, baseException_str, "لم يتم العثور على الخاصية 'المتغير'.");
 
 
 static AlifIntT syntaxError_init(AlifSyntaxErrorObject* self,
@@ -853,7 +907,7 @@ SIMPLEEXTENDSEXCEPTION(_excException_, ValueError, خطأ_قيمة,
 SIMPLEEXTENDSEXCEPTION(_excException_, ArithmeticError, خطأ_حساب,
 	"Base class for arithmetic errors.");
 
- // 3310
+// 3310
 SIMPLEEXTENDSEXCEPTION(_excException_, SystemError, خطأ_نظام,
 	"Internal error in the Alif interpreter.\n");
 
@@ -885,7 +939,7 @@ static StaticException _staticExceptions_[] = { // 3615
 	// Level 3: Exception(BaseException) subclasses
 	ITEM(ArithmeticError),
 	//ITEM(AssertionError),
-	//ITEM(AttributeError),
+	ITEM(AttributeError),
 	//ITEM(BufferError),
 	//ITEM(EOFError),
 	//ITEM(ExceptionGroup),
@@ -972,8 +1026,7 @@ AlifIntT _alifExc_initTypes(AlifInterpreter* _interp) { // 3709
 			return -1;
 		}
 		if (exc->new_ == baseException_new
-			and exc->init == (InitProc)baseException_init)
-		{
+			and exc->init == (InitProc)baseException_init) {
 			exc->vectorCall = baseException_vectorCall;
 		}
 	}

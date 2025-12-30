@@ -137,7 +137,7 @@ static unsigned long get_lenOfRange(long, long, long); // 176
 
 static long compute_rangeLengthLong(AlifObject* start,
 	AlifObject* stop, AlifObject* step) { // 183
-	int overflow = 0;
+	AlifIntT overflow = 0;
 
 	long long_start = alifLong_asLongAndOverflow(start, &overflow);
 	if (overflow) {
@@ -364,7 +364,7 @@ static AlifObject* longRangeIter_next(LongRangeIterObject* r) { // 1072
 AlifTypeObject _alifLongRangeIterType_ = { // 1093
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "تكرار_مدى_عدد",
-	.basicSize = sizeof(LongRangeIterObject), 
+	.basicSize = sizeof(LongRangeIterObject),
 	/* methods */
 	//.dealloc = (Destructor)longRangeIter_dealloc,
 	.getAttro = alifObject_genericGetAttr,

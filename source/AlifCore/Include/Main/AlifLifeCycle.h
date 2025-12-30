@@ -2,7 +2,7 @@
 
 
 
-
+void alif_finalize(void); // 14
 
 
 AlifStatus alif_initFromConfig(const AlifConfig*); // 25

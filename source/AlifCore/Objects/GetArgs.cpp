@@ -10,7 +10,7 @@
 
 #define FLAG_COMPAT 1 // 23
 
-typedef AlifIntT (*DestrT)(AlifObject*, void*); // 25
+typedef AlifIntT(*DestrT)(AlifObject*, void*); // 25
 
 class FreeListEntryT { // 32
 public:
@@ -132,13 +132,12 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 			if (level == 0)
 				max++;
 			level++;
-			if (level >= 30)
-			{ /*alif_fatalError("too many tuple nesting levels "
-					"in argument format string");*/ }
+			if (level >= 30) { /*alif_fatalError("too many tuple nesting levels "
+					"in argument format string");*/
+			}
 			break;
 		case ')':
-			if (level == 0)
-			{ /*alif_fatalError("excess ')' in getargs format");*/ }
+			if (level == 0) { /*alif_fatalError("excess ')' in getargs format");*/ }
 			else
 				level--;
 			break;
@@ -439,7 +438,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 		break;
 	}
 
-	case 'H': { 
+	case 'H': {
 		unsigned short* p_ = va_arg(*_pVa, unsigned short*);
 		unsigned long iVal = alifLong_asUnsignedLongMask(_arg);
 		if (iVal == (unsigned long)-1 /*and alifErr_occurred()*/)
@@ -507,10 +506,8 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 	case 'k': { /* long sized bitfield */
 		unsigned long* p = va_arg(*_pVa, unsigned long*);
 		unsigned long ival;
-		if (ALIFLONG_CHECK(_arg))
-		{ ival = alifLong_asUnsignedLongMask(_arg); }
-		else
-		{ /*return convert_err("AlifIntT", _arg, _mSGBuf, _bufSize);*/ }
+		if (ALIFLONG_CHECK(_arg)) { ival = alifLong_asUnsignedLongMask(_arg); }
+		else { /*return convert_err("AlifIntT", _arg, _mSGBuf, _bufSize);*/ }
 		*p = ival;
 		break;
 	}
@@ -528,10 +525,8 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 	case 'K': { /* long long sized bitfield */
 		unsigned long long* p = va_arg(*_pVa, unsigned long long*);
 		unsigned long long ival;
-		if (ALIFLONG_CHECK(_arg))
-		{ ival = alifLong_asUnsignedLongLongMask(_arg); }
-		else
-		{/*return convert_err("AlifIntT", _arg, _mSGBuf, _bufSize);*/}
+		if (ALIFLONG_CHECK(_arg)) { ival = alifLong_asUnsignedLongLongMask(_arg); }
+		else {/*return convert_err("AlifIntT", _arg, _mSGBuf, _bufSize);*/ }
 		*p = ival;
 		break;
 	}
@@ -563,7 +558,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 		//if (alifErr_occurred())
 		//	RETURN_ERR_OCCURRED;
 		//else
-			*p = cval;
+		*p = cval;
 		break;
 	}
 
@@ -587,7 +582,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 		}
 		else
 			//return convert_err("a byte string of length 1", _arg, _mSGBuf, _bufSize);
-		break;
+			break;
 	}
 
 	case 'C': {/* unicode char */
@@ -598,11 +593,11 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 		if (!ALIFUSTR_CHECK(_arg))
 			//return convert_err("a unicode character", _arg, _mSGBuf, _bufSize);
 
-		if (ALIFUSTR_GET_LENGTH(_arg) != 1) {
-			//return convert_charErr("a unicode character",
-			//	"a string", ALIFUSTR_GET_LENGTH(_arg),
-			//	_mSGBuf, _bufSize);
-		}
+			if (ALIFUSTR_GET_LENGTH(_arg) != 1) {
+				//return convert_charErr("a unicode character",
+				//	"a string", ALIFUSTR_GET_LENGTH(_arg),
+				//	_mSGBuf, _bufSize);
+			}
 
 		kind = ALIFUSTR_KIND(_arg);
 		data = ALIFUSTR_DATA(_arg);
@@ -626,8 +621,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 		const char* buf{};
 		AlifSizeT count{};
 		if (*format == '*') {
-			if (get_buffer(_arg, (AlifBuffer*)p, &buf) < 0)
-			{ /*return convert_err(buf, _arg, _mSGBuf, _bufSize);*/ }
+			if (get_buffer(_arg, (AlifBuffer*)p, &buf) < 0) { /*return convert_err(buf, _arg, _mSGBuf, _bufSize);*/ }
 			format++;
 			if (add_cleanup(p, _freeList, cleanup_buffer)) {
 				//return convert_err(
@@ -637,8 +631,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			break;
 		}
 		count = convert_buffer(_arg, (const void**)p, &buf);
-		if (count < 0)
-		{
+		if (count < 0) {
 			//return convert_err(buf, _arg, _mSGBuf, _bufSize);
 		}
 		if (*format == '#') {
@@ -674,8 +667,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			}
 			else { /* any bytes-like object */
 				const char* buf{};
-				if (get_buffer(_arg, p, &buf) < 0)
-				{
+				if (get_buffer(_arg, p, &buf) < 0) {
 					//return convert_err(buf, _arg, _mSGBuf, _bufSize);
 				}
 			}
@@ -708,8 +700,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 				/* XXX Really? */
 				const char* buf{};
 				AlifSizeT count = convert_buffer(_arg, p, &buf);
-				if (count < 0)
-				{
+				if (count < 0) {
 					//return convert_err(buf, _arg, _mSGBuf, _bufSize);
 				}
 				*psize = count;
@@ -911,7 +902,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 
 		}
 		else if (*format == '&') {
-			typedef AlifIntT (*converter)(AlifObject*, void*);
+			typedef AlifIntT(*converter)(AlifObject*, void*);
 			converter convert = va_arg(*_pVa, converter);
 			void* addr = va_arg(*_pVa, void*);
 			AlifIntT res{};
@@ -922,8 +913,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 				return nullptr; //* alif
 			}
 			if (res == ALIF_CLEANUP_SUPPORTED and
-				add_cleanup(addr, _freeList, convert) == -1)
-			{
+				add_cleanup(addr, _freeList, convert) == -1) {
 				//return convert_err("(cleanup problem)",
 				//	_arg, _mSGBuf, _bufSize);
 			}
@@ -939,8 +929,7 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 	case 'w': { /* "w*": memory buffer, read-write access */
 		void** p = va_arg(*_pVa, void**);
 
-		if (*format != '*')
-		{
+		if (*format != '*') {
 			//return convert_err(
 			//	"(invalid use of 'w' format character)",
 			//	_arg, _mSGBuf, _bufSize);
@@ -1177,7 +1166,8 @@ static AlifIntT _parser_init(void* _arg) { // 1944
 	parser->next = (AlifArgParser*)alifAtomic_loadPtr(&_alifRuntime_.getArgs.staticParsers); //* alif
 	do {
 		// compare-exchange updates parser->next on failure
-	} while (!alifAtomic_compareExchangePtr(&_alifRuntime_.getArgs.staticParsers,
+	}
+	while (!alifAtomic_compareExchangePtr(&_alifRuntime_.getArgs.staticParsers,
 		&parser->next, parser));
 	return 0;
 }
@@ -1216,7 +1206,7 @@ static AlifIntT vGetArgsKeywordsFast_impl(AlifObject* const* args, AlifSizeT nar
 	va_list* p_va, AlifIntT flags) { // 2074
 	AlifObject* kwtuple{};
 	char msgbuf[512]{};
-	int levels[32]{};
+	AlifIntT levels[32]{};
 	const char* format{};
 	const char* msg{};
 	AlifObject* keyword{};
@@ -1769,8 +1759,7 @@ static const char* skip_item(const char** p_format,
 		if (p_va != nullptr) {
 			(void)va_arg(*p_va, char**);
 		}
-		if (c == 'w' and *format != '*')
-		{
+		if (c == 'w' and *format != '*') {
 			/* after 'w', only '*' is allowed */
 			goto err;
 		}
@@ -1781,8 +1770,7 @@ static const char* skip_item(const char** p_format,
 			format++;
 		}
 		else if ((c == 's' or c == 'z' or c == 'y' or c == 'w')
-			and *format == '*')
-		{
+			and *format == '*') {
 			format++;
 		}
 		break;
@@ -1834,7 +1822,7 @@ static const char* skip_item(const char** p_format,
 		return "Unmatched right paren in format string";
 
 	default:
-	err:
+err:
 		return "impossible<bad format char>";
 
 	}

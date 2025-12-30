@@ -6,7 +6,7 @@
 #include "AlifCore_Object.h"
 #include "AlifCore_Dict.h"
 
-typedef class GCDureRunState GCState; // 20
+typedef class GCRuntimeState GCState; // 20
 
 #define LOCAL_ALLOC_COUNT_THRESHOLD 512 // 31
 
@@ -25,7 +25,7 @@ void alifGC_initState(GCState* _gcState) { // 810
 
 
 
-static bool gc_shouldCollect(GCDureRunState* gcstate) { // 1124
+static bool gc_shouldCollect(GCRuntimeState* gcstate) { // 1124
 	int count = alifAtomic_loadIntRelaxed(&gcstate->young.count);
 	int threshold = gcstate->young.threshold;
 	if (count <= threshold or threshold == 0 or !gcstate->enabled) {
@@ -36,7 +36,7 @@ static bool gc_shouldCollect(GCDureRunState* gcstate) { // 1124
 }
 
 static void record_allocation(AlifThread* tstate) { // 1140
-	GCThreadState * gc = &((AlifThreadImpl*)tstate)->gc;
+	GCThreadState* gc = &((AlifThreadImpl*)tstate)->gc;
 	gc->allocCount++;
 	if (gc->allocCount >= LOCAL_ALLOC_COUNT_THRESHOLD) {
 		GCState* gcstate = &tstate->interpreter->gc;
@@ -44,8 +44,7 @@ static void record_allocation(AlifThread* tstate) { // 1140
 		gc->allocCount = 0;
 
 		if (gc_shouldCollect(gcstate) &&
-			!alifAtomic_loadIntRelaxed(&gcstate->collecting))
-		{
+			!alifAtomic_loadIntRelaxed(&gcstate->collecting)) {
 			alif_scheduleGC(tstate);
 		}
 	}
@@ -62,6 +61,9 @@ static void record_deallocation(AlifThread* _threadState) { // 1161
 		gc_->allocCount = 0;
 	}
 }
+
+
+
 
 void alifObject_gcTrack(void* _opRaw) { // 1717
 	AlifObject* op_ = ALIFOBJECT_CAST(_opRaw);
@@ -86,8 +88,7 @@ AlifIntT alifObject_isGC(AlifObject* _obj) { // 1748
 
 
 void alif_scheduleGC(AlifThread* _thread) { // 1754
-	if (!alifEval_breakerBitIsSet(_thread, ALIF_GC_SCHEDULED_BIT))
-	{
+	if (!alifEval_breakerBitIsSet(_thread, ALIF_GC_SCHEDULED_BIT)) {
 		alifSet_evalBreakerBit(_thread, ALIF_GC_SCHEDULED_BIT);
 	}
 }

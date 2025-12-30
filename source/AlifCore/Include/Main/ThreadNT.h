@@ -47,11 +47,11 @@ static VOID FreeNonRecursiveMutex(PNRMUTEX mutex) { // 55
 	}
 }
 
-AlifUIntT alifThread_getThreadID() { // 260
+unsigned long alifThread_getThreadID() { // 260
 
-    if (!INITIALIZED) INITIALIZED = 1;
+	if (!INITIALIZED) INITIALIZED = 1;
 
-    return GetCurrentThreadId();
+	return GetCurrentThreadId();
 }
 
 

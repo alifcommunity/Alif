@@ -1,6 +1,14 @@
 #pragma once
 
 
+#define  ALIF_MONITORING_TOOL_IDS 8 // 12
+#define  ALIF_MONITORING_LOCAL_EVENTS 10 // 14
+
+class AlifLocalMonitors { // 21
+public:
+	uint8_t tools[ALIF_MONITORING_LOCAL_EVENTS]{};
+};
+
 
 class AlifCoCached { // 28
 public:
@@ -10,6 +18,11 @@ public:
 	AlifObject* freeVars{};
 };
 
+class AlifCoLineInstrumentationData { // 40
+public:
+	uint8_t originalOpcode{};
+	int8_t lineDelta{};
+};
 
 class AlifExecutorArray { // 44
 public:
@@ -18,7 +31,30 @@ public:
 	class AlifExecutorObject* executors[1]{};
 };
 
- // 73
+
+class AlifCoMonitoringData { // 55
+public:
+	/* Monitoring specific to this code object */
+	AlifLocalMonitors localMonitors{};
+	/* Monitoring that is active on this code object */
+	AlifLocalMonitors activeMonitors{};
+	/* The tools that are to be notified for events for the matching code unit */
+	uint8_t* tools{};
+	/* The version of tools when they instrument the code */
+	uintptr_t toolVersions[ALIF_MONITORING_TOOL_IDS];
+	/* Information to support line events */
+	AlifCoLineInstrumentationData* lines{};
+	/* The tools that are to be notified for line events for the matching code unit */
+	uint8_t* lineTools{};
+	/* Information to support instruction events */
+	/* The underlying instructions, which can themselves be instrumented */
+	uint8_t* perInstructionOpcodes{};
+	/* The tools that are to be notified for instruction events for the matching code unit */
+	uint8_t* perInstructionTools{};
+};
+
+
+// 73
 #define ALIFCODE_DEF(_size) {                                                    \
 public:																			\
     ALIFOBJECT_VAR_HEAD;                                                         \
@@ -51,7 +87,7 @@ public:																			\
     AlifExecutorArray *executors{};      /* executors from optimizer */        \
     AlifCoCached *cached{};      /* cached co_* attributes */                 \
     uintptr_t instrumentationVersion{}; /* current instrumentation version */ \
-    /*AlifCoMonitoringData *monitoring{};*/ /* Monitoring data */                 \
+    AlifCoMonitoringData *monitoring{}; /* Monitoring data */                 \
     AlifSizeT uniqueID{};     /* ID used for per-thread refcounting */   \
     AlifIntT firstTraceable{};       /* index of first traceable instruction */   \
     void *extra{};                                                            \
@@ -61,7 +97,7 @@ public:																			\
 /* Bytecode object */
 class AlifCodeObject ALIFCODE_DEF(1); // 140
 
- // 143
+// 143
 #define CO_OPTIMIZED    0x0001
 #define CO_NEWLOCALS    0x0002
 #define CO_VARARGS      0x0004
@@ -104,7 +140,7 @@ static inline AlifIntT alifUnstableCode_getFirstFree(AlifCodeObject* _op) { // 1
 AlifIntT alifCode_addr2Line(AlifCodeObject*, AlifIntT); // 243
 
 
- // 247
+// 247
 #define ALIF_FOREACH_CODE_EVENT(_v) \
     _v(Create)                 \
     _v(Destroy)
@@ -117,7 +153,7 @@ enum AlifCodeEvent { // 274
 
 
 
-typedef AlifIntT (*AlifCodeWatchCallback)(AlifCodeEvent _event, AlifCodeObject* _co); // 263
+typedef AlifIntT(*AlifCodeWatchCallback)(AlifCodeEvent _event, AlifCodeObject* _co); // 263
 
 
 class Opaque {

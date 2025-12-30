@@ -109,9 +109,8 @@ public:
 enum ModK_ { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Module { // 163
 public:
-	enum ModK_ type{};
-	union
-	{
+	enum ModK_ type {};
+	union {
 		class {
 		public:
 			ASDLStmtSeq* body{};
@@ -141,12 +140,11 @@ enum StmtK_ { // 187
 	DeleteK, AssignK, AugAssignK, ForK, AsyncForK, WhileK,
 	IfK, WithK, AsyncWithK, TryK, TryStarK, ImportK, ImportFromK,
 	ExprK, PassK, BreakK, ContinueK, GlobalK, NonlocalK,
-}; 
+};
 class Stmt { // 196
 public:
-	enum StmtK_ type{};
-	union
-	{
+	enum StmtK_ type {};
+	union {
 		class {
 		public:
 			Identifier name{};
@@ -244,7 +242,7 @@ public:
 			ASDLStmtSeq* finalBody{};
 		} try_;
 
-		class  {
+		class {
 		public:
 			ASDLStmtSeq* body{};
 			ASDLExcepthandlerSeq* handlers{};
@@ -287,12 +285,11 @@ enum ExprK_ { // 359
 	DictCompK, SetCompK, ListCompK, GeneratorExprK, AwaitK, YieldK,
 	YieldFromK, CompareK, CallK, FormattedValK, JoinStrK, ConstantK,
 	AttributeK, SubScriptK, StarK, NameK, TupleK, SliceK
-}; 
+};
 class Expr { // 367
 public:
-	enum ExprK_ type{};
-	union
-	{
+	enum ExprK_ type {};
+	union {
 		class {
 		public:
 			BoolOp_ op{};
@@ -360,6 +357,12 @@ public:
 			ExprTy elt{};
 			ASDLComprehensionSeq* generators{};
 		}listComp;
+
+		class {
+		public:
+			ExprTy elt{};
+			ASDLComprehensionSeq* generators{};
+		} generatorExp;
 
 		class {
 		public:
@@ -533,12 +536,11 @@ public:
 	ExprTy optionalVars{};
 };
 
-enum TypeParamK { TypeVarK = 1, ParamSpecK, TypeVarTupleK }; 
+enum TypeParamK { TypeVarK = 1, ParamSpecK, TypeVarTupleK };
 class TypeParam { // 654
 public:
-	enum TypeParamK type{};
-	union
-	{
+	enum TypeParamK type {};
+	union {
 		class {
 		public:
 			Identifier name{};
@@ -597,6 +599,7 @@ ExprTy alifAST_ifExpr(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, Alif
 ExprTy alifAST_dict(ASDLExprSeq*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_listComp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_dictComp(ExprTy, ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_generatorExp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_await(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_yield(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_yieldFrom(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
@@ -621,5 +624,7 @@ WithItemTy alifAST_withItem(ExprTy, ExprTy, AlifASTMem*);
 
 
 
+
+AlifObject* alifAST_mod2obj(ModuleTy); // 909
 
 extern AlifObject* alifAST_getDocString(ASDLStmtSeq*);

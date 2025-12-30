@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Abstract.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASTState.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Audit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Backoff.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Cell.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
@@ -48,6 +50,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Dict.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DictState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DoubleToASCII.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Runtime.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_RuntimeInit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Eval.h" />
@@ -142,6 +145,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicGCC.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomicMSC.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Audit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BoolObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\BltinModule.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Buffer.h" />
@@ -152,6 +156,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ComplexObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CondVar.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\ConfigCommon.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\CriticalSection.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
@@ -161,9 +166,11 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FloatObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FrameObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\GetPath.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\Importlib._bootstrap.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FuncObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\GenObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Helpers.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Import.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\InitConfig.h" />
@@ -199,8 +206,10 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FastSearch.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Find.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FindMaxChar.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Partition.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Replace.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Repr.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Split.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
@@ -227,6 +236,7 @@
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h" />
     <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
@@ -301,6 +311,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\Future.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GCFreeThreading.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GenericAliasObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp" />
@@ -312,6 +323,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InstructionSequence.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InvalidParameterHandler.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\IterObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ListObject.cpp" />
@@ -332,6 +344,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StructMember.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StructSeq.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SymTable.cpp" />
@@ -356,6 +369,11 @@
     <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="FreezeModule.vcxproj">
+      <Project>{cae31879-3181-4178-8581-fef6a839652d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -416,6 +434,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
+    <CustomBuildBeforeTargets>Link</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
@@ -437,6 +456,7 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -457,6 +477,7 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -477,6 +498,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -497,6 +520,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\AlifCore\Objects\mimalloc;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Windows</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(IntDir)vc$(TargetName)$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

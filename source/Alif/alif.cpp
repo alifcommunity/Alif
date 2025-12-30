@@ -71,6 +71,25 @@ static AlifIntT stdin_isInteractive(const AlifConfig* config) { // 90
 	return (isatty(fileno(stdin)) or config->interactive);
 }
 
+
+/* Display the current Alif exception and return an exitcode */
+static AlifIntT alifMain_errPrint(AlifIntT* _exitcodeP) { // 98
+	AlifIntT exitcode{};
+	if (_alif_handleSystemExit(&exitcode)) {
+		*_exitcodeP = exitcode;
+		return 1;
+	}
+
+	alifErr_print();
+	return 0;
+}
+
+static AlifIntT alifMain_exitErrPrint(void) { // 112
+	AlifIntT exitcode = 1;
+	alifMain_errPrint(&exitcode);
+	return exitcode;
+}
+
 static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) { // 365
 	FILE* fp_ = alif_fOpenObj(_fn, "rb");
 
@@ -250,11 +269,18 @@ error:
 	goto done;
 }
 
+static void alifMain_setInspect(AlifConfig* _config, AlifIntT _inspect) {
+	_config->inspect = _inspect;
+	ALIF_COMP_DIAG_PUSH
+		ALIF_COMP_DIAG_IGNORE_DEPR_DECLS
+		_alifInspectFlag_ = _inspect;
+	ALIF_COMP_DIAG_POP
+}
 
 static AlifIntT alifMain_runStdin(AlifConfig* _config) { // 542
 	if (stdin_isInteractive(_config)) {
 		// do exit on SystemExit
-		//alifMain_setInspect(_config, 0);
+		alifMain_setInspect(_config, 0);
 
 		AlifIntT exitcode{};
 		if (alifMain_runStartup(_config, &exitcode)) {
@@ -364,7 +390,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	goto done;
 
 error:
-	//*_exitcode = alifMain_exitErrPrint();
+	*_exitcode = alifMain_exitErrPrint();
 
 done:
 	_alifInterpreter_setNotRunningMain(interp);

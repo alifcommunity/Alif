@@ -22,6 +22,18 @@ static AlifIntT ioBase_isClosed(AlifObject* self) { // 76
 	return alifObject_hasAttrWithError(self, &ALIF_ID(__IOBaseClosed));
 }
 
+static AlifObject* _io_IOBase_flushImpl(AlifObject* self) { // 165
+	AlifIntT closed = ioBase_isClosed(self);
+
+	if (!closed) {
+		return ALIF_NONE;
+	}
+	if (closed > 0) {
+		alifErr_setString(_alifExcValueError_, "عملية تبادل على ملف مغلق.");
+	}
+	return nullptr;
+}
+
 static AlifIntT iobase_checkClosed(AlifObject* self) { // 191
 	AlifObject* res{};
 	AlifIntT closed{};
@@ -76,6 +88,14 @@ static AlifIntT ioBase_traverse(IOBase* self, VisitProc visit, void* arg) { // 3
 }
 
 
+static AlifObject* _io_IOBase_seekableImpl(AlifObject* _self) { // 397
+	ALIF_RETURN_FALSE;
+}
+
+
+static AlifObject* _io_IOBase_readableImpl(AlifObject* _self) { // 429
+	ALIF_RETURN_FALSE;
+}
 
 
 AlifObject* _alifIOBase_checkReadable(AlifIOState* state,
@@ -97,6 +117,23 @@ AlifObject* _alifIOBase_checkReadable(AlifIOState* state,
 
 static AlifObject* _io_IOBase_writableImpl(AlifObject* self) { // 462
 	ALIF_RETURN_FALSE;
+}
+
+
+AlifObject* _alifIOBase_checkWritable(AlifIOState* _state,
+	AlifObject* _self, AlifObject* _args) { // 470
+	AlifObject* res = alifObject_callMethodNoArgs(_self, &ALIF_ID(Writable));
+	if (res == nullptr)
+		return nullptr;
+	if (res != ALIF_TRUE) {
+		ALIF_CLEAR(res);
+		//iobase_unsupported(state, "File or stream is not writable.");
+		return nullptr;
+	}
+	if (_args == ALIF_TRUE) {
+		ALIF_DECREF(res);
+	}
+	return res;
 }
 
 
@@ -142,7 +179,8 @@ static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { 
 							break;
 						if (buf[n++] == '\n')
 							break;
-					} while (1);
+					}
+					while (1);
 				}
 				else {
 					do {
@@ -150,7 +188,8 @@ static AlifObject* _io_IOBase_readlineImpl(AlifObject* self, AlifSizeT limit) { 
 							break;
 						if (buf[n++] == '\n')
 							break;
-					} while (1);
+					}
+					while (1);
 				}
 				nreadahead = n;
 			}
@@ -206,10 +245,13 @@ fail:
 #include "clinic/IOBase.cpp.h"
 
 static AlifMethodDef _ioBaseMethods_[] = { // 824
+	_IO__IOBASE_FLUSH_METHODDEF
 	_IO__IOBASE_CLOSE_METHODDEF
 
+	_IO__IOBASE_SEEKABLE_METHODDEF
 	_IO__IOBASE_READLINE_METHODDEF
 	//_IO__IOBASE_READLINES_METHODDEF
+	_IO__IOBASE_READABLE_METHODDEF
 	_IO__IOBASE_WRITABLE_METHODDEF
 	{nullptr, nullptr}
 };

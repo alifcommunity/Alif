@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AlifCore_Audit.h"
+#include "AlifCore_ObjectState.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_FloatObject.h"
 #include "AlifCore_Parser.h"
@@ -13,31 +15,7 @@
 
 
 
-class GetArgsDureRunState {
-public:
-	AlifArgParser* staticParsers{};
-};
 
-struct GILStateDureRunState { // 34
-public:
-	AlifIntT checkEnabled{};
-	AlifInterpreter* autoInterpreterState{};
-};
-
-
-class AlifAuditHookEntry {
-public:
-	class AlifAuditHookEntry* next{};
-	AlifAuditHookFunction hookCFunction{};
-	void* userData{};
-};
-
-
-class RefTracerDureRunState { // 198
-public:
-	AlifRefTracer tracerFunc{};
-	void* tracerData{};
-};
 
 class AlifRuntime { // 159
 public:
@@ -63,8 +41,8 @@ public:
 	AlifIntT mainThreadID{};
 	AlifThread* mainThread{};
 
-	AlifThreadDureRunState threads{};
-	SignalsDureRunState signals{};
+	AlifThreadRuntimeState threads{};
+	SignalsRuntimeState signals{};
 
 
 
@@ -73,12 +51,19 @@ public:
 
 	AlifWStringList origArgv{};
 
-	AlifParserDureRunState parser{};
-	ImportDureRunState imports{};
-	EvalDureRunState eval{};
-	GILStateDureRunState gilState{};
-	GetArgsDureRunState getArgs{};
-	RefTracerDureRunState refTracer{};
+	AlifParserRuntimeState parser{};
+	ImportRuntimeState imports{};
+	EvalRuntimeState eval{};
+	class GITStateRuntimeState {
+	public:
+		AlifIntT checkEnabled{};
+		AlifInterpreter* autoInterpreterState;
+	}gilState;
+	class GetArgsRuntimeState {
+	public:
+		AlifArgParser* staticParsers{};
+	}getArgs;
+	RefTracerRuntimeState refTracer{};
 
 	AlifRWMutex stopTheWorldMutex{};
 	StopTheWorldState stopTheWorld{};
@@ -94,7 +79,7 @@ public:
 
 	AlifFloatRuntimeState floatState{};
 	AlifUnicodeRuntimeState unicodeState{};
-	TypesDureRunState types{};
+	TypesRuntimeState types{};
 
 	AlifCachedObjects cachedObjects{};
 	AlifStaticObjects staticObjects{};
@@ -115,10 +100,10 @@ extern AlifStatus _alifRuntime_initialize(); // 329
 
 extern void _alifRuntime_finalize(void);
 
-static inline AlifThread* alifDureRunState_getFinalizing(AlifRuntime* _dureRun) { // 383
-	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_dureRun->finalizing_);
+static inline AlifThread* alifRuntimeState_getFinalizing(AlifRuntime* _runtime) { // 383
+	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_runtime->finalizing_);
 }
 
-static inline unsigned long alifDureRunState_getFinalizingID(AlifRuntime* _dureRun) { // 388
-	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_dureRun->finalizingID);
+static inline unsigned long alifRuntimeState_getFinalizingID(AlifRuntime* _runtime) { // 388
+	return ALIFATOMIC_LOAD_ULONG_RELAXED(&_runtime->finalizingID);
 }

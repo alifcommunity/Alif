@@ -137,8 +137,7 @@ static void free_workItem(AlifUSizeT _ptr) {  // 1096
 static void free_delayed(uintptr_t _ptr) { // 1107
 	AlifInterpreter* interp = _alifInterpreter_get();
 	if (alifInterpreter_getFinalizing(interp) != nullptr or
-		interp->stopTheWorld.worldStopped)
-	{
+		interp->stopTheWorld.worldStopped) {
 
 		free_workItem(_ptr);
 		return;
@@ -180,7 +179,7 @@ static void free_delayed(uintptr_t _ptr) { // 1107
 }
 
 void alifMem_freeDelayed(void* _ptr) { // 1163
-	free_delayed((AlifUSizeT)_ptr);
+	free_delayed((uintptr_t)_ptr);
 }
 
 

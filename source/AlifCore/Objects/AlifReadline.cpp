@@ -11,25 +11,24 @@ AlifThread* _alifOSReadlineThread_ = nullptr;
 static AlifMutex _alifOSReadlineLock_;
 
 
-AlifIntT (*_alifOSInputHook_)(void) = nullptr; // 33
+AlifIntT(*_alifOSInputHook_)(void) = nullptr; // 33
 
 static AlifIntT my_fgets(AlifThread* tstate,
 	char* buf, AlifIntT len, FILE* fp) { // 38
 #ifdef _WINDOWS
 	HANDLE handle;
 	ALIF_BEGIN_SUPPRESS_IPH
-	handle = (HANDLE)_get_osfhandle(fileno(fp));
+		handle = (HANDLE)_get_osfhandle(fileno(fp));
 	ALIF_END_SUPPRESS_IPH
 
-	if (handle == INVALID_HANDLE_VALUE) {
-		return -1; /* EOF */
-	}
+		if (handle == INVALID_HANDLE_VALUE) {
+			return -1; /* EOF */
+		}
 #endif
 
 	while (1) {
 		if (_alifOSInputHook_ != nullptr &&
-			alif_isMainInterpreter(tstate->interpreter))
-		{
+			alif_isMainInterpreter(tstate->interpreter)) {
 			(void)(_alifOSInputHook_)();
 		}
 
@@ -41,7 +40,7 @@ static AlifIntT my_fgets(AlifThread* tstate,
 		}
 		AlifIntT err = errno;
 
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 		if (GetLastError() == ERROR_OPERATION_ABORTED) {
 			HANDLE hInterruptEvent = _alifOS_sigintEvent();
 			switch (WaitForSingleObjectEx(hInterruptEvent, 10, FALSE)) {
@@ -52,14 +51,14 @@ static AlifIntT my_fgets(AlifThread* tstate,
 				return -2; /* Error */
 			}
 		}
-#endif /* _WINDOWS */
+	#endif /* _WINDOWS */
 
 		if (feof(fp)) {
 			clearerr(fp);
 			return -1; /* EOF */
 		}
 
-#ifdef EINTR
+	#ifdef EINTR
 		if (err == EINTR) {
 			alifEval_restoreThread(tstate);
 			//AlifIntT s = alifErr_checkSignals(); //* todo
@@ -71,7 +70,7 @@ static AlifIntT my_fgets(AlifThread* tstate,
 			/* try again */
 			continue;
 		}
-#endif
+	#endif
 
 		//if (_alifOS_interruptOccurred(tstate)) {
 		//	return 1; /* Interrupt */
@@ -102,8 +101,7 @@ char* _alifOS_windowsConsoleReadline(AlifThread* tstate, HANDLE hStdIn) { // 127
 	wbuflen = sizeof(wbuf_local) / sizeof(wbuf_local[0]) - 1;
 	while (1) {
 		if (_alifOSInputHook_ != nullptr and
-			alif_isMainInterpreter(tstate->interpreter))
-		{
+			alif_isMainInterpreter(tstate->interpreter)) {
 			(void)(_alifOSInputHook_)();
 		}
 		if (!ReadConsoleW(hStdIn, &wbuf[total_read], wbuflen - total_read, &n_read, nullptr)) {
@@ -300,7 +298,8 @@ char* alifOS_stdioReadline(FILE* sys_stdin,
 			break;
 		}
 		n += strlen(p + n);
-	} while (p[n - 1] != '\n');
+	}
+	while (p[n - 1] != '\n');
 
 	pr = (char*)alifMem_dataRealloc(p, n + 1);
 	if (pr == nullptr) {
@@ -331,16 +330,15 @@ char* alifOS_readline(FILE* sys_stdin,
 	}
 
 	ALIF_BEGIN_ALLOW_THREADS
-	alifMutex_lock(&_alifOSReadlineLock_);
+		alifMutex_lock(&_alifOSReadlineLock_);
 	alifAtomic_storePtrRelaxed(&_alifOSReadlineThread_, thread);
 	if (_alifOSReadlineFunctionPointer_ == nullptr) {
 		_alifOSReadlineFunctionPointer_ = alifOS_stdioReadline;
 	}
 
 
-	if (!isatty(fileno(sys_stdin)) or !isatty(fileno(sys_stdout)) ||
-		!alif_isMainInterpreter(thread->interpreter))
-	{
+	if (!isatty(fileno(sys_stdin)) or !isatty(fileno(sys_stdout)) or
+		!alif_isMainInterpreter(thread->interpreter)) {
 		rv = alifOS_stdioReadline(sys_stdin, sys_stdout, prompt);
 	}
 	else {
@@ -351,8 +349,8 @@ char* alifOS_readline(FILE* sys_stdin,
 	alifMutex_unlock(&_alifOSReadlineLock_);
 	ALIF_END_ALLOW_THREADS
 
-	if (rv == nullptr)
-		return nullptr;
+		if (rv == nullptr)
+			return nullptr;
 
 	len = strlen(rv) + 1;
 	res = (char*)alifMem_dataAlloc(len);

@@ -10,7 +10,8 @@
 
 
 
-
+extern AlifIntT _alif_callInstrumentation2args(AlifThread*, AlifIntT, AlifInterpreterFrame*,
+	AlifCodeUnit*, AlifObject*, AlifObject*); // 58
 
 
 

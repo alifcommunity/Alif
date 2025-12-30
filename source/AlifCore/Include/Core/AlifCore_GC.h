@@ -112,16 +112,16 @@ public:
 	AlifSizeT uncollectable{};
 };
 
-class GCDureRunState { // 305
+class GCRuntimeState { // 305
 public:
 	AlifObject* trashDeleteLater{};
 	AlifIntT trashDeleteNesting{};
 
 	AlifIntT enabled{};
 	AlifIntT debug{};
-	GCGeneration young {};
+	GCGeneration young{};
 	GCGeneration old[2]{};
-	GCGeneration permanentGeneration {};
+	GCGeneration permanentGeneration{};
 	GCGenerationStats generationStats[3]{};
 	AlifIntT collecting{};
 	AlifObject* garbage{};
@@ -134,7 +134,6 @@ public:
 	AlifSizeT longLivedTotal{};
 
 	AlifSizeT longLivedPending{};
-	AlifIntT immortalize{};
 };
 
 class GCThreadState { // 357
@@ -145,7 +144,7 @@ public:
 
 
 
-extern void alifGC_initState(GCDureRunState*); // 364
+extern void alifGC_initState(GCRuntimeState*); // 364
 
 
 

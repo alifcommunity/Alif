@@ -10,16 +10,16 @@
 #include "AlifCore_Thread.h"
 
 
-#define ALIF_DURERUNSTATE_INIT(dureRun)												\
+#define ALIF_RUNTIMESTATE_INIT(_runtime)												\
 	{																				\
         .selfInitialized = 0,														\
 		.interpreters = {.nextID = -1},												\
 		.mainThreadID = 0,															\
-		.threads = ALIFTHREAD_DURERUN_INIT(dureRun.threads),						\
+		.threads = ALIFTHREAD_RUNTIME_INIT(_runtime.threads),						\
 		.signals = SIGNALS_RUNTIME_INIT,											\
 		.autoTSSKey = 0,															\
 		.trashTSSKey = 0,															\
-		.parser = PARSER_DURERUN_STATE_INIT,										\
+		.parser = PARSER_RUNTIME_STATE_INIT,										\
         .staticObjects = { \
             .singletons = { \
                 .smallInts = ALIF_SMALL_INTS_INIT, \
@@ -42,7 +42,7 @@
                 },*/ \
             }, \
         }, \
-        .mainInterpreter = ALIF_INTERPRETERSTATE_INIT(_dureRun_.mainInterpreter),	\
+        .mainInterpreter = ALIF_INTERPRETERSTATE_INIT(_runtime.mainInterpreter),	\
 	}
 
 
@@ -60,7 +60,7 @@
 			.nextVersionTag = _ALIF_TYPE_BASE_VERSION_TAG,			\
 		},															\
     }
-        //IMPORTS_INIT,
+		//IMPORTS_INIT,
 
 
 
@@ -148,7 +148,7 @@
 
 
 
-/* ------------------------------ AlifCore_DureRunInitGenerated.h ------------------------------ */
+/* ------------------------------ AlifCore_RuntimeInitGenerated.h ------------------------------ */
 
 
 #define ALIF_SMALL_INTS_INIT { \
@@ -680,8 +680,9 @@
 
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_USTR(_windowsConsoleIO, "طرفية_ويندوز"), \
+	INIT_STR(AnonGenExpr, "<genexpr>"), \
 	INIT_STR(AnonListComp, "<listcomp>"), \
-	INIT_STR(AnonModule, "<module>"), \
+	INIT_USTR(AnonModule, "<وحدة>"), /* //* alif */ \
 	INIT_STR(AnonString, "<string>"), \
     INIT_STR(DblPercent, "%%"), \
     INIT_STR(Defaults, ".defaults"), \
@@ -698,13 +699,23 @@
     INIT_STR(False, "خطأ"), /* //* alif */	\
     INIT_STR(Mode, "mode"), /* //* alif */	\
     INIT_STR(Name, "name"), /* //* alif */	\
+    INIT_STR(Obj, "obj"), /* //* alif */	\
 	INIT_USTR(Open, "افتح"), /* //* alif */	\
+	INIT_USTR(ReadLine, "اقرا_سطر"), /* //* alif */	\
 	INIT_USTR(Read, "اقرا"), /* //* alif */	\
 	INIT_USTR(Close, "اغلق"), /* //* alif */	\
+	INIT_USTR(Replace, "استبدل"), /* //* alif */	\
 	INIT_STR(Raw, "raw"), /* //* alif */	\
+	INIT_USTR(End, "النهاية"), /* //* alif */	\
+	INIT_USTR(Sep, "الفاصل"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
-    INIT_USTR(__init__, "_تهيئة_"), /* //* alif */	\
-    INIT_USTR(__import__, "_استورد_"), /* //* alif */	\
+	INIT_USTR(Write, "اكتب"), /* //* alif */	\
+    INIT_USTR(__add__, "__اجمع__"), /* //* alif */	\
+    INIT_USTR(__call__, "__استدعاء__"), /* //* alif */	\
+    INIT_USTR(__init__, "__تهيئة__"), /* //* alif */	\
+    INIT_USTR(__import__, "__استورد__"), /* //* alif */	\
+    INIT_USTR(__radd__, "__اجمع_ع__"), /* //* alif */	\
+    INIT_USTR(__repr__, "__عرض__"), /* //* alif */	\
     INIT_STR(_io, "تبادل"), /* //* alif // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject() */	\
 }
 
@@ -716,7 +727,7 @@
     INIT_ID(__bases__), \
     INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
-    INIT_ID(__call__), \
+    /*INIT_ID(__call__),*/ \
     INIT_ID(__class__), \
     INIT_ID(__classCell__), \
     INIT_ID(__classDict__), \
@@ -757,6 +768,7 @@
 	INIT_ID(__weakRef__), \
 	INIT_ID(_blksize), \
 	INIT_ID(_deallocWarn), \
+	INIT_ID(_fieldTypes), \
 	INIT_ID(_findAndLoad), \
 	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
@@ -769,16 +781,19 @@
 	INIT_ID(Close), \
 	INIT_ID(Closed), \
 	INIT_ID(CloseFD), \
+	INIT_ID(Code), \
 	INIT_ID(Decode), \
 	INIT_ID(Decoder), \
+	INIT_ID(Encode), \
 	INIT_ID(Encoding), \
-	INIT_ID(End), \
+	/*INIT_ID(End),*/ \
 	INIT_ID(Errors), \
 	/*INIT_ID(Excepthook),*/ \
 	INIT_ID(File), \
 	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
 	INIT_ID(Flush), \
+	INIT_ID(GenExpr), \
 	INIT_ID(GetState), \
 	INIT_ID(HasLocation), \
 	INIT_ID(Join), \
@@ -805,9 +820,12 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
+	/*INIT_ID(ReadLine),*/ \
+	/*INIT_ID(Replace),*/ \
+	INIT_ID(Reset), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \
-	INIT_ID(Sep), \
+	/*INIT_ID(Sep),*/ \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \
 	INIT_ID(Stdout), \

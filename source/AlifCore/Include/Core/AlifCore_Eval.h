@@ -26,7 +26,6 @@ AlifIntT alifEval_makePendingCalls(AlifThread*); // 37
 
 
 extern AlifObject* _alifEval_getBuiltins(AlifThread*); // 85
-extern AlifObject* _alifEval_builtinsFromGlobals(AlifThread*, AlifObject*); // 86
 
 
 
@@ -58,7 +57,7 @@ extern void alifEval_releaseLock(AlifInterpreter*, AlifThread*, AlifIntT); // 13
 
 
 static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
-	GILDureRunState* gil = _thread->interpreter->eval.gil_;
+	GILRuntimeState* gil = _thread->interpreter->eval.gil_;
 	return alifAtomic_loadIntRelaxed(&gil->enabled) != 0;
 }
 
@@ -99,6 +98,9 @@ static inline void _alif_leaveRecursiveCall(void) { // 228
 
 
 
+AlifObject* _alif_makeCoro(AlifFunctionObject*); // 235
+
+
 AlifIntT _alifEval_checkExceptStarTypeValid(AlifThread*, AlifObject*); // 256
 AlifIntT _alifEval_checkExceptTypeValid(AlifThread*, AlifObject*); // 257
 AlifIntT _alifEval_exceptionGroupMatch(AlifObject*, AlifObject*, AlifObject**, AlifObject**); // 258
@@ -116,7 +118,9 @@ void _alifEval_loadGlobalStackRef(AlifObject*, AlifObject*, AlifObject*, AlifSta
 
 AlifObject* _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
 
-// 279
+AlifIntT _alifCheck_argsIterable(AlifThread*, AlifObject*, AlifObject*); // 279
+
+// 282
 #define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)
 #define ALIF_SIGNALS_PENDING_BIT (1U << 1)
 #define ALIF_CALLS_TO_DO_BIT (1U << 2)

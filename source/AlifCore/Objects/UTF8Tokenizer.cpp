@@ -43,7 +43,7 @@ TokenState* _alifTokenizer_fromUTF8(const char* _str,
 	_tokState->decodingState = DecodingState_::State_Normal;
 	_tokState->enc = nullptr;
 	_tokState->string = translated;
-	_tokState->encoding = alifTokenizer_newString("utf-8", 5, _tokState);
+	_tokState->encoding = _alifTokenizer_newString("utf-8", 5, _tokState);
 	if (!_tokState->encoding) {
 		alifTokenizer_free(_tokState);
 		return nullptr;

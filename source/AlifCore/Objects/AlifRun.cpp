@@ -18,7 +18,7 @@
 #undef BYTE
 #endif
 
-
+static void flush_io(void); // 41
 static AlifObject* run_mod(ModuleTy, AlifObject*, AlifObject*,
 	AlifObject*, AlifCompilerFlags*, AlifASTMem*, AlifObject*, AlifIntT); // 42
 static AlifObject* alifRun_file(FILE*, AlifObject*, AlifIntT,
@@ -136,7 +136,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	v = alifRun_file(_fp, _filename, ALIF_FILE_INPUT, dict, dict,
 		_closeIt, _flags);
 	//}
-	//flush_io();
+	flush_io();
 	if (v == nullptr) {
 		ALIF_CLEAR(mainModule);
 		alifErr_print();
@@ -193,58 +193,68 @@ AlifIntT _alifRun_simpleStringFlagsWithName(const char* _command,
 
 
 
+static AlifIntT parse_exitCode(AlifObject* _code, AlifIntT* _exitcodeP) { // 567
+	if (ALIFLONG_CHECK(_code)) {
+		AlifIntT exitcode = (AlifIntT)alifLong_asLongLong(_code);
+		if (exitcode == -1 and alifErr_occurred()) {
+			alifErr_clear();
+			*_exitcodeP = -1;
+			return 1;
+		}
+		*_exitcodeP = exitcode;
+		return 1;
+	}
+	else if (_code == ALIF_NONE) {
+		*_exitcodeP = 0;
+		return 1;
+	}
+	return 0;
+}
 
-
-AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 566
-	//AlifIntT inspect = alif_getConfig()->inspect;
-	//if (inspect) {
-	//	return 0;
-	//}
+AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 591
+	AlifIntT inspect = alif_getConfig()->inspect;
+	if (inspect) {
+		return 0;
+	}
 
 	//if (!alifErr_exceptionMatches(_alifExcSystemExit_)) {
 	//	return 0;
 	//}
 
-	//fflush(stdout);
+	fflush(stdout);
 
-	//AlifIntT exitcode = 0;
+	AlifObject* exc = alifErr_getRaisedException();
 
-	//AlifObject* exc = alifErr_getRaisedException();
-	//if (exc == nullptr) {
-	//	goto done;
-	//}
+	AlifObject* code; code = alifObject_getAttr(exc, &ALIF_ID(Code));
+	if (code == nullptr) {
+		alifErr_clear();
+	}
+	else if (parse_exitCode(code, _exitcodeP)) {
+		ALIF_DECREF(code);
+		ALIF_CLEAR(exc);
+		return 1;
+	}
+	else {
+		ALIF_SETREF(exc, code);
+	}
 
-	//AlifObject* code = alifObject_getAttr(exc, &ALIF_ID(Code));
-	//if (code) {
-	//	ALIF_SETREF(exc, code);
-	//	if (exc == ALIF_NONE) {
-	//		goto done;
-	//	}
-	//}
-
-	//if (ALIFLONG_CHECK(exc)) {
-	//	exitcode = (AlifIntT)alifLong_asLong(exc);
-	//}
-	//else {
-	//	AlifThread* tstate = _alifThread_get();
-	//	AlifObject* sys_stderr = _alifSys_getAttr(tstate, &ALIF_ID(Stderr));
-	//	alifErr_clear();
-	//	if (sys_stderr != nullptr and sys_stderr != ALIF_NONE) {
-	//		alifFile_writeObject(exc, sys_stderr, ALIF_PRINT_RAW);
-	//	}
-	//	else {
-	//		alifObject_print(exc, stderr, ALIF_PRINT_RAW);
-	//		fflush(stderr);
-	//	}
-	//	alifSys_writeStderr("\n");
-	//	exitcode = 1;
-	//}
-
-done:
-	//ALIF_CLEAR(exc);
-	//*_exitcodeP = exitcode;
-	//return 1;
-	return 0; //* alif
+	AlifThread* thread = _alifThread_get();
+	AlifObject* sysStderr = _alifSys_getAttr(thread, &ALIF_ID(Stderr));
+	if (sysStderr != nullptr and sysStderr != ALIF_NONE) {
+		if (alifFile_writeObject(exc, sysStderr, ALIF_PRINT_RAW) < 0) {
+			alifErr_clear();
+		}
+	}
+	else {
+		if (alifObject_print(exc, stderr, ALIF_PRINT_RAW) < 0) {
+			alifErr_clear();
+		}
+		fflush(stderr);
+	}
+	//alifSys_writeStderr("\n");
+	ALIF_CLEAR(exc);
+	*_exitcodeP = 1;
+	return 1;
 }
 
 
@@ -582,7 +592,8 @@ error:
 	return -1;
 }
 
-void _alifErr_display(AlifObject* file, AlifObject* unused, AlifObject* value, AlifObject* tb) { // 1075
+void _alifErr_display(AlifObject* file, AlifObject* unused,
+	AlifObject* value, AlifObject* tb) { // 1075
 	if (ALIFEXCEPTIONINSTANCE_CHECK(value)
 		and tb != nullptr and ALIFTRACEBACK_CHECK(tb)) {
 		AlifObject* cur_tb = alifException_getTraceback(value);
@@ -632,14 +643,14 @@ void _alifErr_display(AlifObject* file, AlifObject* unused, AlifObject* value, A
 	if (printException_recursive(&ctx, value) < 0) {
 		alifErr_clear();
 		//_alifObject_dump(value);
-		fprintf(stderr, "lost sys.stderr\n");
+		fprintf(stderr, "النظام.إخراج_الخطأ مفقود\n");
 	}
 	ALIF_XDECREF(ctx.seen);
 
 	/* Call file.flush() */
-	//if (_alifFile_flush(file) < 0) {
-	//	alifErr_clear();
-	//}
+	if (_alifFile_flush(file) < 0) {
+		alifErr_clear();
+	}
 }
 
 void alifErr_display(AlifObject* unused, AlifObject* value, AlifObject* tb) { // 1151
@@ -762,6 +773,22 @@ static AlifObject* runEval_codeObj(AlifThread* _thread, AlifCodeObject* _co,
 	return v;
 }
 
+static void flush_ioStream(AlifThread* _thread, AlifObject* _name) { // 1268
+	AlifObject* f = _alifSys_getAttr(_thread, _name);
+	if (f != nullptr) {
+		if (_alifFile_flush(f) < 0) {
+			alifErr_clear();
+		}
+	}
+}
+
+static void flush_io(void) { // 1279
+	AlifThread* thread = _alifThread_get();
+	AlifObject* exc = _alifErr_getRaisedException(thread);
+	flush_ioStream(thread, &ALIF_ID(Stderr));
+	flush_ioStream(thread, &ALIF_ID(Stdout));
+	_alifErr_setRaisedException(thread, exc);
+}
 
 static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 	AlifObject* _globals, AlifObject* _locals, AlifCompilerFlags* _flags,
@@ -843,4 +870,46 @@ static AlifObject* run_mod(ModuleTy _mod, AlifObject* _filename,
 	AlifObject* v = runEval_codeObj(thread, co, _globals, _locals);
 	ALIF_DECREF(co);
 	return v;
+}
+
+
+
+
+AlifObject* alif_compileStringObject(const char* _str, AlifObject* _filename,
+	AlifIntT _start, AlifCompilerFlags* _flags, AlifIntT _optimize) { // 1456
+	AlifCodeObject* co{};
+	ModuleTy mod{};
+	AlifASTMem* astMem = alifASTMem_new();
+	if (astMem == nullptr)
+		return nullptr;
+
+	mod = _alifParser_astFromString(_str, _filename, _start, _flags, astMem);
+	if (mod == nullptr) {
+		alifASTMem_free(astMem);
+		return nullptr;
+	}
+	if (_flags and (_flags->flags & ALIFCF_ONLY_AST)) {
+		if ((_flags->flags & ALIFCF_OPTIMIZED_AST) == ALIFCF_OPTIMIZED_AST) {
+			if (_alifCompile_astOptimize(mod, _filename, _flags, _optimize, astMem) < 0) {
+				return nullptr;
+			}
+		}
+		AlifObject* result = alifAST_mod2obj(mod);
+		alifASTMem_free(astMem);
+		return result;
+	}
+	co = _alifAST_compile(mod, _filename, _flags, _optimize, astMem);
+	alifASTMem_free(astMem);
+	return (AlifObject*)co;
+}
+
+AlifObject* alif_compileStringExFlags(const char* _str, const char* _filenameStr,
+	AlifIntT _start, AlifCompilerFlags* _flags, AlifIntT _optimize) { // 1486
+	AlifObject* filename{}, * co{};
+	filename = alifUStr_decodeFSDefault(_filenameStr);
+	if (filename == nullptr)
+		return nullptr;
+	co = alif_compileStringObject(_str, filename, _start, _flags, _optimize);
+	ALIF_DECREF(filename);
+	return co;
 }

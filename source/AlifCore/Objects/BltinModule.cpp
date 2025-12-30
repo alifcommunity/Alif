@@ -105,7 +105,7 @@ static AlifObject* builtin___buildClass__(AlifObject* _self,
 		//	"__buildClass__: name is not a string");
 		return nullptr;
 	}
-	orig_bases = alifTuple_fromArray(_args + 2, _nargs - 2);
+	orig_bases = _alifTuple_fromArray(_args + 2, _nargs - 2);
 	if (orig_bases == nullptr)
 		return nullptr;
 
@@ -232,6 +232,46 @@ static AlifObject* builtin___import__Impl(AlifObject* module, AlifObject* name, 
 	AlifObject* locals, AlifObject* fromlist, AlifIntT level) { // 272
 	return alifImport_importModuleLevelObject(name, globals, locals,
 		fromlist, level);
+}
+
+
+
+
+
+
+static AlifObject* builtin_any(AlifObject* _module, AlifObject* _iterable) { // 358
+	AlifObject* it{}, * item{};
+	AlifObject* (*iternext)(AlifObject*);
+	AlifIntT cmp{};
+
+	it = alifObject_getIter(_iterable);
+	if (it == nullptr)
+		return nullptr;
+	iternext = *ALIF_TYPE(it)->iterNext;
+
+	for (;;) {
+		item = iternext(it);
+		if (item == nullptr)
+			break;
+		cmp = alifObject_isTrue(item);
+		ALIF_DECREF(item);
+		if (cmp < 0) {
+			ALIF_DECREF(it);
+			return nullptr;
+		}
+		if (cmp > 0) {
+			ALIF_DECREF(it);
+			ALIF_RETURN_TRUE;
+		}
+	}
+	ALIF_DECREF(it);
+	if (alifErr_occurred()) {
+		if (alifErr_exceptionMatches(_alifExcStopIteration_))
+			alifErr_clear();
+		else
+			return nullptr;
+	}
+	ALIF_RETURN_FALSE;
 }
 
 
@@ -397,7 +437,7 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 		AlifThread* thread = _alifThread_get();
 		_file = _alifSys_getAttr(thread, &ALIF_ID(Stdout));
 		if (_file == nullptr) {
-		//	//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
+			//alifErr_setString(_alifExcRuntimeError_, "lost sys.stdout");
 			return nullptr;
 		}
 
@@ -465,52 +505,6 @@ static AlifObject* builtin_printImpl(AlifObject* _module, AlifObject* _args,
 
 
 static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { // 2151
-
-	//* alif
-	AlifObject* res{};
-	const char* promptstr{};
-
-	if (prompt) { //* review
-		if (alifUStr_isASCII(prompt)) {
-			char* promptstr = (char*)ALIFUSTR_DATA(prompt);
-			printf("%s", promptstr);
-		}
-		else {
-			char* promptstr = (char*)alifUStr_asUTF8(prompt);
-			printf("%s", promptstr);
-		}
-	}
-
-	char* buff = alifOS_readline(stdin, stdout, promptstr);
-
-
-	if (buff == nullptr) {
-		return ALIF_NONE;
-	}
-
-	AlifSizeT len = strlen(buff);
-	if (len == 0) {
-		res = nullptr;
-	}
-	else {
-		if (len > ALIF_SIZET_MAX) {
-			//alifErr_setString(_alifExcOverflowError_,
-			//	"input: input too long");
-			res = nullptr;
-		}
-		else {
-			len--;   /* strip trailing '\n' */
-			if (len != 0 and buff[len - 1] == '\r')
-				len--;   /* strip trailing '\r' */
-			res = alifUStr_decode(buff, len, nullptr, nullptr);
-		}
-	}
-	alifMem_dataFree(buff);
-
-	return res;
-	//* alif
-
-
 	AlifThread* thread = _alifThread_get();
 	AlifObject* fin = _alifSys_getAttr(thread, &ALIF_ID(Stdin));
 	AlifObject* fout = _alifSys_getAttr(thread, &ALIF_ID(Stdout));
@@ -521,18 +515,18 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 
 	/* Check that stdin/out/err are intact */
 	if (fin == nullptr or fin == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stdin");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الإدخال");
 		return nullptr;
 	}
 	if (fout == nullptr or fout == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stdout");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الإخراج");
 		return nullptr;
 	}
 	if (ferr == nullptr or ferr == ALIF_NONE) {
-		//alifErr_setString(_alifExcRuntimeError_,
-		//	"input(): lost sys.stderr");
+		alifErr_setString(_alifExcRuntimeError_,
+			"ادخل(): مفقود النظام.الخطأ");
 		return nullptr;
 	}
 
@@ -541,16 +535,16 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 	//}
 
 	/* First of all, flush stderr */
-	//if (_alifFile_flush(ferr) < 0) {
-	//	alifErr_clear();
-	//}
+	if (_alifFile_flush(ferr) < 0) {
+		alifErr_clear();
+	}
 
 	/* We should only use (GNU) readline if Alif's sys.stdin and
 	   sys.stdout are the same as CPP's stdin and stdout, because we
 	   need to pass it those. */
 	tmp = alifObject_callMethodNoArgs(fin, &ALIF_ID(Fileno));
 	if (tmp == nullptr) {
-		//alifErr_clear();
+		alifErr_clear();
 		tty = 0;
 	}
 	else {
@@ -563,7 +557,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 	if (tty) {
 		tmp = alifObject_callMethodNoArgs(fout, &ALIF_ID(Fileno));
 		if (tmp == nullptr) {
-			//alifErr_clear();
+			alifErr_clear();
 			tty = 0;
 		}
 		else {
@@ -580,82 +574,80 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 		AlifObject* po = nullptr;
 		const char* promptstr{};
 		char* s = nullptr;
-		AlifObject* stdin_encoding = nullptr, * stdin_errors = nullptr;
-		AlifObject* stdout_encoding = nullptr, * stdout_errors = nullptr;
-		const char* stdin_encoding_str, * stdin_errors_str;
+		AlifObject* stdinEncoding = nullptr, * stdinErrors = nullptr;
+		AlifObject* stdoutEncoding = nullptr, * stdoutErrors = nullptr;
+		const char* stdinEncodingStr, * stdinErrorsStr;
 		AlifObject* result{};
 		AlifUSizeT len{};
 
 		/* stdin is a text stream, so it must have an encoding. */
-		stdin_encoding = alifObject_getAttr(fin, &ALIF_ID(Encoding));
-		if (stdin_encoding == nullptr) {
+		stdinEncoding = alifObject_getAttr(fin, &ALIF_ID(Encoding));
+		if (stdinEncoding == nullptr) {
 			tty = 0;
 			goto _readline_errors;
 		}
-		stdin_errors = alifObject_getAttr(fin, &ALIF_ID(Errors));
-		if (stdin_errors == nullptr) {
+		stdinErrors = alifObject_getAttr(fin, &ALIF_ID(Errors));
+		if (stdinErrors == nullptr) {
 			tty = 0;
 			goto _readline_errors;
 		}
-		if (!ALIFUSTR_CHECK(stdin_encoding) ||
-			!ALIFUSTR_CHECK(stdin_errors))
-		{
+		if (!ALIFUSTR_CHECK(stdinEncoding) or
+			!ALIFUSTR_CHECK(stdinErrors)) {
 			tty = 0;
 			goto _readline_errors;
 		}
-		stdin_encoding_str = alifUStr_asUTF8(stdin_encoding);
-		if (stdin_encoding_str == nullptr) {
+		stdinEncodingStr = alifUStr_asUTF8(stdinEncoding);
+		if (stdinEncodingStr == nullptr) {
 			goto _readline_errors;
 		}
-		stdin_errors_str = alifUStr_asUTF8(stdin_errors);
-		if (stdin_errors_str == nullptr) {
+		stdinErrorsStr = alifUStr_asUTF8(stdinErrors);
+		if (stdinErrorsStr == nullptr) {
 			goto _readline_errors;
 		}
-		//if (_alifFile_flush(fout) < 0) {
-		//	alifErr_clear();
-		//}
+		if (_alifFile_flush(fout) < 0) {
+			alifErr_clear();
+		}
 		if (prompt != nullptr) {
 			/* We have a prompt, encode it as stdout would */
-			const char* stdout_encoding_str{}, * stdout_errors_str{};
+			const char* stdoutEncodingStr{}, * stdoutErrorsStr{};
 			AlifObject* stringpo{};
-			stdout_encoding = alifObject_getAttr(fout, &ALIF_ID(Encoding));
-			if (stdout_encoding == nullptr) {
+			stdoutEncoding = alifObject_getAttr(fout, &ALIF_ID(Encoding));
+			if (stdoutEncoding == nullptr) {
 				tty = 0;
 				goto _readline_errors;
 			}
-			stdout_errors = alifObject_getAttr(fout, &ALIF_ID(Errors));
-			if (stdout_errors == nullptr) {
+			stdoutErrors = alifObject_getAttr(fout, &ALIF_ID(Errors));
+			if (stdoutErrors == nullptr) {
 				tty = 0;
 				goto _readline_errors;
 			}
-			if (!ALIFUSTR_CHECK(stdout_encoding) ||
-				!ALIFUSTR_CHECK(stdout_errors))
-			{
+			if (!ALIFUSTR_CHECK(stdoutEncoding) ||
+				!ALIFUSTR_CHECK(stdoutErrors)) {
 				tty = 0;
 				goto _readline_errors;
 			}
-			stdout_encoding_str = alifUStr_asUTF8(stdout_encoding);
-			if (stdout_encoding_str == nullptr) {
+			stdoutEncodingStr = alifUStr_asUTF8(stdoutEncoding);
+			if (stdoutEncodingStr == nullptr) {
 				goto _readline_errors;
 			}
-			stdout_errors_str = alifUStr_asUTF8(stdout_errors);
-			if (stdout_errors_str == nullptr) {
+			stdoutErrorsStr = alifUStr_asUTF8(stdoutErrors);
+			if (stdoutErrorsStr == nullptr) {
 				goto _readline_errors;
 			}
 			stringpo = alifObject_str(prompt);
 			if (stringpo == nullptr)
 				goto _readline_errors;
 			po = alifUStr_asEncodedString(stringpo,
-				stdout_encoding_str, stdout_errors_str);
-			ALIF_CLEAR(stdout_encoding);
-			ALIF_CLEAR(stdout_errors);
+				stdoutEncodingStr, stdoutErrorsStr);
+			ALIF_CLEAR(stdoutEncoding);
+			ALIF_CLEAR(stdoutErrors);
 			ALIF_CLEAR(stringpo);
 			if (po == nullptr)
 				goto _readline_errors;
 			promptstr = ALIFBYTES_AS_STRING(po);
 			if ((AlifSizeT)strlen(promptstr) != ALIFBYTES_GET_SIZE(po)) {
-				//alifErr_setString(_alifExcValueError_,
-				//	"input: prompt string cannot contain null characters");
+				alifErr_setString(_alifExcValueError_,
+					"input: prompt string cannot contain null characters");
 				goto _readline_errors;
 			}
 		}
@@ -668,7 +660,7 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 			//alifErr_checkSignals();
 			if (!alifErr_occurred())
 				//alifErr_setNone(_alifExcKeyboardInterrupt_);
-			goto _readline_errors;
+				goto _readline_errors;
 		}
 
 		len = strlen(s);
@@ -686,12 +678,12 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 				len--;   /* strip trailing '\n' */
 				if (len != 0 and s[len - 1] == '\r')
 					len--;   /* strip trailing '\r' */
-				result = alifUStr_decode(s, len, stdin_encoding_str,
-					stdin_errors_str);
+				result = alifUStr_decode(s, len, stdinEncodingStr,
+					stdinErrorsStr);
 			}
 		}
-		ALIF_DECREF(stdin_encoding);
-		ALIF_DECREF(stdin_errors);
+		ALIF_DECREF(stdinEncoding);
+		ALIF_DECREF(stdinErrors);
 		ALIF_XDECREF(po);
 		alifMem_dataFree(s);
 
@@ -703,16 +695,16 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 
 		return result;
 
-	_readline_errors:
-		ALIF_XDECREF(stdin_encoding);
-		ALIF_XDECREF(stdout_encoding);
-		ALIF_XDECREF(stdin_errors);
-		ALIF_XDECREF(stdout_errors);
+_readline_errors:
+		ALIF_XDECREF(stdinEncoding);
+		ALIF_XDECREF(stdoutEncoding);
+		ALIF_XDECREF(stdinErrors);
+		ALIF_XDECREF(stdoutErrors);
 		ALIF_XDECREF(po);
 		if (tty)
 			return nullptr;
 
-		//alifErr_clear();
+		alifErr_clear();
 	}
 
 	/* Fallback if we're not interactive */
@@ -720,10 +712,10 @@ static AlifObject* builtin_inputImpl(AlifObject* module, AlifObject* prompt) { /
 		if (alifFile_writeObject(prompt, fout, ALIF_PRINT_RAW) != 0)
 			return nullptr;
 	}
-	//if (_alifFile_flush(fout) < 0) {
-	//	alifErr_clear();
-	//}
-	//return alifFile_getLine(fin, -1);
+	if (_alifFile_flush(fout) < 0) {
+		alifErr_clear();
+	}
+	return alifFile_getLine(fin, -1);
 }
 
 
@@ -731,6 +723,7 @@ static AlifMethodDef _builtinMethods_[] = { // 3141
 	{"__buildClass__", ALIF_CPPFUNCTION_CAST(builtin___buildClass__),
 	 METHOD_FASTCALL | METHOD_KEYWORDS},
 	BUILTIN___IMPORT___METHODDEF,
+	BUILTIN_ANY_METHODDEF,
 	BUILTIN_INPUT_METHODDEF,
 	BUILTIN_LEN_METHODDEF,
 	{"اقصى", ALIF_CPPFUNCTION_CAST(builtin_max), METHOD_FASTCALL | METHOD_KEYWORDS},
@@ -754,7 +747,7 @@ static AlifModuleDef _alifBuiltinsModule_ = { // 3202
 
 
 AlifObject* alifBuiltin_init(AlifInterpreter* _interpreter) { // 3215
-	AlifObject* mod{}, * dict{}, *debug{};
+	AlifObject* mod{}, * dict{}, * debug{};
 
 	const AlifConfig* config = alifInterpreter_getConfig(_interpreter);
 

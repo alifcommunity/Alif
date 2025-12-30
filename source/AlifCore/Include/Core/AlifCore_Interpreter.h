@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "AlifCore_ASTState.h"
 #include "AlifCore_DictState.h"
 #include "AlifCore_EvalState.h"
 #include "AlifCore_Code.h"
@@ -19,6 +19,7 @@
 #include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_Exceptions.h"
+#include "AlifCore_UStrObject.h"
 
 
 
@@ -93,7 +94,7 @@ public:
 
 	uint8_t activeFuncWatchers{};
 
-	GCDureRunState gc{};
+	GCRuntimeState gc{};
 
 	AlifObject* sysDict{};
 
@@ -101,7 +102,7 @@ public:
 
 	ImportState imports{};
 
-	GILDureRunState gil_{};
+	GILRuntimeState gil_{};
 
 	CodecsState codecs{};
 
@@ -126,6 +127,7 @@ public:
 	uint8_t activeCodeWatchers{};
 
 	//AlifObjectState objectState{};
+	AlifUnicodeState unicode{};
 	AlifLongState longState{};
 	DToAState dtoa{};
 	AlifFuncState funcState{};
@@ -135,6 +137,7 @@ public:
 	AlifExcState excState{};
 	AlifMemInterpFreeQueue memFreeQueue{};
 
+	ASTState ast{};
 	TypesState types{};
 
 

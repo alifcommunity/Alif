@@ -355,6 +355,15 @@
     <ClCompile Include="..\source\AlifCore\Objects\UTF8Tokenizer.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AlifCore\Objects\Intrinsics.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\AlifCore\Include\Main\Atomics\AlifAtomic.h">
@@ -1007,6 +1016,36 @@
     </ClInclude>
     <ClInclude Include="..\source\Modules\_io\clinic\TextIO.cpp.h">
       <Filter>Modules\_io\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\ConfigCommon.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h">
+      <Filter>Objects\clinic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASTState.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\GenObject.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\GetPath.h">
+      <Filter>Include\Main\FrozenModules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Split.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Partition.h">
+      <Filter>Include\Main\StringLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Main\Audit.h">
+      <Filter>Include\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Audit.h">
+      <Filter>Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ObjectState.h">
+      <Filter>Include\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

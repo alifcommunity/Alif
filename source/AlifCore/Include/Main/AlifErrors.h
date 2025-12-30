@@ -22,6 +22,7 @@ AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
 AlifIntT alifException_setTraceback(AlifObject*, AlifObject*); // 43
 AlifObject* alifException_getTraceback(AlifObject*); // 44
 
+void alifException_setCause(AlifObject*, AlifObject*); // 48
 
 AlifObject* alifException_getContext(AlifObject*); // 51
 void alifException_setContext(AlifObject*, AlifObject*); // 52
@@ -48,6 +49,7 @@ extern AlifObject* _alifExcBaseExceptionGroup_; // 77
 extern AlifObject* _alifExcStopAsyncIteration_; // 80
 
 extern AlifObject* _alifExcStopIteration_; // 82
+extern AlifObject* _alifExcAttributeError_; // 88
 extern AlifObject* _alifExcOSError_; // 92
 extern AlifObject* _alifExcImportError_; // 93
 extern AlifObject* _alifExcIndexError_; // 97
@@ -55,6 +57,7 @@ extern AlifObject* _alifExcIndexError_; // 97
 
 
 extern AlifObject* _alifExcOverflowError_; // 102
+extern AlifObject* _alifExcRuntimeError_; // 102
 
 extern AlifObject* _alifExcSyntaxError_; // 108
 extern AlifObject* _alifExcIndentationError_; // 109
@@ -89,10 +92,10 @@ AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
 /* --------------------------------------------------------------------------------- */
 
  // 8
-#define ALIFEXCEPTION_HEAD ALIFOBJECT_HEAD; AlifObject *dict;\
-             AlifObject *args; AlifObject *notes; AlifObject *traceback;\
-             AlifObject *context; AlifObject *cause;\
-             char suppressContext;
+#define ALIFEXCEPTION_HEAD ALIFOBJECT_HEAD; AlifObject *dict{};\
+             AlifObject *args{}; AlifObject *notes{}; AlifObject *traceback{};\
+             AlifObject *context{}; AlifObject *cause{};\
+             char suppressContext{};
 
 class AlifBaseExceptionObject { // 13
 public:
@@ -153,7 +156,19 @@ public:
 
 
 
+class AlifAttributeErrorObject { // 79
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* obj{};
+	AlifObject* name{};
+};
+
 
 
 
 void _alifErr_chainExceptions1(AlifObject*); // 93
+
+
+
+
+AlifObject* alifErr_programTextObject(AlifObject*, AlifIntT); // 119

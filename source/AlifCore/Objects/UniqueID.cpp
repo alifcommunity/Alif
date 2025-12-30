@@ -1,5 +1,6 @@
 #include "alif.h"
 
+#include "AlifCore_Dict.h"
 #include "AlifCore_Lock.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Object.h"
@@ -9,7 +10,7 @@
 
 #define POOL_MIN_SIZE 8 // 15
 
- // 17
+// 17
 #define LOCK_POOL(_pool) alifMutex_lockFlags(&_pool->mutex, AlifLockFlags_::Alif_Lock_Dont_Detach)
 #define UNLOCK_POOL(_pool) ALIFMUTEX_UNLOCK(&_pool->mutex)
 
@@ -90,7 +91,7 @@ AlifSizeT _alifObject_assignUniqueId(AlifObject* _obj) { // 76
 
 
 
-static void release_unique_id(AlifSizeT _uniqueID) { // 99
+void _alifObject_releaseUniqueId(AlifSizeT _uniqueID) { // 102
 	AlifInterpreter* interp = _alifInterpreter_get();
 	AlifUniqueIDPool* pool = &interp->uniqueIDs;
 
@@ -117,6 +118,11 @@ static AlifSizeT clear_uniqueID(AlifObject* _obj) { // 115
 		id = co->uniqueID;
 		co->uniqueID = -1;
 	}
+	else if (ALIFDICT_CHECK(_obj)) {
+		AlifDictObject* mp = (AlifDictObject*)_obj;
+		id = _alifDict_uniqueId(mp);
+		mp->watcherTag &= ~(UINT64_MAX << DICT_UNIQUE_ID_SHIFT);
+	}
 	return id;
 }
 
@@ -124,7 +130,7 @@ static AlifSizeT clear_uniqueID(AlifObject* _obj) { // 115
 void _alifObject_disablePerThreadRefcounting(AlifObject* _obj) { // 134
 	AlifSizeT id = clear_uniqueID(_obj);
 	if (id >= 0) {
-		release_unique_id(id);
+		_alifObject_releaseUniqueId(id);
 	}
 }
 

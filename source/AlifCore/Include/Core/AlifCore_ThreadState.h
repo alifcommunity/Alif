@@ -26,4 +26,6 @@ public:
 		AlifIntT isFinalized{};
 	}refCounts{};
 
+	// When >1, code objects do not immortalize their non-string constants.
+	AlifIntT suppressCoConstImmortalization{};
 };

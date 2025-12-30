@@ -18,7 +18,7 @@ union AlifCodeUnit { // 25
 };
 
 #define ALIFCODE_CODE(_co) ALIF_RVALUE((AlifCodeUnit *)(_co)->codeAdaptive) // 34
-
+#define ALIFCODE_NBYTES(_co) (ALIF_SIZE(_co) * (AlifSizeT)sizeof(AlifCodeUnit)) // 35
 
 
 
@@ -40,6 +40,15 @@ extern AlifStatus alifCode_init(AlifInterpreter*); // 75
 
 
 
+class AlifSendCache { // 173
+public:
+	AlifBackoffCounter counter{};
+};
+
+#define INLINE_CACHE_ENTRIES_SEND CACHE_ENTRIES(AlifSendCache)
+
+
+
 class AlifCallCache { // 153
 public:
 	AlifBackoffCounter counter{};
@@ -51,7 +60,7 @@ public:
 
 
 
- // 219
+// 219
 #define CO_FAST_HIDDEN  0x10
 #define CO_FAST_LOCAL   0x20
 #define CO_FAST_CELL    0x40
@@ -113,6 +122,9 @@ extern AlifIntT _alifCode_validate(AlifCodeConstructor*); // 287
 extern AlifCodeObject* alifCode_new(AlifCodeConstructor*); // 288
 
 
+extern AlifObject* _alifCode_getCode(AlifCodeObject*); // 297
+
+
 extern AlifIntT _alifCode_initAddressRange(AlifCodeObject*, AlifCodeAddressRange*); // 300
 
 
@@ -159,13 +171,14 @@ static inline AlifIntT write_signedVarint(uint8_t* _ptr, AlifIntT _val) { // 496
 }
 
 
-static inline AlifIntT write_locationEntryStart(uint8_t* _ptr, AlifIntT _code, AlifIntT _length) { // 510
+static inline AlifIntT write_locationEntryStart(uint8_t* _ptr,
+	AlifIntT _code, AlifIntT _length) { // 510
 	*_ptr = 128 | (uint8_t)(_code << 3) | (uint8_t)(_length - 1);
 	return 1;
 }
 
 
- // 584
+// 584
 #define COMPARISON_UNORDERED 1
 
 #define COMPARISON_LESS_THAN 2
@@ -175,3 +188,5 @@ static inline AlifIntT write_locationEntryStart(uint8_t* _ptr, AlifIntT _code, A
 #define COMPARISON_NOT_EQUALS (COMPARISON_UNORDERED | COMPARISON_LESS_THAN | COMPARISON_GREATER_THAN)
 
 extern AlifIntT _alif_instrument(AlifCodeObject*, AlifInterpreter*);
+
+extern AlifCodeUnit _alif_getBaseCodeUnit(AlifCodeObject*, AlifIntT);
