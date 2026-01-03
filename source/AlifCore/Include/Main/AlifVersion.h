@@ -11,12 +11,12 @@
 
 /* النسخة كقيمة رقمية */
 #define ALIF_MAJOR_VERSION        5
-#define ALIF_MINOR_VERSION        1
+#define ALIF_MINOR_VERSION        2
 #define ALIF_EXTRA_VERSION        0
 #define ALIF_RELEASE_LEVEL        ALIF_RELEASE_LEVEL_FINAL
 
 /* النسخة كقيمة نصية */
-#define ALIF_VERSION              "5.1.0"
+#define ALIF_VERSION              "5.2.0"
 
 /*
 	نسخة ألف ك 4-بايت رقم ست عشري, مثال: 5.1.0 أ.
