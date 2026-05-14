@@ -10,3 +10,14 @@ DerivedData
 *.eddx
 *.xopp
 *.DS_Store
+
+# Nix/Devenv
+.devenv/
+.devenv.flake.nix
+.direnv/
+devenv.lock
+result
+result-*
+
+# Build outputs
+linuxBuild/build/
