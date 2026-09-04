@@ -41,7 +41,29 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       # تُذكر المنصة صراحةً بدل الاتكال على التهيئة الافتراضية في الحل.
-      # ويستحق الانتباه أن تهيئة Release|Win32 في FreezeModule.vcxproj وحدها
-      # بلا PostBuildEvent، فمن بنى بها لا يتولد عنده GetPath.h.
+      # وملف الحل يسمّي المنصتين x86 و x64 (وتحتهما Win32 و x64 على مستوى
+      # المشاريع)، فتمرير Platform=Win32 إلى الحل يُرفض قبل أي ترجمة.
       - name: Build
         run: msbuild /m /p:Configuration=${{matrix.BUILD-CONFIGURATION}} /p:Platform=x64 ${{env.SOLUTION_FILE_PATH}}
+
+      # بناء Debug يفعّل AddressSanitizer، فيعتمد الملف التنفيذي على
+      # clang_rt.asan_dynamic-x86_64.dll وهي في مجلد أدوات MSVC لا في مسار
+      # النظام، فلا يبدأ البرنامج بدونها ويخرج بالرمز 127.
+      - name: إضافة وقت تشغيل ASAN إلى المسار
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -property installationPath
+          $ver = (Get-Content "$vs\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt").Trim()
+          $dir = "$vs\VC\Tools\MSVC\$ver\bin\Hostx64\x64"
+          if (-not (Test-Path "$dir\clang_rt.asan_dynamic-x86_64.dll")) {
+            throw "لم يُعثر على وقت تشغيل ASAN في $dir"
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value $dir
+
+      # الأخضر يعني تُرجم لا يعمل. وويندوز أولى المنصات بهذا الفحص لأن علة
+      # الترميز تظهر فيه عند التشغيل لا عند الترجمة.
+      - name: تشغيل ما بُني
+        shell: bash
+        run: |
+          bash .github/scripts/run_check.sh "winBuild/x64/${{matrix.BUILD-CONFIGURATION}}/alif.exe"
