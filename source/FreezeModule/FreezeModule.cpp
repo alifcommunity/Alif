@@ -7,9 +7,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef _WINDOWS
+#ifdef _WINDOWS
+#  include <windows.h>
+#else
 #  include <unistd.h>
 #endif
 
@@ -183,7 +186,25 @@ static int write_frozen(const char* outpath, const char* inpath,
 	return 0;
 }
 
-int main(int argc, char* argv[]) {
+#ifdef _WINDOWS
+/* على ويندوز تصل المعاملات إلى main بترميز صفحة النظام (ANSI)، فتتحول
+   الحروف العربية في اسم الملف ولاحقته إلى '?' ويفشل فتح الملف على كل نظام
+   لغته ليست العربية. لذا نستقبلها عريضة عبر wmain ونحولها إلى UTF-8،
+   ونضبط ترميز مكتبة C على UTF-8 حتى تقبل fopen المسارات العربية. */
+static char* utf8_fromWide(const wchar_t* _wide) {
+	int size = WideCharToMultiByte(CP_UTF8, 0, _wide, -1, nullptr, 0, nullptr, nullptr);
+	if (size <= 0) return nullptr;
+	char* out = (char*)malloc((size_t)size);
+	if (out == nullptr) return nullptr;
+	if (WideCharToMultiByte(CP_UTF8, 0, _wide, -1, out, size, nullptr, nullptr) <= 0) {
+		free(out);
+		return nullptr;
+	}
+	return out;
+}
+#endif
+
+static int freeze_main(int argc, char* argv[]) {
 	const char* name, * inpath, * outpath;
 
 	_alifImportFrozenBootstrap_ = _noModules_;
@@ -227,3 +248,31 @@ error:
 	alif_finalize();
 	return 1;
 }
+
+
+#ifdef _WINDOWS
+int wmain(int argc, wchar_t* wargv[]) {
+	/* بدون ترميز UTF-8 لمكتبة C لن تفتح fopen المسارات العربية */
+	if (setlocale(LC_ALL, ".UTF-8") == nullptr) {
+		fprintf(stderr, "تعذر ضبط ترميز UTF-8، قد يفشل فتح المسارات العربية\n");
+	}
+
+	char** argv = (char**)calloc((size_t)argc + 1, sizeof(char*));
+	if (argv == nullptr) {
+		fprintf(stderr, "لا توجد ذاكرة كافية\n");
+		return 2;
+	}
+	for (int i = 0; i < argc; i++) {
+		argv[i] = utf8_fromWide(wargv[i]);
+		if (argv[i] == nullptr) {
+			fprintf(stderr, "تعذر تحويل معاملات سطر الأوامر إلى UTF-8\n");
+			return 2;
+		}
+	}
+	return freeze_main(argc, argv);
+}
+#else
+int main(int argc, char* argv[]) {
+	return freeze_main(argc, argv);
+}
+#endif
