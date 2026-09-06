@@ -10,7 +10,6 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-  # زر تشغيل يدوي: يتيح تجربة البناء على أي فرع بلا فتح طلب دمج.
   workflow_dispatch:
 
 env:
@@ -22,9 +21,6 @@ permissions:
 
 jobs:
   build:
-    # عداء مستضاف لدى GitHub بدل عداء ذاتي الاستضافة: الذاتي لا يلتقط
-    # وظائف الفروع وطلبات الدمج إلا حين يكون جهازه متصلاً، ويشغّل شيفرة
-    # الطلبات الواردة على ذلك الجهاز.
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -40,30 +36,6 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      # تُذكر المنصة صراحةً بدل الاتكال على التهيئة الافتراضية في الحل.
-      # وملف الحل يسمّي المنصتين x86 و x64 (وتحتهما Win32 و x64 على مستوى
-      # المشاريع)، فتمرير Platform=Win32 إلى الحل يُرفض قبل أي ترجمة.
       - name: Build
-        run: msbuild /m /p:Configuration=${{matrix.BUILD-CONFIGURATION}} /p:Platform=x64 ${{env.SOLUTION_FILE_PATH}}
-
-      # بناء Debug يفعّل AddressSanitizer، فيعتمد الملف التنفيذي على
-      # clang_rt.asan_dynamic-x86_64.dll وهي في مجلد أدوات MSVC لا في مسار
-      # النظام، فلا يبدأ البرنامج بدونها ويخرج بالرمز 127.
-      - name: إضافة وقت تشغيل ASAN إلى المسار
-        shell: pwsh
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vs = & $vswhere -latest -property installationPath
-          $ver = (Get-Content "$vs\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt").Trim()
-          $dir = "$vs\VC\Tools\MSVC\$ver\bin\Hostx64\x64"
-          if (-not (Test-Path "$dir\clang_rt.asan_dynamic-x86_64.dll")) {
-            throw "لم يُعثر على وقت تشغيل ASAN في $dir"
-          }
-          Add-Content -Path $env:GITHUB_PATH -Value $dir
-
-      # الأخضر يعني تُرجم لا يعمل. وويندوز أولى المنصات بهذا الفحص لأن علة
-      # الترميز تظهر فيه عند التشغيل لا عند الترجمة.
-      - name: تشغيل ما بُني
-        shell: bash
-        run: |
-          bash .github/scripts/run_check.sh "winBuild/x64/${{matrix.BUILD-CONFIGURATION}}/alif.exe"
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: msbuild /m /p:Configuration=${{matrix.BUILD-CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}

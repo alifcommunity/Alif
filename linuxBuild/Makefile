@@ -1,17 +1,5 @@
 CPP = c++ # المترجم
-# النصوص العربية في الشيفرة المصدرية يجب أن تبقى UTF-8 مهما كانت لغة النظام.
-# 	مثال حي: في FormatterUStr.cpp حالات switch مكتوبة L'ف' و L'ه' و L'ط'،
-# 	والحرفان الأولان يبدآن بالبايت D9 والآخر بـ D8. فحين يُقرأ المصدر بصفحة
-# 	ترميز غير UTF-8 تنهار الأحرف إلى بايتها الأول فتتكرر قيم الحالات
-# 	وترفض الترجمة.
-# 	مع gcc يلزم علمان صريحان لمنع ذلك، أما clang فيعامل المصدر والتنفيذ
-# 	بـ UTF-8 دائماً ولا يقبل -fexec-charset، فإضافتهما على ماك تفشل
-# 	الترجمة. لذا نضيفهما فقط حين يكون المترجم gcc.
-IS_CLANG := $(shell $(CPP) --version 2>/dev/null | grep -ci clang)
-ifeq ($(IS_CLANG),0)
-CHARSET_FLAGS = -finput-charset=UTF-8 -fexec-charset=UTF-8
-endif
-CPPFLAGS = -std=c++20 $(CHARSET_FLAGS)
+CPPFLAGS = -std=c++20
 RELEASE_FLAGS = -O2 -w
 DEBUG_FLAGS = -O0 -g
 # -g تخزين معلومات debug

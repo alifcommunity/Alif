@@ -186,24 +186,6 @@ static int write_frozen(const char* outpath, const char* inpath,
 	return 0;
 }
 
-#ifdef _WINDOWS
-/* على ويندوز تصل المعاملات إلى main بترميز صفحة النظام (ANSI)، فتتحول
-   الحروف العربية في اسم الملف ولاحقته إلى '?' ويفشل فتح الملف على كل نظام
-   لغته ليست العربية. لذا نستقبلها عريضة عبر wmain ونحولها إلى UTF-8،
-   ونضبط ترميز مكتبة C على UTF-8 حتى تقبل fopen المسارات العربية. */
-static char* utf8_fromWide(const wchar_t* _wide) {
-	int size = WideCharToMultiByte(CP_UTF8, 0, _wide, -1, nullptr, 0, nullptr, nullptr);
-	if (size <= 0) return nullptr;
-	char* out = (char*)malloc((size_t)size);
-	if (out == nullptr) return nullptr;
-	if (WideCharToMultiByte(CP_UTF8, 0, _wide, -1, out, size, nullptr, nullptr) <= 0) {
-		free(out);
-		return nullptr;
-	}
-	return out;
-}
-#endif
-
 static int freeze_main(int argc, char* argv[]) {
 	const char* name, * inpath, * outpath;
 
@@ -249,27 +231,25 @@ error:
 	return 1;
 }
 
-
+/* على ويندوز تصل المعاملات إلى main بترميز صفحة النظام، فتتحول الحروف
+   العربية في المسار إلى '?' ويفشل فتح الملف على نظام لغته ليست العربية. */
 #ifdef _WINDOWS
 int wmain(int argc, wchar_t* wargv[]) {
-	/* بدون ترميز UTF-8 لمكتبة C لن تفتح fopen المسارات العربية */
-	if (setlocale(LC_ALL, ".UTF-8") == nullptr) {
-		fprintf(stderr, "تعذر ضبط ترميز UTF-8، قد يفشل فتح المسارات العربية\n");
+	setlocale(LC_ALL, ".UTF-8");
+
+	char** argv = (char**)calloc(argc + 1, sizeof(char*));
+	if (!argv) return 2;
+
+	for (int i = 0; i < argc; i++) {
+		int n = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, nullptr, 0, nullptr, nullptr);
+		if (n <= 0) return 2;
+		argv[i] = (char*)malloc(n);
+		if (!argv[i]) return 2;
+		WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], n, nullptr, nullptr);
 	}
 
-	char** argv = (char**)calloc((size_t)argc + 1, sizeof(char*));
-	if (argv == nullptr) {
-		fprintf(stderr, "لا توجد ذاكرة كافية\n");
-		return 2;
-	}
-	for (int i = 0; i < argc; i++) {
-		argv[i] = utf8_fromWide(wargv[i]);
-		if (argv[i] == nullptr) {
-			fprintf(stderr, "تعذر تحويل معاملات سطر الأوامر إلى UTF-8\n");
-			return 2;
-		}
-	}
-	return freeze_main(argc, argv);
+	int r = freeze_main(argc, argv);
+	return r;
 }
 #else
 int main(int argc, char* argv[]) {

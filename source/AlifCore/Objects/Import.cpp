@@ -1879,43 +1879,6 @@ static AlifObject* load_module(const char*, FILE*, char*, AlifIntT, AlifObject*)
 
 #define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR)
 
-
-/* على ويندوز تفسّر stat و fopen مسارَ البايتات بترميز صفحة النظام (ANSI)
-   لا بترميز UTF-8، فلا تريان أي ملف باسم عربي على نظام لغته ليست العربية،
-   ويفشل استيراد المكتبات دون سبب ظاهر. المسارات هنا نصوص UTF-8 ضيقة،
-   لذا نحوّلها إلى نص عريض ونستعمل الدوال العريضة.
-   على غير ويندوز المسارات بايتات UTF-8 أصلاً فتُستعمل الدوال كما هي. */
-static AlifIntT path_stat(const char* _path, AlifIntT* _isDir) { //* alif
-#ifdef _WINDOWS
-	wchar_t wpath[MAXPATHLEN + 1]{};
-	if (MultiByteToWideChar(CP_UTF8, 0, _path, -1, wpath, MAXPATHLEN + 1) <= 0)
-		return 0;
-	DWORD attrs = GetFileAttributesW(wpath);
-	if (attrs == INVALID_FILE_ATTRIBUTES) return 0;
-	if (_isDir != nullptr) *_isDir = ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0);
-	return 1;
-#else
-	struct stat statbuf{};
-	if (stat(_path, &statbuf) != 0) return 0;
-	if (_isDir != nullptr) *_isDir = S_ISDIR(statbuf.st_mode);
-	return 1;
-#endif
-}
-
-static FILE* path_fopen(const char* _path, const char* _mode) { //* alif
-#ifdef _WINDOWS
-	wchar_t wpath[MAXPATHLEN + 1]{};
-	wchar_t wmode[16]{};
-	if (MultiByteToWideChar(CP_UTF8, 0, _path, -1, wpath, MAXPATHLEN + 1) <= 0)
-		return nullptr;
-	if (MultiByteToWideChar(CP_UTF8, 0, _mode, -1, wmode, 16) <= 0)
-		return nullptr;
-	return _wfopen(wpath, wmode);
-#else
-	return fopen(_path, _mode);
-#endif
-}
-
 //* alif
 
 enum FileType { // 10
@@ -2186,6 +2149,8 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 	const char* filemode{};
 	FILE* fp = nullptr;
 
+	struct stat statbuf {};
+
 	static FileDescr fd_builtin = { "", "", CPP_BUILTIN };
 	static FileDescr fd_package = { "", "", PKG_DIRECTORY };
 	char name[MAXPATHLEN + 1]{};
@@ -2266,9 +2231,8 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 		strcpy(_buf + len, name);
 		len += namelen;
 
-		AlifIntT isDir = 0;
-		if (path_stat(_buf, &isDir) and           /* it exists */
-			isDir and                            /* it's a directory */
+		if (stat(_buf, &statbuf) == 0 and         /* it exists */
+			S_ISDIR(statbuf.st_mode) and         /* it's a directory */
 			case_ok(_buf, len, namelen, name)) { /* case matches */
 			if (find_initModule(_buf)) { /* and has __تهيئة__.aliflib */
 				ALIF_XDECREF(copy);
@@ -2292,7 +2256,7 @@ static FileDescr* find_module(const char* _fullname, const char* _subname, AlifO
 			filemode = fdp->mode;
 			if (filemode[0] == 'U')
 				filemode = "r"; // "b";
-			fp = path_fopen(_buf, filemode);
+			fp = fopen(_buf, filemode);
 			if (fp != nullptr) {
 				break;
 			}
@@ -2321,18 +2285,16 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 
 	 /* _WINDOWS */
 #if defined(_WINDOWS)
-	WIN32_FIND_DATAW data{};
+	WIN32_FIND_DATA data;
 	HANDLE h;
 
 	//* alif
-	/* المسارات هنا UTF-8، و mbstowcs تقرؤها بترميز صفحة النظام فتفسد الأسماء
-	   العربية على نظام لغته ليست العربية، لذا نحوّل بـ CP_UTF8 */
-	wchar_t str[MAXPATHLEN + 1]{};
-	if (MultiByteToWideChar(CP_UTF8, 0, _buf, -1, str, MAXPATHLEN + 1) <= 0)
-		return 0;
+	wchar_t str[MAXPATHLEN]{};
+	AlifSizeT len = strlen(_buf);
+	mbstowcs(str, _buf, len);
 	//* alif
 
-	h = FindFirstFileW(str, &data);
+	h = FindFirstFile(str, &data);
 	if (h == INVALID_HANDLE_VALUE) {
 		//alifErr_format(_alifExcNameError_,
 		//	"Can't find file for module %.100s\n(filename %.300s)",
@@ -2342,12 +2304,12 @@ static AlifIntT case_ok(char* _buf, AlifSizeT _len, AlifSizeT _namelen, char* _n
 	FindClose(h);
 
 	//* alif
-	wchar_t name[MAXPATHLEN + 1]{};
-	if (MultiByteToWideChar(CP_UTF8, 0, _name, -1, name, MAXPATHLEN + 1) <= 0)
-		return 0;
+	wchar_t name[MAXPATHLEN]{};
+	AlifSizeT namelen = strlen(_name);
+	mbstowcs(name, _name, namelen);
 	//* alif
 
-	return wcscmp(data.cFileName, name) == 0;
+	return wcsncmp(data.cFileName, name, namelen) == 0;
 
 
 
@@ -2398,6 +2360,7 @@ static AlifIntT find_initModule(char* buf) { // 1715
 	const AlifUSizeT save_len = strlen(buf);
 	AlifUSizeT i = save_len;
 	char* pname{};  /* pointer to start of __تهيئة__ */
+	struct stat statbuf;
 
 	/*      For calling case_ok(buf, len, namelen, name):
 	 *      /a/b/c/d/e/f/g/h/i/j/k/some_long_module_name.aliflib\0
@@ -2412,7 +2375,7 @@ static AlifIntT find_initModule(char* buf) { // 1715
 	buf[i++] = SEP;
 	pname = buf + i;
 	strcpy(pname, "__تهيئة__.aliflib");
-	if (path_stat(buf, nullptr)) {
+	if (stat(buf, &statbuf) == 0) {
 		if (case_ok(buf,
 			save_len + 9,               /* len("/__تهيئة__") */
 			8,                              /* len("__تهيئة__") */
