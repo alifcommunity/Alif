@@ -10,6 +10,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -20,7 +21,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [Win-MSBuild]
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
@@ -33,7 +34,7 @@ jobs:
           # lfs: true
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v2
 
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
