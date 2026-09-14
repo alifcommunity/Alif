@@ -103,8 +103,8 @@ $(TARGET_FREEZE): $(OBJECTS) | $(BUILD_DIR)
 	@$(CPP) $(filter-out build/obj/Alif/alif.o build/obj/AlifCore/Objects/Frozen.o, $^) -o $@
 	@echo "تم بناء مجرد الشيفرة بنجاح"
 	@echo "جاري بناء ومعالجة البرامج المكتوبة بلغة ألف"
-	@$(shell) ./build/freezemodule GetPath ../source/Modules/تحديد_المسارات.alif GetPath.h
-	@$(shell) mv -f GetPath.h ../source/AlifCore/Include/Main/FrozenModules
+	@./build/freezemodule GetPath ../source/Modules/تحديد_المسارات.alif GetPath.h
+	@mv -f GetPath.h ../source/AlifCore/Include/Main/FrozenModules
 
 
 $(TARGET_ALIF): $(OBJECTS) | $(BUILD_DIR)
