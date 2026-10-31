@@ -125,8 +125,6 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(Fileno);
 	_alifUStr_internStatic(interp, &string);
-	string = &ALIF_ID(FromList);
-	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(GenExpr);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(GetState);
@@ -146,8 +144,6 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	string = &ALIF_ID(LastType);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(LastValue);
-	_alifUStr_internStatic(interp, &string);
-	string = &ALIF_ID(Level);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_ID(LineBuffering);
 	_alifUStr_internStatic(interp, &string);
@@ -320,6 +316,10 @@ static inline void _alifUStr_initStaticStrings(AlifInterpreter* interp) {
 	string = &ALIF_STR(TextIOWrapper);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_STR(Write);
+	_alifUStr_internStatic(interp, &string);
+	string = &ALIF_STR(FromList);
+	_alifUStr_internStatic(interp, &string);
+	string = &ALIF_STR(Level);
 	_alifUStr_internStatic(interp, &string);
 	string = &ALIF_STR(__abs__);
 	_alifUStr_internStatic(interp, &string);

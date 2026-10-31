@@ -90,6 +90,8 @@ public:
 		STRUCT_FOR_USTR(Stdout, "مخرجات") //* alif
 		STRUCT_FOR_USTR(TextIOWrapper, "غلاف_النص") //* alif
 		STRUCT_FOR_USTR(Write, "اكتب") //* alif
+		STRUCT_FOR_USTR(FromList, "من_مصفوفة") //* alif
+		STRUCT_FOR_USTR(Level, "مستوى") //* alif
 		STRUCT_FOR_USTR(__abs__, "__مطلق__") //* alif
 		STRUCT_FOR_USTR(__all__, "__كل__") //* alif
 		STRUCT_FOR_USTR(__add__, "__اجمع__") //* alif
@@ -194,7 +196,6 @@ public:
 		STRUCT_FOR_ID(File)
 		STRUCT_FOR_ID(Filename)
 		STRUCT_FOR_ID(Fileno)
-		STRUCT_FOR_ID(FromList)
 		STRUCT_FOR_ID(GenExpr)
 		STRUCT_FOR_ID(GetState)
 		STRUCT_FOR_ID(HasLocation)
@@ -205,7 +206,6 @@ public:
 		STRUCT_FOR_ID(LastTraceback)
 		STRUCT_FOR_ID(LastType)
 		STRUCT_FOR_ID(LastValue)
-		STRUCT_FOR_ID(Level)
 		STRUCT_FOR_ID(LineBuffering)
 		STRUCT_FOR_ID(Lineno)
 		STRUCT_FOR_ID(ListComp)

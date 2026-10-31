@@ -730,6 +730,8 @@
 	INIT_USTR(Stdout, "مخرجات"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
 	INIT_USTR(Write, "اكتب"), /* //* alif */	\
+	INIT_USTR(FromList, "من_مصفوفة"), /* //* alif */	\
+	INIT_USTR(Level, "مستوى"), /* //* alif */	\
     INIT_USTR(__abs__, "__مطلق__"), /* //* alif */	\
     INIT_USTR(__all__, "__كل__"), /* //* alif */	\
     INIT_USTR(__add__, "__اجمع__"), /* //* alif */	\
@@ -830,7 +832,6 @@
 	INIT_ID(File), \
 	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
-	INIT_ID(FromList), \
 	INIT_ID(GenExpr), \
 	INIT_ID(GetState), \
 	INIT_ID(HasLocation), \
@@ -841,7 +842,6 @@
 	INIT_ID(LastTraceback), \
 	INIT_ID(LastType), \
 	INIT_ID(LastValue), \
-	INIT_ID(Level), \
 	INIT_ID(LineBuffering), \
 	INIT_ID(ListComp), \
 	INIT_ID(MetaClass), \
