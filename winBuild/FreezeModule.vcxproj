@@ -253,7 +253,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALIF_NO_ENABLE_SHARED;ALIF_BUILD_CORE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -285,7 +285,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALIF_NO_ENABLE_SHARED;ALIF_BUILD_CORE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
