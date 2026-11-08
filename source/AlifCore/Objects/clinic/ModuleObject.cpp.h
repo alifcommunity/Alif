@@ -26,7 +26,7 @@ static AlifIntT module___init__(AlifObject* _self,
 #  define KWTUPLE nullptr
 #endif 
 
-	static const char* const _keywords[] = { "اسم", "doc", nullptr };
+	static const char* const _keywords[] = { "اسم", "Doc", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "وحدة",

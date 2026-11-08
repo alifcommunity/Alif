@@ -439,7 +439,7 @@ static AlifIntT _ioBufferedRandom___init__(AlifObject *self,
 #  define KWTUPLE nullptr
 #endif  // !ALIF_BUILD_CORE
 
-	static const char * const _keywords[] = {"raw", "bufferSize", nullptr};
+	static const char * const _keywords[] = {"Raw", "BufferSize", nullptr};
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "عشوائي_مخزن",

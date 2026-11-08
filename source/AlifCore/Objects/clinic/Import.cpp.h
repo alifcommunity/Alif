@@ -47,7 +47,7 @@ static AlifObject* _imp_findFrozen(AlifObject* module, AlifObject* const* args,
 #  define KWTUPLE nullptr
 #endif  // !ALIF_BUILD_CORE
 
-	static const char * const _keywords[] = {"", "مع_بيانات", nullptr};
+	static const char * const _keywords[] = {"", "WithData", nullptr};
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "اوجد_مصرف",

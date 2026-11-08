@@ -323,7 +323,7 @@ static AlifObject* builtin_exec(AlifObject* module,
 #  define KWTUPLE nullptr
 #endif
 
-	static const char* const _keywords[] = { "", "اسماء_عامة", "اسماء_محلية", "closure", nullptr };
+	static const char* const _keywords[] = { "", "اسماء_عامة", "اسماء_محلية", "Closure", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "نفذ",
@@ -667,7 +667,7 @@ static AlifObject* builtin_sum(AlifObject* _module, AlifObject *const* _args,
 #  define KWTUPLE nullptr
 #endif
 
-	static const char * const _keywords[] = {"", "بداية", nullptr};
+	static const char * const _keywords[] = {"", "Start", nullptr};
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "اجمع",

@@ -183,11 +183,11 @@ DLFuncPtr _alifImport_findSharedFuncptrWindows(const char* _prefix,
 #endif
 
 		ALIF_BEGIN_ALLOW_THREADS
-			hDLL = LoadLibraryExW(wpathname, NULL,
+		hDLL = LoadLibraryExW(wpathname, NULL,
 				LOAD_LIBRARY_SEARCH_DEFAULT_DIRS |
 				LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
 		ALIF_END_ALLOW_THREADS
-			alifMem_dataFree(wpathname);
+		alifMem_dataFree(wpathname);
 
 #ifdef MS_WINDOWS_DESKTOP
 		/* restore old error mode settings */

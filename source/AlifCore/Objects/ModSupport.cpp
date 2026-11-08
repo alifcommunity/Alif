@@ -529,9 +529,9 @@ AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackL
 AlifIntT alifModule_addObjectRef(AlifObject* _mod,
 	const char* _name, AlifObject* _value) { // 581
 	if (!ALIFMODULE_CHECK(_mod)) {
-		//alifErr_setString(_alifExcTypeError_,
-		//	"alifModule_addObjectRef() first argument "
-		//	"must be a module");
+		alifErr_setString(_alifExcTypeError_,
+			"alifModule_addObjectRef() الوسيط الأول "
+			"يجب أن يكون وحدة");
 		return -1;
 	}
 	if (!_value) {

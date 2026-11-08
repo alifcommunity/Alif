@@ -592,7 +592,7 @@ static AlifObject* uStr_new(AlifTypeObject* type, AlifObject* args, AlifObject* 
 #  define KWTUPLE nullptr
 #endif
 
-	static const char* const _keywords[] = { "كائن", "ترميز", "اخطاء", nullptr };
+	static const char* const _keywords[] = { "كائن", "Encoding", "Errors", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "نص",
