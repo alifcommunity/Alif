@@ -1,23 +1,16 @@
 #include "alif.h"
 
-// هنا قمنا بإستخدام extern "C"
-// لان FreezeModule تستخدم ALIF_NO_ENABLE_SHARED
-// وبالتالي يقوم بعمل إخراج extern للدوال بوضع التسمية الخاص بـ CPP (mangaled name)
-// وذلك عند استخدام "extern AlifObject*" فقط!
-// وهذا يسبب خطأ في عملية الربط.
+//* review
+// هنا قمنا بإستخدام ALIFMODINIT_FUNC
+// لأن استخدام extern AlifObject*
+// يسبب خطأ في عملية الربط اثناء بناء اللغة
 // لا تقم بإرجاعه إلى extern AlifObject*
 // إلا إذا كنت تعلم ماذا تفعل.
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-extern AlifObject* alifInit_nt(void);
+ALIFMODINIT_FUNC alifInit_nt(void);
 
-extern AlifObject* alifInit__io(void);
+ALIFMODINIT_FUNC alifInit__io(void);
 
-#ifdef __cplusplus
-}
-#endif
 
 
 class InitTable _alifImportInitTab_[] = { // 87
