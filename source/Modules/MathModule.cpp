@@ -704,6 +704,6 @@ static class AlifModuleDef _alifMathModule_ = { // 4170
 	.slots = _mathSlots_,
 };
 
-AlifObject* alifInit_math(void) { // 4171
+ALIFMODINIT_FUNC alifInit_math(void) { // 4171
 	return alifModuleDef_init(&_alifMathModule_);
 }

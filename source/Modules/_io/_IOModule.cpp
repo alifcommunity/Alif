@@ -435,6 +435,6 @@ AlifModuleDef _alifIOModule_ = { // 724
 	.traverse = ioModule_traverse,
 };
 
-AlifObject* alifInit__io(void) { // 736
+ALIFMODINIT_FUNC alifInit__io(void) { // 736
 	return alifModuleDef_init(&_alifIOModule_);
 }

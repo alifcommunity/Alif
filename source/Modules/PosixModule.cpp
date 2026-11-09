@@ -2583,7 +2583,8 @@ static AlifModuleDef _posixModule_ = { // 18145
 
 
 
-AlifObject* INITFUNC(void) { // 18157
+ALIFMODINIT_FUNC
+INITFUNC(void) { // 18157
 	return alifModuleDef_init(&_posixModule_);
 }
 

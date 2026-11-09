@@ -407,6 +407,6 @@ AlifModuleDef __randomModule_ = { // 671
 	.slots = __randomSlots_,
 };
 
-AlifObject* alifInit__random(void) { // 683
+ALIFMODINIT_FUNC alifInit__random(void) { // 683
 	return alifModuleDef_init(&__randomModule_);
 }
