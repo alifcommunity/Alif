@@ -26,41 +26,51 @@
 
 
  // 53
+ /* Supported types */
 #define TYPE_NULL               '0'
 #define TYPE_NONE               'N'
 #define TYPE_FALSE              'F'
 #define TYPE_TRUE               'T'
 #define TYPE_STOPITER           'S'
 #define TYPE_ELLIPSIS           '.'
-#define TYPE_INT                'i'
-/* TYPE_INT64 is not generated anymore.
-   Supported for backward compatibility only. */
-#define TYPE_INT64              'I'
-#define TYPE_FLOAT              'f'
-#define TYPE_BINARY_FLOAT       'g'
-#define TYPE_COMPLEX            'x'
-#define TYPE_BINARY_COMPLEX     'y'
-#define TYPE_LONG               'l'
-#define TYPE_STRING             's'
-#define TYPE_INTERNED           't'
-#define TYPE_REF                'r'
-#define TYPE_TUPLE              '('
+#define TYPE_BINARY_FLOAT       'g'  // Version 0 uses TYPE_FLOAT instead.
+#define TYPE_BINARY_COMPLEX     'y'  // Version 0 uses TYPE_COMPLEX instead.
+#define TYPE_LONG               'l'  // See also TYPE_INT.
+#define TYPE_STRING             's'  // Bytes.
+#define TYPE_TUPLE              '('  // See also TYPE_SMALL_TUPLE.
 #define TYPE_LIST               '['
 #define TYPE_DICT               '{'
 #define TYPE_CODE               'c'
 #define TYPE_UNICODE            'u'
 #define TYPE_UNKNOWN            '?'
+ // added in version 2:
 #define TYPE_SET                '<'
 #define TYPE_FROZENSET          '>'
+ // added in version 5:
 #define TYPE_SLICE              ':'
-#define FLAG_REF                '\x80' /* with a type, add obj to index */
 
+ /* Special cases for unicode strings (added in version 4) */
+#define TYPE_INTERNED           't' // Version 1+
 #define TYPE_ASCII              'a'
 #define TYPE_ASCII_INTERNED     'A'
-#define TYPE_SMALL_TUPLE        ')'
 #define TYPE_SHORT_ASCII        'z'
 #define TYPE_SHORT_ASCII_INTERNED 'Z'
 
+ /* Special cases for small objects */
+#define TYPE_INT                'i'  // All versions. 32-bit encoding.
+#define TYPE_SMALL_TUPLE        ')'  // Version 4+
+
+ /* Supported for backwards compatibility */
+#define TYPE_COMPLEX            'x'  // Generated for version 0 only.
+#define TYPE_FLOAT              'f'  // Generated for version 0 only.
+#define TYPE_INT64              'I'  // Not generated any more.
+
+ /* References (added in version 3) */
+#define TYPE_REF                'r'
+#define FLAG_REF                '\x80' /* with a type, add obj to index */
+
+
+ // Error codes:
 #define WFERR_OK 0
 #define WFERR_UNMARSHALLABLE 1
 #define WFERR_NESTEDTOODEEP 2
@@ -221,7 +231,7 @@ static void w_alifLong(const AlifLongObject* ob, char flag, WFile* p) { // 244
 	}
 
 	/* set l to number of base ALIFLONG_MARSHAL_BASE digits */
-	n = alifLong_digitCount(ob);
+	n = _alifLong_digitCount(ob);
 	l = (n - 1) * ALIFLONG_MARSHAL_RATIO;
 	d = ob->longValue.digit[n - 1];
 	do {
@@ -562,6 +572,11 @@ static void w_complexObject(AlifObject* v, char flag, WFile* p) { // 395
 		alifBuffer_release(&view);
 	}
 	else if (ALIFSLICE_CHECK(v)) {
+		if (p->version < 5) {
+			W_BYTE(TYPE_UNKNOWN, p);
+			p->error = WFERR_UNMARSHALLABLE;
+			return;
+		}
 		AlifSliceObject* slice = (AlifSliceObject*)v;
 		W_TYPE(TYPE_SLICE, p);
 		w_object(slice->start, p);
@@ -758,7 +773,7 @@ static AlifObject* r_alifLong(RFILE* p) { // 854
 
 	n = r_long(p);
 	if (n == 0)
-		return (AlifObject*)alifLong_new(0);
+		return (AlifObject*)_alifLong_new(0);
 	if (n == -1 and alifErr_occurred()) {
 		return nullptr;
 	}
@@ -770,7 +785,7 @@ static AlifObject* r_alifLong(RFILE* p) { // 854
 
 	size = 1 + (ALIF_ABS(n) - 1) / ALIFLONG_MARSHAL_RATIO;
 	shorts_in_top_digit = 1 + (ALIF_ABS(n) - 1) % ALIFLONG_MARSHAL_RATIO;
-	ob = alifLong_new(size);
+	ob = _alifLong_new(size);
 	if (ob == nullptr)
 		return nullptr;
 
@@ -1062,7 +1077,7 @@ _read_ascii:
 				// marshal is meant to serialize .alifc files with code
 				// objects, and code-related strings are currently immortal.
 				AlifInterpreter* interp = _alifInterpreter_get();
-				alifUStr_internImmortal(interp, &v);
+				_alifUStr_internImmortal(interp, &v);
 			}
 			retval = v;
 			R_REF(retval);
@@ -1099,7 +1114,7 @@ _read_ascii:
 			// marshal is meant to serialize .alifc files with code
 			// objects, and code-related strings are currently immortal.
 			AlifInterpreter* interp = _alifInterpreter_get();
-			alifUStr_internImmortal(interp, &v);
+			_alifUStr_internImmortal(interp, &v);
 		}
 		retval = v;
 		R_REF(retval);

@@ -15,7 +15,7 @@
 	هذا التعريف يستخدم فقط لعد الاحرف والارقام للاسماء
 */
 #define IS_IDENTIFIER_CHAR(_c) ((_c >= 161 and _c <= 191)	\
-								or (_c >= 128 and _c <= 138) /* الاحرف العربية - البايت الثاني منها */	\
+								or (_c >= 128 and _c <= 138) /* الاحرف العربية - الثمانية الثانية منها */	\
 								or (_c >= '0' and _c <= '9') \
 								or (_c == '_')	\
 								or (_c == 216 or _c == 217))
@@ -367,7 +367,7 @@ AlifObject* alifParserEngine_newIdentifier(AlifParser* _p, const char* _s) { // 
 		//id = id2;
 	}
 	interp = _alifInterpreter_get();
-	alifUStr_internImmortal(interp, &id);
+	_alifUStr_internImmortal(interp, &id);
 	if (alifASTMem_listAddAlifObj(_p->astMem, id) < 0) {
 		ALIF_DECREF(id);
 		goto error;

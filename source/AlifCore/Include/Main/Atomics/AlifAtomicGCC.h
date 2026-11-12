@@ -136,7 +136,7 @@ static inline AlifSizeT alifAtomic_exchangeSize(AlifSizeT* _obj, AlifSizeT _valu
 	return __atomic_exchange_n(_obj, _value, __ATOMIC_SEQ_CST);
 }
 
-static inline void* alifAtomic_exchangeptr(void* _obj, void* _value) { // 193
+static inline void* alifAtomic_exchangePtr(void* _obj, void* _value) { // 193
 	return __atomic_exchange_n((void**)_obj, _value, __ATOMIC_SEQ_CST);
 }
 
@@ -306,6 +306,9 @@ static inline void alifAtomic_storeInt64Relaxed(int64_t* _obj, int64_t _value) {
 static inline void alifAtomic_storeUint8Relaxed(uint8_t* _obj, uint8_t _value) { // 451
 	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED);
 }
+
+static inline void alifAtomic_storeUint16Relaxed(uint16_t* _obj, uint16_t _value) { // 455
+	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED); }
 
 static inline void alifAtomic_storeUint32Relaxed(uint32_t* _obj, uint32_t _value) { // 459
 	__atomic_store_n(_obj, _value, __ATOMIC_RELAXED);

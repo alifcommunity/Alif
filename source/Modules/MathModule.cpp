@@ -14,9 +14,9 @@
 
 class MathModuleState { // 81
 public:
-	AlifObject* str___ceil__;
-	AlifObject* str___floor__;
-	AlifObject* str___trunc__;
+	AlifObject* str___ceil__{};
+	AlifObject* str___floor__{};
+	AlifObject* str___trunc__{};
 };
 
 static inline MathModuleState* getMath_moduleState(AlifObject* _module) { // 88
@@ -62,7 +62,7 @@ static double m_log(double _x) { // 641
 			return log(_x);
 		errno = EDOM;
 		if (_x == 0.0)
-			return -ALIF_HUGE_VAL; /* log(0) = -inf */
+			return -ALIF_INFINITY; /* log(0) = -inf */
 		else
 			return ALIF_NAN; /* log(-ve) = nan */
 	}
@@ -76,13 +76,16 @@ static double m_log(double _x) { // 641
 	}
 }
 
-static AlifObject* math_gcdImpl(AlifObject* _module, AlifSizeT _nArgs, AlifObject* const* _args) { // 730
-	if (_nArgs == 2 and ALIFLONG_CHECKEXACT(_args[0]) and ALIFLONG_CHECKEXACT(_args[1]))
+static AlifObject* math_gcdImpl(AlifObject* _module, AlifObject* const* _args,
+	AlifSizeT _argsLength) { // 730
+	if (_argsLength == 2
+		and ALIFLONG_CHECKEXACT(_args[0])
+		and ALIFLONG_CHECKEXACT(_args[1]))
 	{
 		return alifLong_gcd(_args[0], _args[1]);
 	}
 
-	if (_nArgs == 0) {
+	if (_argsLength == 0) {
 		return alifLong_fromLong(0);
 	}
 
@@ -90,13 +93,13 @@ static AlifObject* math_gcdImpl(AlifObject* _module, AlifSizeT _nArgs, AlifObjec
 	if (res ==  nullptr) {
 		return nullptr;
 	}
-	if (_nArgs == 1) {
+	if (_argsLength == 1) {
 		ALIF_SETREF(res, alifNumber_absolute(res));
 		return res;
 	}
 
 	AlifObject* one = _alifLong_getOne();  // borrowed ref
-	for (AlifSizeT i = 1; i < _nArgs; i++) {
+	for (AlifSizeT i = 1; i < _argsLength; i++) {
 		AlifObject* x = alifNumber_index(_args[i]);
 		if (x == nullptr) {
 			ALIF_DECREF(res);
@@ -141,25 +144,25 @@ static AlifObject* long_lcm(AlifObject* _a, AlifObject* _b) { // 774
 	return ab;
 }
 
-static AlifObject* math_lcmImpl(AlifObject* _module,
-	AlifSizeT _nArgs, AlifObject* const* _args) { // 802
+static AlifObject* math_lcmImpl(AlifObject* _module, AlifObject* const* _args,
+	AlifSizeT _argsLength) { // 802
 	AlifObject* res{}, * x{};
 	AlifSizeT i{};
 
-	if (_nArgs == 0) {
+	if (_argsLength == 0) {
 		return alifLong_fromLong(1);
 	}
 	res = alifNumber_index(_args[0]);
 	if (res == nullptr) {
 		return nullptr;
 	}
-	if (_nArgs == 1) {
+	if (_argsLength == 1) {
 		ALIF_SETREF(res, alifNumber_absolute(res));
 		return res;
 	}
 
 	AlifObject* zero = _alifLong_getZero();  // borrowed ref
-	for (i = 1; i < _nArgs; i++) {
+	for (i = 1; i < _argsLength; i++) {
 		x = alifNumber_index(_args[i]);
 		if (x == nullptr) {
 			ALIF_DECREF(res);
@@ -245,7 +248,7 @@ static AlifObject* math_ceil(AlifObject* _module, AlifObject* _number) { // 1091
 	}
 	else {
 		MathModuleState* state = getMath_moduleState(_module);
-		AlifObject* method = alifObject_lookupSpecial(_number, state->str___ceil__);
+		AlifObject* method = _alifObject_lookupSpecial(_number, state->str___ceil__);
 		if (method != nullptr) {
 			AlifObject* result = _alifObject_callNoArgs(method);
 			ALIF_DECREF(method);
@@ -267,7 +270,7 @@ static AlifObject* math_floor(AlifObject* _module, AlifObject* _number) { // 116
 	}
 	else {
 		MathModuleState* state = getMath_moduleState(_module);
-		AlifObject* method = alifObject_lookupSpecial(_number, state->str___floor__);
+		AlifObject* method = _alifObject_lookupSpecial(_number, state->str___floor__);
 		if (method != nullptr) {
 			AlifObject* result = _alifObject_callNoArgs(method);
 			ALIF_DECREF(method);
@@ -287,6 +290,10 @@ FUNC1(cos, cos, 0 ,
 	"cos($module, x, /)\n--\n\n"
 	"Return the cosine of x (measured in radians).") // 1122
 
+FUNC1(exp, exp, 1,
+	"exp($module, x, /)\n--\n\n"
+	"Return e raised to the power of x.")
+
 FUNC1(fabs, fabs, 0,
 		"fabs($module, x, /)\n--\n\n"
 		"Return the absolute value of the float x.")
@@ -298,6 +305,10 @@ FUNC1(sin, sin, 0,
 FUNC1(tan, tan, 0,
 		"tan($module, x, /)\n--\n\n"
 		"Return the tangent of x (measured in radians).") // 1211
+
+FUNC1(sqrt, sqrt, 0,
+		"sqrt($module, x, /)\n--\n\n"
+		"Return the square root of x.")
 
 
 static unsigned long countSet_bits(unsigned long _n) { // 1447
@@ -620,31 +631,79 @@ static AlifObject* math_radiansImpl(AlifObject* _module, double _x) { // 3039
 }
 
 
+
+
+static AlifIntT math_exec(AlifObject* _module) { // 4046 //* todo
+
+	MathModuleState* state = getMath_moduleState(_module);
+	state->str___ceil__ = alifUStr_internFromString("__حد_اعلى__");
+	if (state->str___ceil__ == nullptr) {
+		return -1;
+	}
+	state->str___floor__ = alifUStr_internFromString("__حد_ادنى__");
+	if (state->str___floor__ == nullptr) {
+		return -1;
+	}
+	//state->str___trunc__ = alifUStr_internFromString("__trunc__");
+	//if (state->str___trunc__ == nullptr) {
+	//	return -1;
+	//}
+	if (alifModule_add(_module, "ط", alifFloat_fromDouble(ALIF_MATH_PI)) < 0) { // pi
+		return -1;
+	}
+	if (alifModule_add(_module, "ه", alifFloat_fromDouble(ALIF_MATH_E)) < 0) { // e
+		return -1;
+	}
+	// 2pi
+	if (alifModule_add(_module, "ت", alifFloat_fromDouble(ALIF_MATH_TAU)) < 0) { // tau
+		return -1;
+	}
+	if (alifModule_add(_module, "لانهائي", alifFloat_fromDouble(ALIF_INFINITY)) < 0) { // inf
+		return -1;
+	}
+	if (alifModule_add(_module, "لاعدد", alifFloat_fromDouble(fabs(ALIF_NAN))) < 0) { // nan
+		return -1;
+	}
+	return 0;
+}
+
+
 static AlifMethodDef _alifMathMethods_[] = { // 4087
 	MATH_CEIL_METHODDEF
 	MATH_FLOOR_METHODDEF
-	{"جيب",             math_sin,       METHOD_O},
-	{"تجيب",            math_cos,       METHOD_O},
-	{"ظل",              math_tan,       METHOD_O},
+	{"جيب", math_sin, METHOD_O},
+	{"تجيب", math_cos, METHOD_O},
+	{"ظل", math_tan, METHOD_O},
     MATH_DEGREES_METHODDEF
 	MATH_DIST_METHODDEF
-	{"قيمة_مطلقة",      math_fabs,      METHOD_O},
+	{"قيمة_مطلقة", math_fabs, METHOD_O},
 	MATH_FACTORIAL_METHODDEF
 	MATH_GCD_METHODDEF
 	MATH_LCM_METHODDEF
-	{"لوغ",        ALIF_CPPFUNCTION_CAST(math_log),       METHOD_FASTCALL},
+	{"اس_طبيعي", math_exp, METHOD_O,},
+	{"لوغ", ALIF_CPPFUNCTION_CAST(math_log), METHOD_FASTCALL},
 	MATH_RADIANS_METHODDEF
+	{"جذر", math_sqrt, METHOD_O},
 	{nullptr,              nullptr}           /* sentinel */
 };
 
 
-
-static class AlifModuleDef _alifMathModule_ = { // 4159
-	.base = ALIFMODULEDEF_HEAD_INIT,
-	.name = "الرياضيات",
-	.methods = _alifMathMethods_
+static AlifModuleDefSlot _mathSlots_[] = { // 4159
+	{ALIF_MOD_EXEC, (void*)math_exec},
+	{ALIF_MOD_MULTIPLE_INTERPRETERS, ALIF_MOD_PER_INTERPRETER_GIL_SUPPORTED},
+	{ALIF_MOD_GIL, ALIF_MOD_GIL_NOT_USED},
+	{0, nullptr}
 };
 
-AlifObject* alifInit_math(void) { // 4171
+
+static class AlifModuleDef _alifMathModule_ = { // 4170
+	.base = ALIFMODULEDEF_HEAD_INIT,
+	.name = "الرياضيات",
+	.size = sizeof(MathModuleState),
+	.methods = _alifMathMethods_,
+	.slots = _mathSlots_,
+};
+
+ALIFMODINIT_FUNC alifInit_math(void) { // 4171
 	return alifModuleDef_init(&_alifMathModule_);
 }

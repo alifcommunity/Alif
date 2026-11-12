@@ -4,8 +4,8 @@
 #define ALIFBOOL_CHECK(_x) ALIF_IS_TYPE((_x), &_alifBoolType_) // 12
 
 
-extern AlifLongObject _alifFalseClass_; // 17
-extern AlifLongObject _alifTrueClass_; // 18
+ALIFAPI_DATA(AlifLongObject) _alifFalseClass_; // 17
+ALIFAPI_DATA(AlifLongObject) _alifTrueClass_; // 18
 
 
 
@@ -23,7 +23,7 @@ extern AlifLongObject _alifTrueClass_; // 18
 
 
 
-AlifObject* alifBool_fromLong(long); // 42
+ALIFAPI_FUNC(AlifObject*)  alifBool_fromLong(long); // 42
 
 
 

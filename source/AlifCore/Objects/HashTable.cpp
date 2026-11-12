@@ -144,7 +144,7 @@ static AlifIntT hashTable_rehash(AlifHashTableT* _ht) { // 287
 }
 
 
-void* alifHashTable_get(AlifHashTableT* _ht, const void* _key) { // 255
+void* _alifHashTable_get(AlifHashTableT* _ht, const void* _key) { // 255
 	AlifHashTableEntryT* entry = _ht->getEntryFunc(_ht, _key);
 	if (entry != nullptr) {
 		return entry->value;

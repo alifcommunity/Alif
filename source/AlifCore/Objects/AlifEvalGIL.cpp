@@ -260,7 +260,7 @@ static void init_sharedGIL(AlifInterpreter* _interp, GILRuntimeState* _gil) { //
 }
 
 static void init_ownGIL(AlifInterpreter* _interp, GILRuntimeState* _gil) { // 474
-	const AlifConfig* config = alifInterpreter_getConfig(_interp);
+	const AlifConfig* config = _alifInterpreterState_getConfig(_interp);
 	//_gil->enabled = (config->enableGIL == AlifConfigGIL_::AlifConfig_GIL_Enable)
 	//	? INT_MAX : 0; //* review //* delete
 	create_gil(_gil);
@@ -270,7 +270,7 @@ static void init_ownGIL(AlifInterpreter* _interp, GILRuntimeState* _gil) { // 47
 
 void alifEval_initGIL(AlifThread* _thread, AlifIntT _ownGIL) { // 488
 	if (!_ownGIL) {
-		AlifInterpreter* main_interp = alifInterpreter_main();
+		AlifInterpreter* main_interp = _alifInterpreterState_main();
 		GILRuntimeState* gil = main_interp->eval.gil_;
 		init_sharedGIL(_thread->interpreter, gil);
 	}
@@ -278,7 +278,7 @@ void alifEval_initGIL(AlifThread* _thread, AlifIntT _ownGIL) { // 488
 		init_ownGIL(_thread->interpreter, &_thread->interpreter->gil_);
 	}
 
-	alifThread_attach(_thread);
+	_alifThread_attach(_thread);
 }
 
 
@@ -316,19 +316,19 @@ void alifEval_releaseLock(AlifInterpreter* _interp,
 
 void alifEval_acquireThread(AlifThread* _thread) { // 591
 	ALIF_ENSURETHREADNOTNULL(_thread);
-	alifThread_attach(_thread);
+	_alifThread_attach(_thread);
 }
 
 
 void alifEval_releaseThread(AlifThread* _thread) { // 598
-	alifThread_detach(_thread);
+	_alifThread_detach(_thread);
 }
 
 
 
 AlifThread* alifEval_saveThread() { // 628
 	AlifThread* tstate = _alifThread_get();
-	alifThread_detach(tstate);
+	_alifThread_detach(tstate);
 	return tstate;
 }
 
@@ -338,7 +338,7 @@ void alifEval_restoreThread(AlifThread* _thread) { // 636
 #endif
 
 	ALIF_ENSURETHREADNOTNULL(_thread);
-	alifThread_attach(_thread);
+	_alifThread_attach(_thread);
 
 #ifdef _WINDOWS
 	SetLastError(err);
@@ -507,7 +507,7 @@ void alifUnset_evalBreakerBitAll(AlifInterpreter* _interp, uintptr_t _bit) { // 
 
 
 
-AlifIntT alifEval_makePendingCalls(AlifThread* _thread) { // 1029
+AlifIntT _alifEval_makePendingCalls(AlifThread* _thread) { // 1029
 	AlifIntT res{};
 	if (alif_isMainThread() and alif_isMainInterpreter(_thread->interpreter)) {
 		res = handle_signals(_thread);
@@ -533,5 +533,5 @@ AlifIntT alif_makePendingCalls() { // 1054
 	if (!alif_isMainThread() or !alif_isMainInterpreter(thread->interpreter)) {
 		return 0;
 	}
-	return alifEval_makePendingCalls(thread);
+	return _alifEval_makePendingCalls(thread);
 }

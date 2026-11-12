@@ -215,7 +215,7 @@ char* alifOS_stdioReadline(FILE* sys_stdin,
 	AlifThread* tstate = _alifOSReadlineThread_;
 
 #ifdef HAVE_WINDOWS_CONSOLE_IO
-	const AlifConfig* config = alifInterpreter_getConfig(tstate->interpreter);
+	const AlifConfig* config = _alifInterpreterState_getConfig(tstate->interpreter);
 	if (!config->legacyWindowsStdio and sys_stdin == stdin) {
 		HANDLE hStdIn{}, hStdErr{};
 

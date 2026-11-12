@@ -89,6 +89,8 @@ static AlifIntT internal_close(FileIO* self) { // 117
 		ALIF_END_SUPPRESS_IPH
 			ALIF_END_ALLOW_THREADS
 	}
+	alifMem_dataFree(self->statAtOpen);
+	self->statAtOpen = nullptr;
 	if (err < 0) {
 		errno = save_errno;
 		//alifErr_setFromErrno(_alifExcOSError_);
@@ -183,8 +185,9 @@ static AlifIntT _ioFileIO___init__Impl(FileIO* self, AlifObject* nameobj, const 
 	if (self->fd >= 0) {
 		if (self->closefd) {
 			/* Have to close the existing file first. */
-			if (internal_close(self) < 0)
+			if (internal_close(self) < 0) {
 				return -1;
+			}
 		}
 		else
 			self->fd = -1;
@@ -428,10 +431,8 @@ error:
 		internal_close(self);
 		_alifErr_chainExceptions1(exc);
 	}
-	if (self->statAtOpen != nullptr) {
-		alifMem_dataFree(self->statAtOpen);
-		self->statAtOpen = nullptr;
-	}
+	alifMem_dataFree(self->statAtOpen);
+	self->statAtOpen = nullptr;
 
 done:
 #ifdef _WINDOWS
@@ -588,8 +589,8 @@ static AlifObject* _ioFileIO_readallImpl(FileIO * _self) { // 731
 			bufsize = new_bufferSize(_self, bytesRead);
 			if (bufsize > ALIF_SIZET_MAX || bufsize <= 0) {
 				alifErr_setString(_alifExcOverflowError_,
-					"القراءة غير المحدودة قامت بإرجاع عددا من البايتات أكبر "
-					"من عدد البايتات التي يمكن أن يستوعبها كائن ألف");
+					"القراءة غير المحدودة قامت بإرجاع عددا من الثمانيات أكبر "
+					"من عدد الثمانيات التي يمكن أن يستوعبها كائن ألف");
 				ALIF_DECREF(result);
 				return nullptr;
 			}

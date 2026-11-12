@@ -11,7 +11,7 @@ enum AlifLockStatus_ { // 12
 };
 
 //void ALIF_NO_RETURN alifThread_exitThread(void); // 20
-unsigned long alifThread_getThreadID(); // 21
+ALIFAPI_FUNC(unsigned long) alifThread_getThreadID(); // 21
 
 // 23
 #if (defined(__APPLE__) or defined(__linux__) or defined(_WIN32) \
@@ -19,28 +19,28 @@ unsigned long alifThread_getThreadID(); // 21
      or defined(__OpenBSD__) or defined(__NetBSD__) \
      or defined(__DragonFly__) or defined(_AIX))
 #define ALIF_HAVE_THREAD_NATIVE_ID
-unsigned long alifThread_getThreadNativeID();
+ALIFAPI_FUNC(unsigned long)  alifThread_getThreadNativeID();
 #endif
 
 
-AlifIntT alifThread_acquireLock(AlifThreadTypeLock, AlifIntT); // 33
+ALIFAPI_FUNC(AlifThreadTypeLock) alifThread_allocateLock(void); // 50
+ALIFAPI_FUNC(AlifIntT) alifThread_acquireLock(AlifThreadTypeLock, AlifIntT); // 52
+ALIFAPI_FUNC(void) alifThread_freeLock(AlifThreadTypeLock); // 51
 #define WAIT_LOCK       1
 #define NOWAIT_LOCK     0
 
-AlifThreadTypeLock alifThread_allocateLock(void); // 50
-void alifThread_freeLock(AlifThreadTypeLock); // 51
 
 
-void alifThread_releaseLock(AlifThreadTypeLock); // 77
+ALIFAPI_FUNC(void) alifThread_releaseLock(AlifThreadTypeLock); // 77
 
 // Forward Declaration
 class AlifTssT;
 
-AlifIntT alifThreadTSS_isCreated(AlifTssT*); // 96
-AlifIntT alifThreadTSS_create(AlifTssT*); // 97
-void alifThreadTSS_delete(AlifTssT*); // 98
-AlifIntT alifThreadTSS_set(AlifTssT*, void*); // 99
-void* alifThreadTSS_get(AlifTssT*); // 100
+ALIFAPI_FUNC(AlifIntT) alifThreadTSS_isCreated(AlifTssT*); // 115
+ALIFAPI_FUNC(AlifIntT) alifThreadTSS_create(AlifTssT*); // 116
+ALIFAPI_FUNC(void) alifThreadTSS_delete(AlifTssT*); // 117
+ALIFAPI_FUNC(AlifIntT) alifThreadTSS_set(AlifTssT*, void*); // 118
+ALIFAPI_FUNC(void*) alifThreadTSS_get(AlifTssT*); // 119
 
 /* --------------------------------------------------------------------------------------------------------- */
 

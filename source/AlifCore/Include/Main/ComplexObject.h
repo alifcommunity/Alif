@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifTypeObject _alifComplexType_;
+ALIFAPI_DATA(AlifTypeObject) _alifComplexType_;
 
 
 #define ALIFCOMPLEX_CHECK(_op) ALIFOBJECT_TYPECHECK((_op), &_alifComplexType_) // 13
@@ -24,4 +24,4 @@ public:
 
 
 
-AlifComplex alifComplex_asCComplex(AlifObject*); // 33
+ALIFAPI_FUNC(AlifComplex) alifComplex_asCComplex(AlifObject*); // 33

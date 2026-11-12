@@ -939,7 +939,7 @@ AlifIntT _alifTime_localtime(time_t _t, struct tm* _tm) { // 1289
 }
 
 
-AlifTimeT alifDeadline_get(AlifTimeT _deadline) { // 1362
+AlifTimeT _alifDeadline_get(AlifTimeT _deadline) { // 1362
 	AlifTimeT now{};
 	(void)alifTime_monotonicRaw(&now);
 	return _deadline - now;

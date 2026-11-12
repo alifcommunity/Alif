@@ -44,9 +44,9 @@ public:
 };
 
 
-AlifLongObject* alifLong_new(AlifSizeT); // 103
+ALIFAPI_FUNC(AlifLongObject*) _alifLong_new(AlifSizeT); // 103
 
-AlifObject* _alifLong_copy(AlifLongObject*); // 106
+ALIFAPI_FUNC(AlifObject*) _alifLong_copy(AlifLongObject*); // 106
 
 
  // 117

@@ -20,7 +20,7 @@ static inline AlifObject* member_getObject(const char* addr, const char* obj_add
 	AlifObject* v = (AlifObject*)alifAtomic_loadPtr(&(*(AlifObject**)addr)); //* alif
 	if (v == nullptr) {
 		alifErr_format(_alifExcAttributeError_,
-			"الكائن '%T' لا يملك الخاصية '%s'",
+			"الكائن '%T' لا يملك الصفة '%s'",
 			(AlifObject*)obj_addr, l->name);
 	}
 	return v;
@@ -131,7 +131,7 @@ AlifIntT alifMember_setOne(char* addr, AlifMemberDef* l, AlifObject* v) { // 129
 
 	if ((l->flags & ALIF_READONLY))
 	{
-		alifErr_setString(_alifExcAttributeError_, "خاصية للقراءة-فقط");
+		alifErr_setString(_alifExcAttributeError_, "صفة للقراءة-فقط");
 		return -1;
 	}
 	if (v == nullptr) {

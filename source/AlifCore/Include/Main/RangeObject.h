@@ -5,6 +5,6 @@
 
 
 
-extern AlifTypeObject _alifRangeType_;
-extern AlifTypeObject _alifRangeIterType_;
-extern AlifTypeObject _alifLongRangeIterType_;
+ALIFAPI_DATA(AlifTypeObject) _alifRangeType_;
+ALIFAPI_DATA(AlifTypeObject) _alifRangeIterType_;
+ALIFAPI_DATA(AlifTypeObject) _alifLongRangeIterType_;

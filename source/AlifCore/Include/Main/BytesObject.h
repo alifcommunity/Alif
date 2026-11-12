@@ -3,23 +3,24 @@
 
 
 
-extern AlifTypeObject _alifBytesType_; // 24
-extern AlifTypeObject _alifBytesIterType_;
+ALIFAPI_DATA(AlifTypeObject) _alifBytesType_; // 24
+ALIFAPI_DATA(AlifTypeObject) _alifBytesIterType_;
 // 27
 #define ALIFBYTES_CHECK(op) \
                  ALIFTYPE_FASTSUBCLASS(ALIF_TYPE(op), ALIF_TPFLAGS_BYTES_SUBCLASS)
 #define ALIFBYTES_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifBytesType_)
 
 
-AlifObject* alifBytes_fromStringAndSize(const char*, AlifSizeT); // 31
-AlifObject* alifBytes_fromString(const char*);
+ALIFAPI_FUNC(AlifObject*) alifBytes_fromStringAndSize(const char*, AlifSizeT); // 31
+ALIFAPI_FUNC(AlifObject*) alifBytes_fromString(const char*);
+ALIFAPI_FUNC(AlifObject*) alifBytes_fromObject(AlifObject*); // 33
 
-AlifSizeT alifBytes_size(AlifObject*); // 38
-char* alifBytes_asString(AlifObject*); // 39
+ALIFAPI_FUNC(AlifSizeT) alifBytes_size(AlifObject*); // 38
+ALIFAPI_FUNC(char*) alifBytes_asString(AlifObject*); // 39
 
-void alifBytes_concat(AlifObject**, AlifObject*); // 41
+ALIFAPI_FUNC(void) alifBytes_concat(AlifObject**, AlifObject*); // 41
 
-AlifIntT alifBytes_asStringAndSize(AlifObject*, char**, AlifSizeT*); // 51
+ALIFAPI_FUNC(AlifIntT) alifBytes_asStringAndSize(AlifObject*, char**, AlifSizeT*); // 51
 
 /* ------------------------------------------------------------------------------------------- */
 
@@ -38,7 +39,7 @@ public:
 	 */
 };
 
-AlifIntT _alifBytes_resize(AlifObject**, AlifSizeT); // 17
+ALIFAPI_FUNC(AlifIntT) _alifBytes_resize(AlifObject**, AlifSizeT); // 17
 
 // 20
 #define ALIFBYTES_CAST(op) \

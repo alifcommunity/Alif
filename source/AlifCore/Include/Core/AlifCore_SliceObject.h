@@ -8,4 +8,4 @@
 
 
 
-AlifObject* _alifBuildSlice_consumeRefs(AlifObject*, AlifObject*);
+ALIFAPI_FUNC(AlifObject*) _alifBuildSlice_consumeRefs(AlifObject*, AlifObject*);

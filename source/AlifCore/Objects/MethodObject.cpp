@@ -3,6 +3,7 @@
 #include "AlifCore_Call.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Errors.h"
 #include "AlifCore_State.h"
 
 
@@ -104,10 +105,37 @@ AlifObject* alifCPPMethod_new(AlifMethodDef* _ml,
 
 
 
+static AlifObject* meth_get_qualname__(AlifObject* _self, void* _closure) { // 217
+	AlifCPPFunctionObject* m = ALIFCPPFUNCTIONOBJECT_CAST(_self);
+	if (m->self == nullptr or ALIFMODULE_CHECK(m->self)) {
+		return alifUStr_fromString(m->ml_->name);
+	}
+
+	AlifObject* type = ALIFTYPE_CHECK(m->self) ? m->self : (AlifObject*)ALIF_TYPE(m->self);
+
+	AlifObject* typeQualname = alifObject_getAttr(type, &ALIF_STR(__qualname__));
+	if (typeQualname == nullptr)
+		return nullptr;
+
+	if (!ALIFUSTR_CHECK(typeQualname)) {
+		alifErr_setString(_alifExcTypeError_, "<method>.__class__."
+			"__اسم_مميز__ is not a unicode object");
+		ALIF_XDECREF(typeQualname);
+		return nullptr;
+	}
+
+	AlifObject* res = alifUStr_fromFormat("%S.%s", typeQualname, m->ml_->name);
+	ALIF_DECREF(typeQualname);
+	return res;
+}
 
 
-
-
+static AlifGetSetDef _methGetSets_[] = { // 273
+	//{"__اسم__", meth_get_name__, nullptr, nullptr},
+	{"__اسم_مميز__", meth_get_qualname__, nullptr, nullptr},
+	//{"__self__", meth_get_self__, nullptr, nullptr},
+	{0}
+};
 
 
 
@@ -120,7 +148,8 @@ AlifTypeObject _alifCPPFunctionType_ = { // 332
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL,
-	.weakListOffset = offsetof(AlifCPPFunctionObject, weakRefList), /* tp_weaklistoffset */
+	.weakListOffset = offsetof(AlifCPPFunctionObject, weakRefList),
+	.getSet = _methGetSets_,
 };
 
 
@@ -247,9 +276,9 @@ static AlifObject* cfunction_vectorCallO(AlifObject* _func, AlifObject* const* _
 	if (nargs != 1) {
 		AlifObject* funcstr = _alifObject_functionStr(_func);
 		if (funcstr != nullptr) {
-			//_alifErr_format(thread, _alifExcTypeError_,
-			//	"%U takes exactly one argument (%zd given)", funcstr, nargs);
-			//ALIF_DECREF(funcstr);
+			_alifErr_format(thread, _alifExcTypeError_,
+				"%U تستهلك فقط معامل واحد (تم تمرير %zd)", funcstr, nargs);
+			ALIF_DECREF(funcstr);
 		}
 		return nullptr;
 	}

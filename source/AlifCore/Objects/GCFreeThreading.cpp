@@ -155,7 +155,7 @@ AlifVarObject* alifObject_gcNewVar(AlifTypeObject* _tp, AlifSizeT _nItems) { // 
 	return op_;
 }
 
-AlifVarObject* alifObject_gcResize(AlifVarObject* _op, AlifSizeT _nItems) { // 1852 
+AlifVarObject* _alifObject_gcResize(AlifVarObject* _op, AlifSizeT _nItems) { // 1852 
 	const AlifUSizeT basicSize = alifObject_varSize(ALIF_TYPE(_op), _nItems);
 	const AlifUSizeT preSize = alifType_preHeaderSize(((AlifObject*)_op)->type);
 	if (basicSize > (AlifUSizeT)ALIF_SIZET_MAX - preSize) {
@@ -189,3 +189,22 @@ void alifObject_gcDel(void* _op) { // 1871
 		alifMem_dataFree(((char*)_op) - preSize);
 	}
 }
+
+
+
+//void _alifGC_visitObjectsWorldStopped(AlifInterpreter* interp,
+//	GCVisitObjectsT callback, void *arg) { // 1955
+//	CustomVisitorArgs wrapper = {
+//		.callback = callback,
+//		.arg = arg,
+//	};
+//	gc_visitHeaps(interp, &custom_visitor_wrapper, &wrapper.base);
+//}
+
+//void alifUnstable_gcVisitObjects(GCVisitObjectsT callback,
+//	void *arg) { // 1966
+//	AlifInterpreter* interp = _alifInterpreter_get();
+//	_alifEval_stopTheWorld(interp);
+//	_alifGC_visitObjectsWorldStopped(interp, callback, arg);
+//	_alifEval_startTheWorld(interp);
+//}

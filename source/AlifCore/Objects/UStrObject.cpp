@@ -1,6 +1,7 @@
 #include "alif.h"
 
 #include "AlifCore_Abstract.h"
+#include "AlifCore_BytesMethods.h"
 #include "AlifCore_Eval.h"
 #include "AlifCore_Codecs.h"
 #include "AlifCore_FreeList.h"
@@ -21,9 +22,14 @@
 
 // Forward Declaration
 static inline AlifIntT alifUStrWriter_writeCharInline(AlifUStrWriter*, AlifUCS4);
-static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
+static inline void _alifUStrWriter_initWithBuffer(AlifUStrWriter*, AlifObject*);
 
 #define MAX_UNICODE 0x10ffff // 106
+
+//* alif
+#define IS_ARABIC_CHAR(_c) ((_c >= 161 and _c <= 191)	\
+								or (_c >= 128 and _c <= 138) /* الاحرف العربية - الثمانية الثانية منها */	\
+								or (_c == 216) or (_c == 217)) \
 
 
 // 114
@@ -170,14 +176,14 @@ static AlifIntT hashTable_uStrCompare(const void* _key1, const void* _key2) { //
 
 
 static bool hasShared_internDict(AlifInterpreter* _interp) { // 295
-	AlifInterpreter* mainInterp = alifInterpreter_main();
+	AlifInterpreter* mainInterp = _alifInterpreterState_main();
 	return _interp != mainInterp and _interp->featureFlags & ALIF_RTFLAGS_USE_ALIFMEM;
 }
 
 static AlifIntT init_internedDict(AlifInterpreter* interp) { // 302
 	AlifObject* interned{};
 	if (hasShared_internDict(interp)) {
-		interned = get_internedDict(alifInterpreter_main());
+		interned = get_internedDict(_alifInterpreterState_main());
 		ALIF_INCREF(interned);
 	}
 	else {
@@ -414,7 +420,7 @@ static char* backSlash_replace(AlifBytesWriter* _writer, char* _str,
 		size += incr;
 	}
 
-	_str = (char*)alifBytesWriter_prepare(_writer, _str, size);
+	_str = (char*)_alifBytesWriter_prepare(_writer, _str, size);
 	if (_str == nullptr)
 		return nullptr;
 
@@ -486,7 +492,7 @@ static char* xmlCharRef_replace(AlifBytesWriter* _writer, char* _str,
 		size += incr;
 	}
 
-	_str = (char*)alifBytesWriter_prepare(_writer, _str, size);
+	_str = (char*)_alifBytesWriter_prepare(_writer, _str, size);
 	if (_str == nullptr)
 		return nullptr;
 
@@ -500,6 +506,67 @@ static char* xmlCharRef_replace(AlifBytesWriter* _writer, char* _str,
 	}
 	return _str;
 }
+
+
+
+/* --- Bloom Filters ----------------------------------------------------- */
+
+#if LONG_BIT >= 128
+#define BLOOM_WIDTH 128
+#elif LONG_BIT >= 64
+#define BLOOM_WIDTH 64
+#elif LONG_BIT >= 32
+#define BLOOM_WIDTH 32
+#else
+#error "LONG_BIT is smaller than 32"
+#endif
+
+#define BLOOM_MASK unsigned long
+
+static BLOOM_MASK bloom_linebreak = ~(BLOOM_MASK)0;
+
+#define BLOOM(mask, ch)     ((mask &  (1UL << ((ch) & (BLOOM_WIDTH - 1)))))
+
+#define BLOOM_LINEBREAK(ch)                                             \
+    ((ch) < 128U ? ascii_linebreak[(ch)] :                              \
+     (BLOOM(bloom_linebreak, (ch)) && Py_UNICODE_ISLINEBREAK(ch)))
+
+static inline BLOOM_MASK make_bloomMask(AlifIntT kind, const void* ptr, AlifSizeT len) {
+#define BLOOM_UPDATE(TYPE, MASK, PTR, LEN)             \
+    do {                                               \
+        TYPE *data = (TYPE *)PTR;                      \
+        TYPE *end = data + LEN;                        \
+        AlifUCS4 ch;                                    \
+        for (; data != end; data++) {                  \
+            ch = *data;                                \
+            MASK |= (1UL << (ch & (BLOOM_WIDTH - 1))); \
+        }                                              \
+        break;                                         \
+    } while (0)
+
+	/* calculate simple bloom-style bitmask for a given unicode string */
+
+	BLOOM_MASK mask;
+
+	mask = 0;
+	switch (kind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		BLOOM_UPDATE(AlifUCS1, mask, ptr, len);
+		break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		BLOOM_UPDATE(AlifUCS2, mask, ptr, len);
+		break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		BLOOM_UPDATE(AlifUCS4, mask, ptr, len);
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+	return mask;
+
+#undef BLOOM_UPDATE
+}
+
 
 
 
@@ -589,7 +656,7 @@ static inline AlifSizeT find_char(const void* _s, AlifIntT _kind,
 	}
 }
 
-static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 1071
+static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 1098
 	AlifSizeT charSize{};
 	AlifSizeT structSize{};
 	AlifSizeT newSize{};
@@ -612,15 +679,16 @@ static AlifObject* resize_compact(AlifObject* _uStr, AlifSizeT _length) { // 107
 		_ALIFUSTR_UTF8(_uStr) = nullptr;
 		ALIFUSTR_UTF8_LENGTH(_uStr) = 0;
 	}
+	_ALIFREFTRACERTRACK(_uStr, AlifRefTracerEvent_::Alif_RefTracer_Destroy);
 
 	newUStr = (AlifObject*)alifMem_objRealloc(_uStr, newSize);
 	if (newUStr == nullptr) {
-		alif_newReferenceNoTotal(_uStr);
+		_alif_newReferenceNoTotal(_uStr);
 		//alifErr_noMemory();
 		return nullptr;
 	}
 	_uStr = newUStr;
-	alif_newReferenceNoTotal(_uStr);
+	_alif_newReferenceNoTotal(_uStr);
 
 	ALIFUSTR_LENGTH(_uStr) = _length;
 	ALIFUSTR_WRITE(ALIFUSTR_KIND(_uStr), ALIFUSTR_DATA(_uStr), _length, 0);
@@ -969,9 +1037,9 @@ static AlifIntT find_maxCharSurrogates(const wchar_t* _begin, const wchar_t* _en
 	return 0;
 }
 
-static void ustr_dealloc(AlifObject* _uStr) { // 1633
+static void uStr_dealloc(AlifObject* _uStr) { // 1633
 	if (ALIFUSTR_STATE(_uStr).staticallyAllocated) {
-		alif_setImmortal(_uStr);
+		_alif_setImmortal(_uStr);
 		return;
 	}
 	switch (ALIFUSTR_STATE(_uStr).interned) {
@@ -985,18 +1053,18 @@ static void ustr_dealloc(AlifObject* _uStr) { // 1633
 		//	AlifIntT r = alifDict_pop(interned, _uStr, &popped);
 		//	if (r == -1) {
 		//		//alifErr_writeUnraisable(unicode);
-		//		alif_setImmortal(_uStr);
+		//		_alif_setImmortal(_uStr);
 		//		ALIFUSTR_STATE(_uStr).interned = SSTATE_INTERNED_IMMORTAL;
 		//		return;
 		//	}
 		//	if (r == 0) {
-		//		alif_setImmortal(_uStr);
+		//		_alif_setImmortal(_uStr);
 		//		return;
 		//	}
 		//	ALIF_SET_REFCNT(_uStr, 0);
 		//	break;
 	default:
-		alif_setImmortal(_uStr);
+		_alif_setImmortal(_uStr);
 		return;
 	}
 	if (ALIFUSTR_HAS_UTF8_MEMORY(_uStr)) {
@@ -1334,7 +1402,7 @@ static AlifObject* _alifUStr_fromUCS4(const AlifUCS4* _u, AlifSizeT _size) { // 
 AlifObject* alifUStr_fromKindAndData(AlifIntT _kind,
 	const void* _buffer, AlifSizeT _size) { // 2335
 	if (_size < 0) {
-		//alifErr_setString(_alifExcValueError_, "size must be positive");
+		alifErr_setString(_alifExcValueError_, "الحجم يجب أن يكون أكبر من او يساوي صفر (موجب)");
 		return nullptr;
 	}
 	switch (_kind) {
@@ -1986,7 +2054,7 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	//	if (!typeName) {
 	//		return nullptr;
 	//	}
-	//	if (unicode_fromFormatWriteStr(_writer, typeName,
+	//	if (uStr_fromFormatWriteStr(_writer, typeName,
 	//		width, precision, flags) == -1) {
 	//		ALIF_DECREF(typeName);
 	//		return nullptr;
@@ -1994,7 +2062,7 @@ static const char* uStr_fromFormatArg(AlifUStrWriter* _writer,
 	//	ALIF_DECREF(typeName);
 	//	break;
 	//}
-	//
+	
 	default:
 invalid_format:
 		alifErr_format(_alifExcSystemError_, "تنسيق نصي غير صحيح: %s", p);
@@ -2229,9 +2297,57 @@ AlifObject* alifUStr_fromObject(AlifObject* _obj) { // 3446
 	return nullptr;
 }
 
+AlifObject* alifUStr_fromEncodedObject(AlifObject* _obj,
+	const char* _encoding, const char* _errors) { // 3483
+	AlifBuffer buffer{};
+	AlifObject* v{};
+
+	if (_obj == nullptr) {
+		//ALIFERR_BADINTERNALCALL();
+		return nullptr;
+	}
+
+	/* Decoding bytes objects is the most common case and should be fast */
+	if (ALIFBYTES_CHECK(_obj)) {
+		if (ALIFBYTES_GET_SIZE(_obj) == 0) {
+			//if (uStr_checkEncodingErrors(_encoding, _errors) < 0) {
+			//	return nullptr;
+			//}
+			ALIF_RETURN_UNICODE_EMPTY;
+		}
+		return alifUStr_decode(
+			ALIFBYTES_AS_STRING(_obj), ALIFBYTES_GET_SIZE(_obj),
+			_encoding, _errors);
+	}
+
+	if (ALIFUSTR_CHECK(_obj)) {
+		alifErr_setString(_alifExcTypeError_,
+			"فك ترميز النص غير مدعوم");
+		return nullptr;
+	}
+
+	if (alifObject_getBuffer(_obj, &buffer, ALIFBUF_SIMPLE) < 0) {
+		alifErr_format(_alifExcTypeError_,
+			"فك الترميز إلى نص: يحتاج إلى كائن نوع ثمانيات, %.80s ولكن الممرر",
+			ALIF_TYPE(_obj)->name);
+		return nullptr;
+	}
+
+	if (buffer.len == 0) {
+		alifBuffer_release(&buffer);
+		//if (uStr_checkEncodingErrors(_encoding, _errors) < 0) {
+		//	return nullptr;
+		//}
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+
+	v = alifUStr_decode((char*)buffer.buf, buffer.len, _encoding, _errors);
+	alifBuffer_release(&buffer);
+	return v;
+}
 
 AlifIntT _alif_normalizeEncoding(const char* encoding,
-	char* lower, AlifUSizeT lower_len) { // 3520
+	char* lower, AlifUSizeT lower_len) { // 3520 //* alif
 	const char* e{};
 	char* l{};
 	char* l_end{};
@@ -2247,7 +2363,7 @@ AlifIntT _alif_normalizeEncoding(const char* encoding,
 			break;
 		}
 
-		if (ALIF_ISALNUM(c) or c == '.') {
+		if (ALIF_ISALNUM(c) or IS_ARABIC_CHAR((unsigned char)c) or c == '.') { //* alif
 			if (punct and l != lower) {
 				if (l == l_end) {
 					return 0;
@@ -2276,7 +2392,7 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 	const char* encoding, const char* errors) { // 3566
 	AlifObject* buffer = nullptr, * unicode{};
 	AlifBuffer info{};
-	char buflower[11]{};
+	char buflower[22]{};
 
 	//if (uStr_checkEncodingErrors(encoding, errors) < 0) {
 	//	return nullptr;
@@ -2315,7 +2431,7 @@ AlifObject* alifUStr_decode(const char* s, AlifSizeT size,
 		else {
 			if (strcmp(lower, "ascii") == 0
 				or strcmp(lower, "us_ascii") == 0) {
-				//return alifUStr_decodeASCII(s, size, errors);
+				return alifUStr_decodeASCII(s, size, errors);
 			}
 		#ifdef _WINDOWS
 			else if (strcmp(lower, "mbcs") == 0) {
@@ -2411,7 +2527,7 @@ AlifObject* alifUStr_encodeFSDefault(AlifObject* _uStr) { // 3806
 	AlifInterpreter* interp = _alifInterpreter_get();
 
 
-	const AlifConfig* config = alifInterpreter_getConfig(interp);
+	const AlifConfig* config = _alifInterpreterState_getConfig(interp);
 	//const wchar_t* fileSystemErrors = config->fileSystemErrors;
 	const wchar_t* fileSystemErrors = nullptr;
 	AlifErrorHandler_ errors = get_errorHandlerWide(fileSystemErrors);
@@ -2422,7 +2538,7 @@ AlifObject* alifUStr_encodeFSDefault(AlifObject* _uStr) { // 3806
 AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 	const char* encoding, const char* errors) { // 3840
 	AlifObject* v{};
-	char buflower[11]{};
+	char buflower[22]{};
 
 	if (!ALIFUSTR_CHECK(unicode)) {
 		//alifErr_badArgument();
@@ -2461,7 +2577,8 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 		}
 		else {
 			if (strcmp(lower, "ascii") == 0
-				or strcmp(lower, "us_ascii") == 0) {
+				or strcmp(lower, "us_ascii") == 0
+				or strcmp(lower, "ترميز_بدائي") == 0) {
 				return _alifUStr_asASCIIString(unicode, errors);
 			}
 		#ifdef _WINDOWS
@@ -2507,11 +2624,11 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 		return b;
 	}
 
-	//alifErr_format(_alifExcTypeError_,
-	//	"'%.400s' encoder returned '%.400s' instead of 'bytes'; "
-	//	"use codecs.encode() to encode to arbitrary types",
-	//	encoding,
-	//	ALIF_TYPE(v)->name);
+	alifErr_format(_alifExcTypeError_,
+		"المرمز '%.400s' ارجع '%.400s' بدل من 'ثمانيات'; "
+		"استخدم الترميزات.ترميز() للترميز إلى انواع مختلفة",
+		encoding,
+		ALIF_TYPE(v)->name);
 	ALIF_DECREF(v);
 	return nullptr;
 }
@@ -2520,7 +2637,7 @@ AlifObject* alifUStr_asEncodedString(AlifObject* unicode,
 static AlifObject* uStr_decodeLocale(const char* _str, AlifSizeT _len,
 	AlifErrorHandler_ _errors, AlifIntT _currentLocale) { // 3998
 	if (_str[_len] != '\0' or (AlifUSizeT)_len != strlen(_str)) {
-		alifErr_setString(_alifExcValueError_, "يحتوي على بايت فارغ");
+		alifErr_setString(_alifExcValueError_, "يحتوي على ثمانية فارغة");
 		return nullptr;
 	}
 
@@ -2588,7 +2705,7 @@ AlifObject* alifUStr_decodeFSDefaultAndSize(const char* s, AlifSizeT size) { // 
 	}
 #endif
 	else {
-		const AlifConfig* config = alifInterpreter_getConfig(interp);
+		const AlifConfig* config = _alifInterpreterState_getConfig(interp);
 		const wchar_t* filesystem_errors = config->fileSystemErrors;
 		AlifErrorHandler_ errors = get_errorHandlerWide(filesystem_errors);
 	#ifdef ALIF_FORCE_UTF8_FS_ENCODING
@@ -2817,6 +2934,11 @@ onError:
 }
 
 
+#undef IS_BASE64
+#undef FROM_BASE64
+#undef TO_BASE64
+#undef DECODE_DIRECT
+#undef ENCODE_DIRECT
 
 /* ------------------------------------------ UTF-8 Codec ------------------------------------------ */
 
@@ -2933,7 +3055,7 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 			endInpos = end - starts;
 			break;
 		case 1:
-			errMsg = "خطأ في بايت البداية";
+			errMsg = "خطأ في ثمانية البداية";
 			startInPos = _s - starts;
 			endInpos = startInPos + 1;
 			break;
@@ -2946,7 +3068,7 @@ static AlifIntT unicode_decodeUTF8Impl(AlifUStrWriter* writer, const char* start
 			ALIF_FALLTHROUGH;
 		case 3:
 		case 4:
-			errMsg = "امتداد بايت غير صحيح";
+			errMsg = "امتداد ثمانيات غير صحيح";
 			startInPos = _s - starts;
 			endInpos = startInPos + ch_ - 1;
 			break;
@@ -3047,7 +3169,7 @@ static AlifObject* unicode_decodeUTF8(const char* _str, AlifSizeT _size,
 	_size -= decoded;
 
 	AlifUStrWriter writer{};
-	alifUStrWriter_initWithBuffer(&writer, u);
+	_alifUStrWriter_initWithBuffer(&writer, u);
 	writer.pos = decoded;
 
 	if (unicode_decodeUTF8Impl(&writer, starts, _str, end,
@@ -3340,15 +3462,16 @@ AlifIntT _alif_encodeUTF8Ex(const wchar_t* _text, char** _str, AlifUSizeT* _erro
 
 
 static AlifObject* uStr_encodeUtf8(AlifObject* unicode,
-	AlifErrorHandler_ error_handler, const char* errors) { // 5538
+	AlifErrorHandler_ error_handler, const char* errors) { // 5557
 	if (!ALIFUSTR_CHECK(unicode)) {
 		//alifErr_badArgument();
 		return nullptr;
 	}
 
-	if (ALIFUSTR_UTF8(unicode))
+	if (ALIFUSTR_UTF8(unicode)) {
 		return alifBytes_fromStringAndSize(ALIFUSTR_UTF8(unicode),
 			ALIFUSTR_UTF8_LENGTH(unicode));
+	}
 
 	AlifIntT kind = ALIFUSTR_KIND(unicode);
 	const void* data = ALIFUSTR_DATA(unicode);
@@ -3372,10 +3495,10 @@ static AlifObject* uStr_encodeUtf8(AlifObject* unicode,
 	}
 
 	if (end == nullptr) {
-		alifBytesWriter_dealloc(&writer);
+		_alifBytesWriter_dealloc(&writer);
 		return nullptr;
 	}
-	return alifBytesWriter_finish(&writer, end);
+	return _alifBytesWriter_finish(&writer, end);
 }
 
 
@@ -3405,7 +3528,7 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 		break;
 	}
 	if (end == nullptr) {
-		alifBytesWriter_dealloc(&writer);
+		_alifBytesWriter_dealloc(&writer);
 		return -1;
 	}
 
@@ -3415,7 +3538,7 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 
 	char* cache = (char*)alifMem_objAlloc(len + 1);
 	if (cache == nullptr) {
-		alifBytesWriter_dealloc(&writer);
+		_alifBytesWriter_dealloc(&writer);
 		//alifErr_noMemory();
 		return -1;
 	}
@@ -3423,7 +3546,7 @@ static AlifIntT uStr_fillUTF8(AlifObject* _uStr) { // 5582
 	ALIFUSTR_UTF8_LENGTH(_uStr) = len;
 	memcpy(cache, start, len);
 	cache[len] = '\0';
-	alifBytesWriter_dealloc(&writer);
+	_alifBytesWriter_dealloc(&writer);
 	return 0;
 }
 
@@ -4325,6 +4448,39 @@ static AlifObject* uStr_encodeCallErrorhandler(const char* errors,
 }
 
 
+/* create or adjust a UnicodeEncodeError */
+static void make_encodeException(AlifObject** _exceptionObject,
+	const char* _encoding, AlifObject* _unicode, AlifSizeT _startpos,
+	AlifSizeT _endpos, const char* _reason) { // 6965
+	if (*_exceptionObject == nullptr) {
+		*_exceptionObject = alifObject_callFunction(
+			_alifExcUnicodeEncodeError_, "sOnns",
+			_encoding, _unicode, _startpos, _endpos, _reason);
+	}
+	else {
+		if (alifUnicodeEncodeError_setStart(*_exceptionObject, _startpos))
+			goto onError;
+		if (alifUnicodeEncodeError_setEnd(*_exceptionObject, _endpos))
+			goto onError;
+		if (alifUnicodeEncodeError_setReason(*_exceptionObject, _reason))
+			goto onError;
+		return;
+onError:
+		ALIF_CLEAR(*_exceptionObject);
+	}
+}
+
+/* raises a UnicodeEncodeError */
+static void raise_encodeException(AlifObject** _exceptionObject,
+	const char* _encoding, AlifObject* _unicode, AlifSizeT _startpos,
+	AlifSizeT _endpos, const char* _reason) { // 6991
+	make_encodeException(_exceptionObject,
+		_encoding, _unicode, _startpos, _endpos, _reason);
+	if (*_exceptionObject != nullptr)
+		alifCodec_strictErrors(*_exceptionObject);
+}
+
+
 
 static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 	const char* errors, const AlifUCS4 limit) { // 7044
@@ -4335,7 +4491,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 	/* pointer into the output */
 	char* str{};
 	const char* encoding = (limit == 256) ? "latin-1" : "ascii";
-	const char* reason = (limit == 256) ? "ordinal not in range(256)" : "ordinal not in range(128)";
+	const char* reason = (limit == 256) ? "الرمز ليس ضمن المدى(256)" : "الرمز ليس ضمن المدى(128)";
 	AlifObject* error_handler_obj = nullptr;
 	AlifObject* exc = nullptr;
 	AlifErrorHandler_ error_handler = AlifErrorHandler_::Alif_Error_Unknown;
@@ -4351,8 +4507,8 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 	if (size == 0)
 		return alifBytes_fromStringAndSize(nullptr, 0);
 
-	alifBytesWriter_init(&writer);
-	str = (char*)alifBytesWriter_alloc(&writer, size);
+	_alifBytesWriter_init(&writer);
+	str = (char*)_alifBytesWriter_alloc(&writer, size);
 	if (str == nullptr)
 		return nullptr;
 
@@ -4384,7 +4540,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 			switch (error_handler) {
 			case AlifErrorHandler_::Alif_Error_Strict:
-				//raise_encodeException(&exc, encoding, unicode, collstart, collend, reason);
+				raise_encodeException(&exc, encoding, unicode, collstart, collend, reason);
 				goto onError;
 
 			case AlifErrorHandler_::Alif_Error_Replace:
@@ -4439,7 +4595,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 				if (newpos < collstart) {
 					writer.overAllocate = 1;
-					str = (char*)alifBytesWriter_prepare(&writer, str,
+					str = (char*)_alifBytesWriter_prepare(&writer, str,
 						collstart - newpos);
 					if (str == nullptr)
 						goto onError;
@@ -4453,7 +4609,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 				if (ALIFBYTES_CHECK(rep)) {
 					/* Directly copy bytes result to output. */
-					str = (char*)alifBytesWriter_writeBytes(&writer, str,
+					str = (char*)_alifBytesWriter_writeBytes(&writer, str,
 						ALIFBYTES_AS_STRING(rep),
 						ALIFBYTES_GET_SIZE(rep));
 				}
@@ -4467,7 +4623,7 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 						//	collstart, collend, reason);
 						goto onError;
 					}
-					str = (char*)alifBytesWriter_writeBytes(&writer, str,
+					str = (char*)_alifBytesWriter_writeBytes(&writer, str,
 						ALIFUSTR_DATA(rep),
 						ALIFUSTR_GET_LENGTH(rep));
 				}
@@ -4482,11 +4638,11 @@ static AlifObject* uStr_encodeUcs1(AlifObject* unicode,
 
 	ALIF_XDECREF(error_handler_obj);
 	ALIF_XDECREF(exc);
-	return alifBytesWriter_finish(&writer, str);
+	return _alifBytesWriter_finish(&writer, str);
 
 onError:
 	ALIF_XDECREF(rep);
-	alifBytesWriter_dealloc(&writer);
+	_alifBytesWriter_dealloc(&writer);
 	ALIF_XDECREF(error_handler_obj);
 	ALIF_XDECREF(exc);
 	return nullptr;
@@ -4505,7 +4661,103 @@ AlifObject* _alifUStr_asLatin1String(AlifObject* unicode, const char* errors) { 
 }
 
 
+/* --- 7-bit ASCII Codec -------------------------------------------------- */
 
+AlifObject* alifUStr_decodeASCII(const char* _s,
+	AlifSizeT _size, const char* _errors) { // 7265
+	const char* starts = _s;
+	const char* e = _s + _size;
+	AlifObject* error_handler_obj = nullptr;
+	AlifObject* exc = nullptr;
+	AlifErrorHandler_ error_handler = AlifErrorHandler_::Alif_Error_Unknown;
+
+	if (_size == 0) {
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+
+	/* ASCII is equivalent to the first 128 ordinals in Unicode. */
+	if (_size == 1 and (unsigned char)_s[0] < 128) {
+		return get_latin1Char((unsigned char)_s[0]);
+	}
+
+	// Shortcut for simple case
+	AlifObject* u = alifUStr_new(_size, 127);
+	if (u == nullptr) {
+		return nullptr;
+	}
+	AlifSizeT outpos = ascii_decode(_s, e, ALIFUSTR_1BYTE_DATA(u));
+	if (outpos == _size) {
+		return u;
+	}
+
+	AlifUStrWriter writer{};
+	_alifUStrWriter_initWithBuffer(&writer, u);
+	writer.pos = outpos;
+
+	_s += outpos;
+	AlifIntT kind = writer.kind;
+	void* data = writer.data;
+	AlifSizeT startinpos{}, endinpos{};
+
+	while (_s < e) {
+		unsigned char c = (unsigned char)*_s;
+		if (c < 128) {
+			ALIFUSTR_WRITE(kind, data, writer.pos, c);
+			writer.pos++;
+			++_s;
+			continue;
+		}
+
+		/* byte outsize range 0x00..0x7f: call the error handler */
+
+		if (error_handler == AlifErrorHandler_::Alif_Error_Unknown)
+			error_handler = alif_getErrorHandler(_errors);
+
+		switch (error_handler) {
+		case AlifErrorHandler_::Alif_Error_Replace:
+		case AlifErrorHandler_::Alif_Error_SurrogateEscape:
+			/* Fast-path: the error handler only writes one character,
+			but we may switch to UCS2 at the first write */
+			if (ALIFUSTRWRITER_PREPAREKIND(&writer, AlifUStrKind_::AlifUStr_2Byte_Kind) < 0)
+				goto onError;
+			kind = writer.kind;
+			data = writer.data;
+
+			if (error_handler == AlifErrorHandler_::Alif_Error_Replace)
+				ALIFUSTR_WRITE(kind, data, writer.pos, 0xfffd);
+			else
+				ALIFUSTR_WRITE(kind, data, writer.pos, c + 0xdc00);
+			writer.pos++;
+			++_s;
+			break;
+
+		case AlifErrorHandler_::Alif_Error_Ignore:
+			++_s;
+			break;
+
+		default:
+			startinpos = _s - starts;
+			endinpos = startinpos + 1;
+			if (uStrDecode_callErrorHandlerWriter(
+				_errors, &error_handler_obj,
+				"ascii", "الرمز ليس في المدى(128)",
+				&starts, &e, &startinpos, &endinpos, &exc, &_s,
+				&writer))
+				goto onError;
+			kind = writer.kind;
+			data = writer.data;
+		}
+	}
+	ALIF_XDECREF(error_handler_obj);
+	ALIF_XDECREF(exc);
+	return _alifUStrWriter_finish(&writer);
+
+onError:
+	_alifUStrWriter_dealloc(&writer);
+	ALIF_XDECREF(error_handler_obj);
+	ALIF_XDECREF(exc);
+	return nullptr;
+}
 
 
 AlifObject* _alifUStr_asASCIIString(AlifObject* unicode, const char* errors) { // 7345
@@ -4954,7 +5206,7 @@ AlifSizeT _alifUStr_insertThousandsGrouping(
 		insertThousandsGrouping_fill(_writer, &bufferPos,
 			_digits, &digitsPos,
 			nChars, nZeros,
-			useSeparator ? _thousandsSep : NULL,
+			useSeparator ? _thousandsSep : nullptr,
 			thousandsSepLen, _maxchar);
 	}
 	return count;
@@ -4981,6 +5233,188 @@ AlifSizeT alifUStr_findChar(AlifObject* _str, AlifUCS4 _ch,
 		return _start + result;
 }
 
+
+
+
+static AlifIntT tail_match(AlifObject* _self,
+	AlifObject* _subString, AlifSizeT _start,
+	AlifSizeT _end, AlifIntT _direction) { // 9636
+	AlifIntT kindSelf{};
+	AlifIntT kindSub{};
+	const void* dataSelf{};
+	const void* dataSub{};
+	AlifSizeT offset{};
+	AlifSizeT i{};
+	AlifSizeT endSub{};
+
+	ADJUST_INDICES(_start, _end, ALIFUSTR_GET_LENGTH(_self));
+	_end -= ALIFUSTR_GET_LENGTH(_subString);
+	if (_end < _start)
+		return 0;
+
+	if (ALIFUSTR_GET_LENGTH(_subString) == 0)
+		return 1;
+
+	kindSelf = ALIFUSTR_KIND(_self);
+	dataSelf = ALIFUSTR_DATA(_self);
+	kindSub = ALIFUSTR_KIND(_subString);
+	dataSub = ALIFUSTR_DATA(_subString);
+	endSub = ALIFUSTR_GET_LENGTH(_subString) - 1;
+
+	if (_direction > 0)
+		offset = _end;
+	else
+		offset = _start;
+
+	if (ALIFUSTR_READ(kindSelf, dataSelf, offset) ==
+		ALIFUSTR_READ(kindSub, dataSub, 0) &&
+		ALIFUSTR_READ(kindSelf, dataSelf, offset + endSub) ==
+		ALIFUSTR_READ(kindSub, dataSub, endSub)) {
+		/* If both are of the same kind, memcmp is sufficient */
+		if (kindSelf == kindSub) {
+			return ! memcmp((char *)dataSelf +
+				(offset * ALIFUSTR_KIND(_subString)),
+				dataSub,
+				ALIFUSTR_GET_LENGTH(_subString) *
+				ALIFUSTR_KIND(_subString));
+		}
+		/* otherwise we have to compare each character by first accessing it */
+		else {
+			/* We do not need to compare 0 and len(substring)-1 because
+			the if statement above ensured already that they are equal
+			when we end up here. */
+			for (i = 1; i < endSub; ++i) {
+				if (ALIFUSTR_READ(kindSelf, dataSelf, offset + i) !=
+					ALIFUSTR_READ(kindSub, dataSub, i))
+					return 0;
+			}
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+static AlifObject* ascii_upperOrLower(AlifObject* self, AlifIntT lower) { // 9713
+	AlifSizeT len = ALIFUSTR_GET_LENGTH(self);
+	const char* data = (const char*)ALIFUSTR_DATA(self);
+	char* resdata{};
+	AlifObject* res{};
+
+	res = alifUStr_new(len, 127);
+	if (res == nullptr)
+		return nullptr;
+	resdata = (char*)ALIFUSTR_DATA(res);
+	if (lower)
+		_alifBytes_lower(resdata, data, len);
+	else
+		_alifBytes_upper(resdata, data, len);
+	return res;
+}
+
+static AlifUCS4 handle_capitalSigma(AlifIntT kind, const void* data,
+	AlifSizeT length, AlifSizeT i) { // 9732
+	AlifSizeT j{};
+	AlifIntT final_sigma{};
+	AlifUCS4 c = 0;
+	for (j = i - 1; j >= 0; j--) {
+		c = ALIFUSTR_READ(kind, data, j);
+		if (!_alifUStr_isCaseIgnorable(c))
+			break;
+	}
+	final_sigma = j >= 0 and _alifUStr_isCased(c);
+	if (final_sigma) {
+		for (j = i + 1; j < length; j++) {
+			c = ALIFUSTR_READ(kind, data, j);
+			if (!_alifUStr_isCaseIgnorable(c))
+				break;
+		}
+		final_sigma = j == length or !_alifUStr_isCased(c);
+	}
+	return (final_sigma) ? 0x3C2 : 0x3C3;
+}
+
+static AlifIntT lower_ucs4(AlifIntT _kind, const void* _data, AlifSizeT _length,
+	AlifSizeT _i, AlifUCS4 _c, AlifUCS4* _mapped) { // 9761
+	/* Obscure special case. */
+	if (_c == 0x3A3) {
+		_mapped[0] = handle_capitalSigma(_kind, _data, _length, _i);
+		return 1;
+	}
+	return _alifUStr_toLowerFull(_c, _mapped);
+}
+
+static AlifSizeT do_upperOrLower(AlifIntT _kind, const void* _data, AlifSizeT _length,
+	AlifUCS4* _res, AlifUCS4* _maxchar, AlifIntT _lower) { // 9822
+	AlifSizeT i{}, k = 0;
+
+	for (i = 0; i < _length; i++) {
+		AlifUCS4 c = ALIFUSTR_READ(_kind, _data, i), mapped[3];
+		AlifIntT n_res{}, j{};
+		if (_lower)
+			n_res = lower_ucs4(_kind, _data, _length, i, c, mapped);
+		else
+			n_res = _alifUStr_toUpperFull(c, mapped);
+		for (j = 0; j < n_res; j++) {
+			*_maxchar = ALIF_MAX(*_maxchar, mapped[j]);
+			_res[k++] = mapped[j];
+		}
+	}
+	return k;
+}
+
+
+
+
+static AlifSizeT do_lower(AlifIntT _kind, const void* _data,
+	AlifSizeT _length, AlifUCS4* _res, AlifUCS4* _maxchar) { // 9849
+	return do_upperOrLower(_kind, _data, _length, _res, _maxchar, 1);
+}
+
+static AlifObject* case_operation(AlifObject* self,
+	AlifSizeT(*perform)(AlifIntT, const void*, AlifSizeT, AlifUCS4*, AlifUCS4*)) { // 9899
+	AlifObject* res = nullptr;
+	AlifSizeT length, newlength = 0;
+	AlifIntT kind{}, outkind{};
+	const void* data{};
+	void* outdata{};
+	AlifUCS4 maxchar = 0, * tmp{}, * tmpend{};
+
+	kind = ALIFUSTR_KIND(self);
+	data = ALIFUSTR_DATA(self);
+	length = ALIFUSTR_GET_LENGTH(self);
+	if ((size_t)length > ALIF_SIZET_MAX / (3 * sizeof(AlifUCS4))) {
+		alifErr_setString(_alifExcOverflowError_, "النص طويل جداً");
+		return nullptr;
+	}
+	tmp = (AlifUCS4*)alifMem_dataAlloc(sizeof(AlifUCS4) * 3 * length);
+	//if (tmp == nullptr)
+	//	return alifErr_noMemory();
+	newlength = perform(kind, data, length, tmp, &maxchar);
+	res = alifUStr_new(newlength, maxchar);
+	if (res == nullptr)
+		goto leave;
+	tmpend = tmp + newlength;
+	outdata = ALIFUSTR_DATA(res);
+	outkind = ALIFUSTR_KIND(res);
+	switch (outkind) {
+	case AlifUStrKind_::AlifUStr_1Byte_Kind:
+		ALIFUSTR_CONVERT_BYTES(AlifUCS4, AlifUCS1, tmp, tmpend, outdata); //* review
+		break;
+	case AlifUStrKind_::AlifUStr_2Byte_Kind:
+		ALIFUSTR_CONVERT_BYTES(AlifUCS4, AlifUCS2, tmp, tmpend, outdata); //* review
+		break;
+	case AlifUStrKind_::AlifUStr_4Byte_Kind:
+		memcpy(outdata, tmp, sizeof(AlifUCS4) * newlength);
+		break;
+	default:
+		ALIF_UNREACHABLE();
+	}
+leave:
+	alifMem_dataFree(tmp);
+	return res;
+}
 
 AlifObject* alifUStr_join(AlifObject* _separator, AlifObject* _seq) { // 9910
 	AlifObject* res{};
@@ -5931,7 +6365,7 @@ AlifIntT alifUStr_equalToUTF8AndSize(AlifObject* _uStr,
 	return s_ == ends;
 }
 
-AlifIntT alifUStr_equalToASCIIString(AlifObject* _uStr, const char* _str) { // 11135
+AlifIntT _alifUStr_equalToASCIIString(AlifObject* _uStr, const char* _str) { // 11135
 	AlifUSizeT len_{};
 	if (!ALIFUSTR_IS_ASCII(_uStr))
 		return 0;
@@ -6210,6 +6644,39 @@ static AlifHashT uStr_hash(AlifObject* _self) { // 11663
 }
 
 
+static AlifObject* uStr_isasciiImpl(AlifObject* _self) { // 11743
+	return alifBool_fromLong(ALIFUSTR_IS_ASCII(_self));
+}
+
+
+static AlifObject* uStr_isalnumImpl(AlifObject* _self) { // 11976
+	AlifIntT kind{};
+	const void* data{};
+	AlifSizeT len{}, i{};
+
+	kind = ALIFUSTR_KIND(_self);
+	data = ALIFUSTR_DATA(_self);
+	len = ALIFUSTR_GET_LENGTH(_self);
+
+	/* Shortcut for single character strings */
+	if (len == 1) {
+		const AlifUCS4 ch = ALIFUSTR_READ(kind, data, 0);
+		return alifBool_fromLong(alifUStr_isalnum(ch));
+	}
+
+	/* Special case for empty strings */
+	if (len == 0)
+		ALIF_RETURN_FALSE;
+
+	for (i = 0; i < len; i++) {
+		const AlifUCS4 ch = ALIFUSTR_READ(kind, data, i);
+		if (!alifUStr_isalnum(ch))
+			ALIF_RETURN_FALSE;
+	}
+	ALIF_RETURN_TRUE;
+}
+
+
 
 AlifSizeT _alifUStr_scanIdentifier(AlifObject* _self) { // 12090
 	AlifSizeT i{};
@@ -6253,6 +6720,68 @@ static AlifSizeT uStr_length(AlifObject* _self) { // 12231
 
 
 
+static AlifObject* uStr_lowerImpl(AlifObject* _self) { // 12266
+	if (ALIFUSTR_IS_ASCII(_self))
+		return ascii_upperOrLower(_self, 1);
+	return case_operation(_self, do_lower);
+}
+
+// 12275
+#define LEFTSTRIP 0
+#define RIGHTSTRIP 1
+#define BOTHSTRIP 2
+
+/* Arrays indexed by above */
+static const char* _stripFuncNames_[] = {"جرد_يسار", "جرد_يمين", "جرد"};
+
+#define STRIPNAME(i) (_stripFuncNames_[i])
+
+AlifObject* _alifUStr_xStrip(AlifObject* _self,
+	AlifIntT _stripType, AlifObject* _sepObj) { // 12285
+	const void* data{};
+	AlifIntT kind{};
+	AlifSizeT i{}, j{}, len{};
+	BLOOM_MASK sepmask{};
+	AlifSizeT seplen{};
+
+	kind = ALIFUSTR_KIND(_self);
+	data = ALIFUSTR_DATA(_self);
+	len = ALIFUSTR_GET_LENGTH(_self);
+	seplen = ALIFUSTR_GET_LENGTH(_sepObj);
+	sepmask = make_bloomMask(ALIFUSTR_KIND(_sepObj),
+		ALIFUSTR_DATA(_sepObj),
+		seplen);
+
+	i = 0;
+	if (_stripType != RIGHTSTRIP) {
+		while (i < len) {
+			AlifUCS4 ch = ALIFUSTR_READ(kind, data, i);
+			if (!BLOOM(sepmask, ch))
+				break;
+			if (alifUStr_findChar(_sepObj, ch, 0, seplen, 1) < 0)
+				break;
+			i++;
+		}
+	}
+
+	j = len;
+	if (_stripType != LEFTSTRIP) {
+		j--;
+		while (j >= i) {
+			AlifUCS4 ch = ALIFUSTR_READ(kind, data, j);
+			if (!BLOOM(sepmask, ch))
+				break;
+			if (alifUStr_findChar(_sepObj, ch, 0, seplen, 1) < 0)
+				break;
+			j--;
+		}
+
+		j++;
+	}
+
+	return alifUStr_subString(_self, i, j);
+}
+
 AlifObject* alifUStr_subString(AlifObject* _self,
 	AlifSizeT _start, AlifSizeT _end) { // 12304
 	const unsigned char* data{};
@@ -6285,6 +6814,153 @@ AlifObject* alifUStr_subString(AlifObject* _self,
 	}
 }
 
+static AlifObject* do_strip(AlifObject* self, AlifIntT striptype) { // 12366
+	AlifSizeT len{}, i{}, j{};
+
+	len = ALIFUSTR_GET_LENGTH(self);
+
+	if (ALIFUSTR_IS_ASCII(self)) {
+		const AlifUCS1* data = ALIFUSTR_1BYTE_DATA(self);
+
+		i = 0;
+		if (striptype != RIGHTSTRIP) {
+			while (i < len) {
+				AlifUCS1 ch = data[i];
+				if (!_alifASCIIWhitespace_[ch])
+					break;
+				i++;
+			}
+		}
+
+		j = len;
+		if (striptype != LEFTSTRIP) {
+			j--;
+			while (j >= i) {
+				AlifUCS1 ch = data[j];
+				if (!_alifASCIIWhitespace_[ch])
+					break;
+				j--;
+			}
+			j++;
+		}
+	}
+	else {
+		AlifIntT kind = ALIFUSTR_KIND(self);
+		const void* data = ALIFUSTR_DATA(self);
+
+		i = 0;
+		if (striptype != RIGHTSTRIP) {
+			while (i < len) {
+				AlifUCS4 ch = ALIFUSTR_READ(kind, data, i);
+				if (!alifUStr_isSpace(ch))
+					break;
+				i++;
+			}
+		}
+
+		j = len;
+		if (striptype != LEFTSTRIP) {
+			j--;
+			while (j >= i) {
+				AlifUCS4 ch = ALIFUSTR_READ(kind, data, j);
+				if (!alifUStr_isSpace(ch))
+					break;
+				j--;
+			}
+			j++;
+		}
+	}
+
+	return alifUStr_subString(self, i, j);
+}
+
+
+static AlifObject* do_argStrip(AlifObject* _self,
+	AlifIntT _stripType, AlifObject* _sep) { // 12429
+	if (_sep != ALIF_NONE) {
+		if (ALIFUSTR_CHECK(_sep))
+			return _alifUStr_xStrip(_self, _stripType, _sep);
+		else {
+			alifErr_format(_alifExcTypeError_,
+				"%s المعامل يجب أن يكون نص او عدم",
+				STRIPNAME(_stripType));
+			return NULL;
+		}
+	}
+
+	return do_strip(_self, _stripType);
+}
+
+
+static AlifObject* uStr_stripImpl(AlifObject* _self,
+	AlifObject* _chars) { // 12458
+	return do_argStrip(_self, BOTHSTRIP, _chars);
+}
+
+
+static AlifObject* uStr_lStripImpl(AlifObject* _self,
+	AlifObject* _chars) { // 12477
+	return do_argStrip(_self, LEFTSTRIP, _chars);
+}
+
+
+static AlifObject* uStr_rStripImpl(AlifObject* _self,
+	AlifObject* _chars) { // 12496
+	return do_argStrip(_self, RIGHTSTRIP, _chars);
+}
+
+
+
+static AlifObject* uStr_repeat(AlifObject* str, AlifSizeT len) { // 12503
+	AlifObject* u{};
+	AlifSizeT nchars{}, n{};
+
+	if (len < 1) {
+		ALIF_RETURN_UNICODE_EMPTY;
+	}
+
+	/* no repeat, return original string */
+	if (len == 1)
+		return uStr_resultUnchanged(str);
+
+	if (ALIFUSTR_GET_LENGTH(str) > ALIF_SIZET_MAX / len) {
+		alifErr_setString(_alifExcOverflowError_,
+			"النص المكرر طويل جداً");
+		return nullptr;
+	}
+	nchars = len * ALIFUSTR_GET_LENGTH(str);
+
+	u = alifUStr_new(nchars, ALIFUSTR_MAX_CHAR_VALUE(str));
+	if (!u)
+		return nullptr;
+
+	if (ALIFUSTR_GET_LENGTH(str) == 1) {
+		AlifIntT kind = ALIFUSTR_KIND(str);
+		AlifUCS4 fill_char = ALIFUSTR_READ(kind, ALIFUSTR_DATA(str), 0);
+		if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+			void* to = ALIFUSTR_DATA(u);
+			memset(to, (unsigned char)fill_char, len);
+		}
+		else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+			AlifUCS2* ucs2 = ALIFUSTR_2BYTE_DATA(u);
+			for (n = 0; n < len; ++n)
+				ucs2[n] = fill_char;
+		}
+		else {
+			AlifUCS4* ucs4 = ALIFUSTR_4BYTE_DATA(u);
+			for (n = 0; n < len; ++n)
+				ucs4[n] = fill_char;
+		}
+	}
+	else {
+		AlifSizeT charSize = ALIFUSTR_KIND(str);
+		char* to = (char*)ALIFUSTR_DATA(u);
+		_alifBytes_repeat(to, nchars * charSize, (const char*)ALIFUSTR_DATA(str),
+			ALIFUSTR_GET_LENGTH(str) * charSize);
+	}
+
+	return u;
+}
 
 
 
@@ -6531,6 +7207,80 @@ static AlifObject* uStr_rsplitImpl(AlifObject* self, AlifObject* sep,
 }
 
 
+
+static AlifObject* uStr_startsWithImpl(AlifObject* _self,
+	AlifObject* _subObj, AlifSizeT _start, AlifSizeT _end) { // 13295
+	if (ALIFTUPLE_CHECK(_subObj)) {
+		AlifSizeT i{};
+		for (i = 0; i < ALIFTUPLE_GET_SIZE(_subObj); i++) {
+			AlifObject* substring = ALIFTUPLE_GET_ITEM(_subObj, i);
+			if (!ALIFUSTR_CHECK(substring)) {
+				alifErr_format(_alifExcTypeError_,
+					"المترابطة الخاصة بـ يبدا_ب() يجب أن تحتوي فقط نص, "
+					"وليس %.100s",
+					ALIF_TYPE(substring)->name);
+				return nullptr;
+			}
+			AlifIntT result = tail_match(_self, substring, _start, _end, -1);
+			if (result < 0) {
+				return nullptr;
+			}
+			if (result) {
+				ALIF_RETURN_TRUE;
+			}
+		}
+		/* nothing matched */
+		ALIF_RETURN_FALSE;
+	}
+	if (!ALIFUSTR_CHECK(_subObj)) {
+		alifErr_format(_alifExcTypeError_,
+			"اول معامل في يبدا_ب() يجب ان يكون نص او "
+			"مترابطة من النصوص, وليس %.100s", ALIF_TYPE(_subObj)->name);
+		return nullptr;
+	}
+	AlifIntT result = tail_match(_self, _subObj, _start, _end, -1);
+	if (result < 0) {
+		return nullptr;
+	}
+	return alifBool_fromLong(result);
+}
+
+static AlifObject* uStr_endsWithImpl(AlifObject* _self,
+	AlifObject* _subobj, AlifSizeT _start, AlifSizeT _end) { // 13352
+	if (ALIFTUPLE_CHECK(_subobj)) {
+		AlifSizeT i{};
+		for (i = 0; i < ALIFTUPLE_GET_SIZE(_subobj); i++) {
+			AlifObject* substring = ALIFTUPLE_GET_ITEM(_subobj, i);
+			if (!ALIFUSTR_CHECK(substring)) {
+				alifErr_format(_alifExcTypeError_,
+					"لاستخدام ينتهي_ب مع مترابطة يجب أن تكون كل محتوياتها نصوص, "
+					"وليس %.100s",
+					ALIF_TYPE(substring)->name);
+				return nullptr;
+			}
+			int result = tail_match(_self, substring, _start, _end, +1);
+			if (result < 0) {
+				return nullptr;
+			}
+			if (result) {
+				ALIF_RETURN_TRUE;
+			}
+		}
+		ALIF_RETURN_FALSE;
+	}
+	if (!ALIFUSTR_CHECK(_subobj)) {
+		alifErr_format(_alifExcTypeError_,
+			"اول معامل ل ينتهي_ب يجب أن يكون نص او "
+			"مترابطة من النصوص, وليس %.100s", ALIF_TYPE(_subobj)->name);
+		return nullptr;
+	}
+	int result = tail_match(_self, _subobj, _start, _end, +1);
+	if (result < 0) {
+		return nullptr;
+	}
+	return alifBool_fromLong(result);
+}
+
 static inline void alifUStrWriter_update(AlifUStrWriter* _writer) { // 13364
 	_writer->maxChar = ALIFUSTR_MAX_CHAR_VALUE(_writer->buffer);
 	_writer->data = ALIFUSTR_DATA(_writer->buffer);
@@ -6588,7 +7338,7 @@ void alifUStrWriter_discard(AlifUStrWriter* _writer) { // 13456
 
 
 
-static inline void alifUStrWriter_initWithBuffer(AlifUStrWriter* _writer,
+static inline void _alifUStrWriter_initWithBuffer(AlifUStrWriter* _writer,
 	AlifObject* _buffer) { // 13439
 	memset(_writer, 0, sizeof(*_writer));
 	_writer->buffer = _buffer;
@@ -6958,7 +7708,7 @@ static AlifObject* uStr___format__Impl(AlifObject* _self,
 		ALIFUSTR_GET_LENGTH(_formatSpec));
 	if (ret == -1) {
 		_alifUStrWriter_dealloc(&writer);
-		return NULL;
+		return nullptr;
 	}
 	return _alifUStrWriter_finish(&writer);
 }
@@ -6975,14 +7725,19 @@ static AlifMethodDef _uStrMethods_[] = { // 13987
 	UNICODE_RSPLIT_METHODDEF
 	UNICODE_JOIN_METHODDEF
 	//UNICODE_RFIND_METHODDEF
-	//UNICODE_STRIP_METHODDEF
-	//UNICODE_LSTRIP_METHODDEF
-	//UNICODE_RSTRIP_METHODDEF
-	//UNICODE_ENDSWITH_METHODDEF
-	//UNICODE_STARTSWITH_METHODDEF
+	UNICODE_STRIP_METHODDEF
+	UNICODE_LSTRIP_METHODDEF
+	UNICODE_RSTRIP_METHODDEF
+	UNICODE_ENDSWITH_METHODDEF
+	UNICODE_STARTSWITH_METHODDEF
 	//UNICODE_ISDECIMAL_METHODDEF
 	UNICODE_PARTITION_METHODDEF
 	UNICODE_RPARTITION_METHODDEF
+
+	UNICODE_ISASCII_METHODDEF
+	UNICODE_LOWER_METHODDEF
+	UNICODE_ISALNUM_METHODDEF
+
 	//{"نسق", ALIF_CPPFUNCTION_CAST(do_stringFormat), METHOD_VARARGS | METHOD_KEYWORDS},
 	UNICODE___FORMAT___METHODDEF
 	{nullptr, nullptr}
@@ -7006,7 +7761,7 @@ static AlifNumberMethods _uStrAsNumber_ = { // 14049
 static AlifSequenceMethods _uStrAsSequence_ = { // 14056
 	0, // (LenFunc)uStr_length,       /* length */
 	alifUStr_concat,
-	0, // (SizeArgFunc)uStr_repeat,  /* repeat */
+	(SizeArgFunc)uStr_repeat,  /* repeat */
 	0, // (SizeArgFunc)uStr_getItem,     /* item */
 	0,                  /* slice */
 	0,                  /* assItem */
@@ -7088,6 +7843,159 @@ static AlifMappingMethods _uStrAsMapping_ = { // 14137
 	(BinaryFunc)uStr_subScript,
 };
 
+
+
+static AlifObject* uStr_subTypeNew(AlifTypeObject*, AlifObject*); // 15085
+
+static AlifObject* uStr_newImpl(AlifTypeObject* _type, AlifObject* _x,
+	const char* _encoding, const char* _errors) { // 15098
+	AlifObject* unicode{};
+	if (_x == nullptr) {
+		unicode = uStr_getEmpty();
+	}
+	else if (_encoding == nullptr and _errors == nullptr) {
+		unicode = alifObject_str(_x);
+	}
+	else {
+		unicode = alifUStr_fromEncodedObject(_x, _encoding, _errors);
+	}
+
+	if (unicode != nullptr and _type != &_alifUStrType_) {
+		ALIF_SETREF(unicode, uStr_subTypeNew(_type, unicode));
+	}
+	return unicode;
+}
+
+static const char* arg_asUTF8(AlifObject* _obj, const char* _name) { // 15120
+	if (!ALIFUSTR_CHECK(_obj)) {
+		alifErr_format(_alifExcTypeError_,
+			"معامل نص() '%s' يجب أن يكون نص, وليس %T",
+			_name, _obj);
+		return nullptr;
+	}
+	return _alifUStr_asUTF8NoNUL(_obj);
+}
+
+static AlifObject* uStr_vectorCall(AlifObject* _type, AlifObject* const* _args,
+	AlifUSizeT _nargsf, AlifObject* _kwnames) { // 15132
+	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
+	if (_kwnames != nullptr and ALIFTUPLE_GET_SIZE(_kwnames) != 0) {
+		// Fallback to uStr_new()
+		AlifObject* tuple = _alifTuple_fromArray(_args, nargs);
+		if (tuple == nullptr) {
+			return nullptr;
+		}
+		AlifObject* dict = _alifStack_asDict(_args + nargs, _kwnames);
+		if (dict == nullptr) {
+			ALIF_DECREF(tuple);
+			return nullptr;
+		}
+		AlifObject* ret = uStr_new(ALIFTYPE_CAST(_type), tuple, dict);
+		ALIF_DECREF(tuple);
+		ALIF_DECREF(dict);
+		return ret;
+	}
+	if (!_ALIFARG_CHECKPOSITIONAL("نص", nargs, 0, 3)) {
+		return nullptr;
+	}
+	if (nargs == 0) {
+		return uStr_getEmpty();
+	}
+	AlifObject* object = _args[0];
+	if (nargs == 1) {
+		return alifObject_str(object);
+	}
+	const char* encoding = arg_asUTF8(_args[1], "encoding");
+	if (encoding == nullptr) {
+		return nullptr;
+	}
+	const char* errors = nullptr;
+	if (nargs == 3) {
+		errors = arg_asUTF8(_args[2], "errors");
+		if (errors == nullptr) {
+			return nullptr;
+		}
+	}
+	return alifUStr_fromEncodedObject(object, encoding, errors);
+}
+
+
+static AlifObject* uStr_subTypeNew(AlifTypeObject* _type,
+	AlifObject* _unicode) { // 15179
+	AlifObject* self{};
+	AlifSizeT length{}, charSize{};
+	AlifIntT shareUTF8{};
+	AlifIntT kind{};
+	void* data{};
+
+	self = _type->alloc(_type, 0);
+	if (self == nullptr) {
+		return nullptr;
+	}
+	kind = ALIFUSTR_KIND(_unicode);
+	length = ALIFUSTR_GET_LENGTH(_unicode);
+
+	ALIFUSTR_LENGTH(self) = length;
+#ifdef ALIF_DEBUG
+	ALIFUSTR_HASH(self) = -1;
+#else
+	ALIFUSTR_HASH(self) = ALIFUSTR_HASH(_unicode);
+#endif
+	ALIFUSTR_STATE(self).interned = 0;
+	ALIFUSTR_STATE(self).kind = kind;
+	ALIFUSTR_STATE(self).compact = 0;
+	ALIFUSTR_STATE(self).ascii = ALIFUSTR_STATE(_unicode).ascii;
+	ALIFUSTR_STATE(self).staticallyAllocated = 0;
+	_ALIFUSTR_UTF8_LENGTH(self) = 0;
+	_ALIFUSTR_UTF8(self) = nullptr;
+	ALIFUSTR_DATA_ANY(self) = nullptr;
+
+	shareUTF8 = 0;
+	if (kind == AlifUStrKind_::AlifUStr_1Byte_Kind) {
+		charSize = 1;
+		if (ALIFUSTR_MAX_CHAR_VALUE(_unicode) < 128)
+			shareUTF8 = 1;
+	}
+	else if (kind == AlifUStrKind_::AlifUStr_2Byte_Kind) {
+		charSize = 2;
+	}
+	else {
+		charSize = 4;
+	}
+
+	/* Ensure we won't overflow the length. */
+	if (length > (ALIF_SIZET_MAX / charSize - 1)) {
+		//alifErr_noMemory();
+		goto onError;
+	}
+	data = alifMem_dataAlloc((length + 1) * charSize);
+	if (data == nullptr) {
+		//alifErr_noMemory();
+		goto onError;
+	}
+
+	ALIFUSTR_DATA_ANY(self) = data;
+	if (shareUTF8) {
+		_ALIFUSTR_UTF8_LENGTH(self) = length;
+		_ALIFUSTR_UTF8(self) = (char*)data;
+	}
+
+	memcpy(data, ALIFUSTR_DATA(_unicode), kind * (length + 1));
+#ifdef ALIF_DEBUG
+	ALIFUSTR_HASH(self) = ALIFUSTR_HASH(unicode);
+#endif
+	return self;
+
+onError:
+	ALIF_DECREF(self);
+	return nullptr;
+}
+
+void _alifUStr_exactDealloc(AlifObject* _op) { // 15256
+	uStr_dealloc(_op);
+}
+
+
 static AlifObject* uStr_iter(AlifObject*); // 15275
 
 AlifTypeObject _alifUStrType_ = { // 15235
@@ -7095,19 +8003,23 @@ AlifTypeObject _alifUStrType_ = { // 15235
 	.name = "نص",
 	.basicSize = sizeof(AlifUStrObject),
 	.itemSize = 0,
-	.dealloc = ustr_dealloc,
+	.dealloc = uStr_dealloc,
 	.repr = uStr_repr,
 	.asNumber = &_uStrAsNumber_,
 	.asSequence = &_uStrAsSequence_,
 	.asMapping = &_uStrAsMapping_,
 	.hash = (HashFunc)uStr_hash,
+	//.str = (ReprFunc)uStr_str,
+	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE |
 		ALIF_TPFLAGS_UNICODE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.richCompare = alifUStr_richCompare,
 	.iter = uStr_iter,
 	.methods = _uStrMethods_,
+	.new_ = uStr_new,
 	.free = alifMem_objFree,
+	.vectorCall = uStr_vectorCall,
 };
 
 
@@ -7131,14 +8043,14 @@ AlifStatus alifUStr_initGlobalObjects(AlifInterpreter* _interp) { // 15318
 
 
 static AlifObject* intern_static(AlifInterpreter* interp, AlifObject* s /* stolen */) { // 15398
-	AlifObject* r = (AlifObject*)alifHashTable_get(INTERNED_STRINGS, s);
+	AlifObject* r = (AlifObject*)_alifHashTable_get(INTERNED_STRINGS, s);
 	if (r != nullptr and r != s) {
 		ALIF_DECREF(s);
 		return ALIF_NEWREF(r);
 	}
 
 	if (_alifHashTable_set(INTERNED_STRINGS, s, s) < -1) {
-		//alif_fatalError("failed to intern static string");
+		alif_fatalError("فشل أثناء تضمين النصوص الثابتة");
 	}
 
 	ALIFUSTR_STATE(s).interned = SSTATE_INTERNED_IMMORTAL_STATIC;
@@ -7153,7 +8065,7 @@ void _alifUStr_internStatic(AlifInterpreter* interp, AlifObject** p) { // 15437
 static void immortalize_interned(AlifObject* _s) { // 15405
 
 	ALIFUSTR_STATE(_s).interned = SSTATE_INTERNED_IMMORTAL;
-	alif_setImmortal(_s);
+	_alif_setImmortal(_s);
 }
 
 
@@ -7194,7 +8106,7 @@ static AlifObject* intern_common(AlifInterpreter* _interp,
 	}
 
 	{
-		AlifObject* r = (AlifObject*)alifHashTable_get(INTERNED_STRINGS, _s);
+		AlifObject* r = (AlifObject*)_alifHashTable_get(INTERNED_STRINGS, _s);
 		if (r != nullptr) {
 			ALIF_DECREF(_s);
 			return ALIF_NEWREF(r);
@@ -7236,11 +8148,11 @@ static AlifObject* intern_common(AlifInterpreter* _interp,
 }
 
 
-void alifUStr_internImmortal(AlifInterpreter* _interp, AlifObject** _p) { // 15553
+void _alifUStr_internImmortal(AlifInterpreter* _interp, AlifObject** _p) { // 15553
 	*_p = intern_common(_interp, *_p, 1);
 }
 
-void alifUStr_internMortal(AlifInterpreter* _interp, AlifObject** _p) { // 15561
+void _alifUStr_internMortal(AlifInterpreter* _interp, AlifObject** _p) { // 15561
 	*_p = intern_common(_interp, *_p, 0);
 }
 
@@ -7250,7 +8162,7 @@ AlifObject* alifUStr_internFromString(const char* _cp) { // 15592
 		return nullptr;
 	}
 	AlifInterpreter* interp = _alifInterpreter_get();
-	alifUStr_internMortal(interp, &s_);
+	_alifUStr_internMortal(interp, &s_);
 	return s_;
 }
 
@@ -7384,7 +8296,7 @@ static AlifIntT config_getCodecName(wchar_t** _configEncoding) { // 15961
 	if (!codec)
 		goto error;
 
-	name_obj = alifObject_getAttrString(codec, "name");
+	name_obj = alifObject_getAttrString(codec, "اسم");
 	ALIF_CLEAR(codec);
 	if (!name_obj) {
 		goto error;
@@ -7416,7 +8328,7 @@ error:
 }
 
 static AlifStatus init_stdioEncoding(AlifInterpreter* interp) { // 16008
-	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
+	AlifConfig* config = (AlifConfig*)_alifInterpreterState_getConfig(interp);
 	if (config_getCodecName(&config->stdioEncoding) < 0) {
 		return ALIFSTATUS_ERR("failed to get the Alif codec name "
 			"of the stdio encoding");
@@ -7425,7 +8337,7 @@ static AlifStatus init_stdioEncoding(AlifInterpreter* interp) { // 16008
 }
 
 static AlifIntT init_fsCodec(AlifInterpreter* _interp) { // 16021
-	const AlifConfig* config = alifInterpreter_getConfig(_interp);
+	const AlifConfig* config = _alifInterpreterState_getConfig(_interp);
 
 	AlifErrorHandler_ error_handler{};
 	error_handler = get_errorHandlerWide(config->fileSystemErrors);
@@ -7470,7 +8382,7 @@ static AlifIntT init_fsCodec(AlifInterpreter* _interp) { // 16021
 static AlifStatus init_fsEncoding(AlifThread* _thread) { // 16078
 	AlifInterpreter* interp = _thread->interpreter;
 
-	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
+	AlifConfig* config = (AlifConfig*)_alifInterpreterState_getConfig(interp);
 	//if (config_getCodecName(&config->fileSystemEncoding) < 0) {
 	//	//_alif_dumpPathConfig(_thread);
 	//	return ALIFSTATUS_ERR("failed to get the Alif codec "
@@ -7494,6 +8406,6 @@ AlifStatus _alifUnicode_initEncodings(AlifThread* _thread) { // 16100
 		return status;
 	}
 
-	//return init_stdioEncoding(_thread->interpreter);
+	//return init_stdioEncoding(_thread->interpreter); //* todo
 	return ALIFSTATUS_OK(); //* alif
 }

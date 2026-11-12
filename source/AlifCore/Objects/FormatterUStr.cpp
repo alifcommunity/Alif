@@ -788,8 +788,8 @@ static AlifIntT format_longInternal(AlifObject* _value, const InternalFormatSpec
 		AlifIntT leading_chars_to_skip = 0; 
 
 		/* Compute the base and how many characters will be added by
-		PyNumber_ToBase */
-		switch (_format->type) {
+		alifNumber_toBase */
+		switch (_format->type) { // DONT TOUCH!
 		case 'b':
 			base = 2;
 			leading_chars_to_skip = 2; /* 0b */
@@ -826,7 +826,8 @@ static AlifIntT format_longInternal(AlifObject* _value, const InternalFormatSpec
 			nPrefix = leading_chars_to_skip;
 
 		/* Do the hard part, converting to a string in a given base */
-		tmp = _alifLong_format(_value, base);
+		tmp = _alifLong_format(_value, base,
+			0/* هذا المعامل يحدد طباعة النظام العددي بالأحرف العربية أم اللاتينية */); //* alif //* todo
 		if (tmp == nullptr)
 			goto done;
 

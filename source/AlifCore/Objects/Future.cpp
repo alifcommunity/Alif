@@ -95,7 +95,7 @@ static AlifIntT future_parse(AlifFutureFeatures* ff, ModuleTy mod, AlifObject* f
 		if (s->type == StmtK_::ImportFromK and s->V.importFrom.level == 0) {
 			Identifier modname = s->V.importFrom.module;
 			if (modname and
-				alifUStr_equalToASCIIString(modname, "__future__")) {
+				_alifUStr_equalToASCIIString(modname, "__future__")) {
 				if (!future_checkFeatures(ff, s, filename)) {
 					return 0;
 				}

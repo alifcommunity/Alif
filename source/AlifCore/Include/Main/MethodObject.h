@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifTypeObject _alifCPPFunctionType_; // 14
+ALIFAPI_DATA(AlifTypeObject) _alifCPPFunctionType_; // 14
 
 
 typedef AlifObject* (*AlifCPPFunction)(AlifObject*, AlifObject*); // 19
@@ -28,7 +28,7 @@ public:
 
 // 78
 #define ALIFCPPFUNCTION_NEWEX(_ml, _self, _mod) alifCPPMethod_new((_ml), (_self), (_mod), nullptr)
-AlifObject* alifCPPMethod_new(AlifMethodDef*, AlifObject*, AlifObject*, AlifTypeObject*);
+ALIFAPI_FUNC(AlifObject*) alifCPPMethod_new(AlifMethodDef*, AlifObject*, AlifObject*, AlifTypeObject*);
 
 
 
@@ -83,7 +83,7 @@ public:
     (ALIF_CAST(AlifCPPMethodObject*, (_func)))
 
 
-extern AlifTypeObject _alifCPPMethodType_; // 32
+ALIFAPI_DATA(AlifTypeObject) _alifCPPMethodType_; // 32
 
 #define ALIFCPPMETHOD_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifCPPMethodType_) // 34
 #define ALIFCPPMETHOD_CHECK(_op) ALIFOBJECT_TYPECHECK((_op), &_alifCPPMethodType_)

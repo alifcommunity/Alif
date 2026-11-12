@@ -74,8 +74,8 @@ public:
 
 
 
-AlifIntT _alifOS_isMainThread(void); // 97
+ALIFAPI_FUNC(AlifIntT) _alifOS_isMainThread(void); // 97
 
 
-void* _alifOS_sigintEvent(); // 102
+ALIFAPI_FUNC(void*) _alifOS_sigintEvent(); // 102
 

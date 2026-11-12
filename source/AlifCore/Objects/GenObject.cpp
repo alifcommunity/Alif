@@ -115,7 +115,7 @@ static AlifSendResult gen_sendEx2(AlifGenObject* gen, AlifObject* arg,
 	thread->excInfo = &gen->giExcState;
 
 	if (exc) {
-		//_alifErr_chainStackItem();
+		_alifErr_chainStackItem();
 	}
 
 	gen->giFrameState = AlifFrameState_::Frame_Executing;

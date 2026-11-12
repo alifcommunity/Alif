@@ -45,6 +45,12 @@ static inline void current_fastClear() { // 94
 	#endif
 }
 
+// 105
+#define THREAD_VERIFY_NOT_ACTIVE(_thread) \
+    if (_thread == current_fastGet()) { \
+        _alif_fatalErrorFormat(__func__, "الممر %p لا يزال الحالي (لم يتغير)", _thread); \
+    }
+
 AlifThread* alifThread_getCurrent() { // 110
 	return current_fastGet();
 }
@@ -103,6 +109,9 @@ static void bind_thread(AlifThread* _thread) { // 245
 
 
 
+static void unbind_thread(AlifThread* _thread) { // 277
+	_thread->status.unbound = 1;
+}
 
 
 static void bind_gilStateThread(AlifThread* tstate) { // 318
@@ -207,6 +216,9 @@ static AlifStatus init_interpreter(AlifInterpreter* _interpreter,
 	_interpreter->runtime = _Runtime;
 	_interpreter->id_ = _id;
 	_interpreter->next = _next;
+
+	_interpreter->threads.preallocated = &_interpreter->initialThread;
+
 	alifGC_initState(&_interpreter->gc);
 	alifConfig_initAlifConfig(&_interpreter->config);
 
@@ -217,7 +229,7 @@ static AlifStatus init_interpreter(AlifInterpreter* _interpreter,
 	return ALIFSTATUS_OK();
 }
 
-AlifStatus alifInterpreter_new(AlifThread* _thread, AlifInterpreter** _interpreterP) { // 674
+AlifStatus _alifInterpreterState_new(AlifThread* _thread, AlifInterpreter** _interpreterP) { // 674
 
 	*_interpreterP = nullptr;
 
@@ -278,12 +290,17 @@ static inline void set_mainThread(AlifInterpreter* _interp,
 	alifAtomic_storePtrRelaxed(&_interp->threads.main, _thread);
 }
 
-static inline AlifThread* get_mainThread(AlifInterpreter* _interp) { // 1050
+static inline AlifThread* get_mainThread(AlifInterpreter* _interp) { // 1044
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->threads.main);
 }
 
-AlifIntT alifInterpreter_setRunningMain(AlifInterpreter* _interp) { // 1056
-	if (alifInterpreter_failIfRunningMain(_interp) < 0) {
+void _alifErr_setInterpreterAlreadyRunning(void) { // 1050
+	//alifErr_setString(_alifExcInterpreterError_, "المفسر يعمل بالفعل");
+}
+
+AlifIntT _alifInterpreter_setRunningMain(AlifInterpreter* _interp) { // 1056
+	if (get_mainThread(_interp) != nullptr) {
+		_alifErr_setInterpreterAlreadyRunning();
 		return -1;
 	}
 	AlifThread* tstate = current_fastGet();
@@ -302,18 +319,9 @@ void _alifInterpreter_setNotRunningMain(AlifInterpreter* _interp) { // 1074
 	set_mainThread(_interp, nullptr);
 }
 
-AlifIntT _alifThread_isRunningMain(AlifThread* _thread) { // 1092
+AlifIntT _alifThread_isRunningMain(AlifThread* _thread) { // 1097
 	AlifInterpreter* interp = _thread->interpreter;
 	return get_mainThread(interp) == _thread;
-}
-
-AlifIntT alifInterpreter_failIfRunningMain(AlifInterpreter* _interp) { // 1105
-	if (get_mainThread(_interp) != nullptr) {
-		//alifErr_setString(_alifExcInterpreterError_,
-		//	"interpreter already running");
-		return -1;
-	}
-	return 0;
 }
 
 
@@ -331,15 +339,15 @@ AlifInterpreter* alifInterpreter_get() { // 1331
 	ALIF_ENSURETHREADNOTNULL(tstate);
 	AlifInterpreter* interp = tstate->interpreter;
 	if (interp == nullptr) {
-		//alif_fatalError("no current interpreter");
-		return nullptr; //* alif //* delete
+		alif_fatalError("لا يوجد مفسر");
 	}
 	return interp;
 }
 
 #define DATA_STACK_CHUNK_SIZE (16*1024) // 1414
 
-static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _previous) { // 1417
+static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes,
+	AlifStackChunk* _previous) { // 1417
 	AlifStackChunk* res_ = (AlifStackChunk*)alifMem_dataAlloc(_sizeInBytes); //* alif
 	if (res_ == nullptr) {
 		return nullptr;
@@ -351,8 +359,42 @@ static AlifStackChunk* allocate_chunk(AlifIntT _sizeInBytes, AlifStackChunk* _pr
 }
 
 
+static void reset_thread(AlifThreadImpl* _thread) { // 1393
+	memcpy(_thread,
+		&_initial_.mainInterpreter.initialThread,
+		sizeof(*_thread));
+}
 
-static void init_thread(AlifThreadImpl* _thread, AlifInterpreter* _interpreter, AlifUSizeT _id) { // 1460
+static AlifThreadImpl* alloc_thread(AlifInterpreter* _interp) { // 1402
+	AlifThreadImpl* thread{};
+
+	// Try the preallocated thread first.
+	thread = (AlifThreadImpl*)alifAtomic_exchangePtr(&_interp->threads.preallocated, nullptr);
+
+	// Fall back to the allocator.
+	if (thread == nullptr) {
+		thread = (AlifThreadImpl*)alifMem_dataAlloc(sizeof(AlifThreadImpl));
+		if (thread == nullptr) {
+			return nullptr;
+		}
+		reset_thread(thread);
+	}
+	return thread;
+}
+
+static void free_thread(AlifThreadImpl* _thread) { // 1421
+	AlifInterpreter* interp = _thread->base.interpreter;
+	if (_thread == &interp->initialThread) {
+		reset_thread(_thread);
+		alifAtomic_storePtr(&interp->threads.preallocated, _thread);
+	}
+	else {
+		alifMem_dataFree(_thread);
+	}
+}
+
+static void init_thread(AlifThreadImpl* _thread,
+	AlifInterpreter* _interpreter, AlifUSizeT _id) { // 1460
 	AlifThread* thread = (AlifThread*)_thread;
 	if (thread->status.initialized) {
 		// error
@@ -391,56 +433,198 @@ static void add_thread(AlifInterpreter* _interpreter,
 
 static AlifThread* new_thread(AlifInterpreter* _interpreter) { // 1533
 
-	AlifThreadImpl* thread{};
-
-	AlifRuntime* runtime = _interpreter->runtime;
-	AlifThreadImpl* newThread = (AlifThreadImpl*)alifMem_dataAlloc(sizeof(AlifThreadImpl));
-	AlifIntT usedNewThread{};
-	if (newThread == nullptr) {
+	AlifThreadImpl* thread = alloc_thread(_interpreter);
+	if (thread == nullptr) {
 		return nullptr;
 	}
 
 	AlifSizeT qsbrIDx = alifQSBR_reserve(_interpreter);
 	if (qsbrIDx < 0) {
-		alifMem_dataFree(newThread);
+		free_thread(thread);
+		return nullptr;
+	}
+	int32_t tlbcIdx = _alif_reserveTLBCIndex(_interpreter);
+	if (tlbcIdx < 0) {
+		free_thread(thread);
 		return nullptr;
 	}
 
-	HEAD_LOCK(runtime);
+	HEAD_LOCK(_interpreter->runtime);
 
 	_interpreter->threads.nextUniquID += 1;
 	AlifSizeT id = _interpreter->threads.nextUniquID;
+	init_thread(thread, _interpreter, id);
 
 	AlifThread* oldHead = _interpreter->threads.head;
-	if (oldHead == nullptr) {
-		// It's the interpreter's initial thread state.
-		usedNewThread = 0;
-		thread = &_interpreter->initialThread;
-	}
-	else {
-		usedNewThread = 1;
-		thread = newThread;
-		memcpy(thread, &_initial_.mainInterpreter.initialThread, sizeof(*thread));
-	}
-
-	init_thread(thread, _interpreter, id);
 	add_thread(_interpreter, (AlifThread*)thread, oldHead);
 
-	HEAD_UNLOCK(runtime);
-	if (!usedNewThread) {
-		alifMem_dataFree(newThread);
-	}
+	HEAD_UNLOCK(_interpreter->runtime);
 
 	// Must be called with lock unlocked to avoid lock ordering deadlocks.
 	alifQSBR_register(thread, _interpreter, qsbrIDx);
+	thread->tlbcIndex = tlbcIdx;
 
 	return (AlifThread*)thread;
 }
 
 
-AlifThread* alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
+AlifThread* alifThreadState_new(AlifInterpreter* interp) { // 1564
+	return _alifThreadState_newBound(interp);
+}
+
+AlifThread* _alifThreadState_newBound(AlifInterpreter* interp) { // 1570
+	AlifThread* tstate = new_thread(interp);
+	if (tstate) {
+		bind_thread(tstate);
+		if (GILSTATE_TSS_GET(tstate->interpreter->runtime) == nullptr) {
+			bind_gilStateThread(tstate);
+		}
+	}
+	return tstate;
+}
+
+static void clear_dataStack(AlifThread* _thread) { // 1608
+	AlifStackChunk* chunk = _thread->dataStackChunk;
+	_thread->dataStackChunk = nullptr;
+	while (chunk != nullptr) {
+		AlifStackChunk* prev = chunk->previous;
+		//_alifMem_virtualMemFree(chunk, chunk->size);
+		chunk = prev;
+	}
+}
+
+AlifThread* _alifThreadState_new(AlifInterpreter* _interpreter) { // 1622
 	return new_thread(_interpreter);
 }
+
+
+static void thread_deleteCommon(AlifThread* _thread,
+	AlifIntT _releaseGIL) { // 1736
+	THREAD_VERIFY_NOT_ACTIVE(_thread);
+
+	AlifInterpreter* interp = _thread->interpreter;
+	if (interp == nullptr) {
+		alif_fatalError("مفسر فارغ");
+	}
+	AlifRuntime* runtime = interp->runtime;
+
+	HEAD_LOCK(runtime);
+	if (_thread->prev) {
+		_thread->prev->next = _thread->next;
+	}
+	else {
+		interp->threads.head = _thread->next;
+	}
+	if (_thread->next) {
+		_thread->next->prev = _thread->prev;
+	}
+	//if (_thread->state != ALIF_THREAD_SUSPENDED) {
+	//	if (interp->stopTheWorld.requested) {
+	//		decrement_stopTheWorldCountdown(&interp->stopTheWorld);
+	//	}
+	//	if (runtime->stopTheWorld.requested) {
+	//		decrement_stopTheWorldCountdown(&runtime->stopTheWorld);
+	//	}
+	//}
+
+//#if defined(ALIF_REF_DEBUG)
+//	AlifThreadImpl* threadImpl = (AlifThreadImpl*)_thread;
+//	_thread->interpreter->objectState.refTotal += threadImpl->refTotal;
+//	threadImpl->refTotal = 0;
+//#endif
+
+	HEAD_UNLOCK(runtime);
+
+	//if (_thread->status.boundGILState) {
+	//	unbind_gilStateThread(_thread);
+	//}
+	unbind_thread(_thread);
+
+	//clear_dataStack(_thread);
+
+	if (_releaseGIL) {
+		alifEval_releaseLock(_thread->interpreter, _thread, 1);
+	}
+
+	_alifQSBR_unregister(_thread);
+
+	_thread->status.finalized = 1;
+}
+
+
+void alifThreadState_clear(AlifThread* tstate) { // 1920
+	tstate->status.finalizing = 1; 
+
+	int verbose = _alifInterpreterState_getConfig(tstate->interpreter)->verbose;
+
+	if (verbose && tstate->currentFrame != nullptr) {
+		fprintf(stderr,
+			"alifThreadState_clear: تحذير: الممر لا يزال يمتلك إطار\n");
+	}
+
+	if (verbose && tstate->currentException != NULL) {
+		fprintf(stderr, "alifThreadState_clear: تحذير: الممر لا يمتلك ضابط خلل\n");
+		_alifErr_print(tstate);
+	}
+
+	//ALIF_CLEAR(tstate->threadingLocalKey);
+	//ALIF_CLEAR(tstate->threadingLocalSentinel);
+
+	//ALIF_CLEAR(((AlifThreadImpl*)tstate)->asyncIORunningLoop);
+
+	ALIF_CLEAR(tstate->dict);
+	//ALIF_CLEAR(tstate->asyncExc);
+
+	ALIF_CLEAR(tstate->currentException);
+
+	ALIF_CLEAR(tstate->excState.excValue);
+
+	if (verbose and tstate->excInfo != &tstate->excState) {
+		fprintf(stderr,
+			"alifThreadState_clear: تحذير: الممر لا يزال يملك مولد\n");
+	}
+
+	//if (tstate->cppProfileFunc != nullptr) {
+	//	tstate->interpreter->sysProfilingThreads--;
+	//	tstate->cppProfileFunc = nullptr;
+	//}
+	//if (tstate->cppTraceFunc != nullptr) {
+	//	tstate->interpreter->sysTracingThreads--;
+	//	tstate->cppTraceFunc = nullptr;
+	//}
+	//ALIF_CLEAR(tstate->cppProfileObj);
+	//ALIF_CLEAR(tstate->cppTraceObj);
+
+	//ALIF_CLEAR(tstate->asyncGenFirstiter);
+	//ALIF_CLEAR(tstate->asyncGenFinalizer);
+
+	//ALIF_CLEAR(tstate->context);
+
+	AlifFreeLists* freelists = _alifFreeLists_get();
+	//_alifObject_clearFreeLists(freelists, 1);
+
+	//_alifObject_finalizePerThreadRefCounts((AlifThreadImpl*)tstate);
+
+	//_alifBRC_removeThread(tstate);
+
+	_alif_clearTLBCIndex((AlifThreadImpl*)tstate);
+
+	//_alifMem_abandonDelayed(tstate);
+
+	//_alifThreadState_clearMimallocHeaps(tstate);
+
+	tstate->status.cleared = 1;
+}
+
+
+
+void alifThreadState_delete(AlifThread* _thread) { // 1815
+	ALIF_ENSURETHREADNOTNULL(_thread);
+	THREAD_VERIFY_NOT_ACTIVE(_thread);
+	thread_deleteCommon(_thread, 0);
+	free_thread((AlifThreadImpl*)_thread);
+}
+
 
 
 AlifObject* _alifThreadState_getDict(AlifThread* _thread) { // 1941
@@ -485,7 +669,7 @@ static void thread_waitAttach(AlifThread* _thread) { // 2055
 	do {
 		AlifIntT expected = ALIF_THREAD_SUSPENDED;
 
-		alifParkingLot_park(&_thread->state, &expected, sizeof(_thread->state),
+		_alifParkingLot_park(&_thread->state, &expected, sizeof(_thread->state),
 			/*timeout=*/-1, nullptr, /*detach=*/0);
 
 	}
@@ -497,7 +681,7 @@ static void thread_setDetached(AlifThread* _thread, AlifIntT _detachedState) { /
 }
 
 
-void alifThread_attach(AlifThread* _thread) { // 2070
+void _alifThread_attach(AlifThread* _thread) { // 2070
 	ALIF_ENSURETHREADNOTNULL(_thread);
 	if (current_fastGet() != nullptr) {
 		//alif_fatalError("non-nullptr old thread state");
@@ -526,7 +710,7 @@ void alifThread_attach(AlifThread* _thread) { // 2070
 	}
 
 	if (_thread->criticalSection != 0) {
-		alifCriticalSection_resume(_thread);
+		_alifCriticalSection_resume(_thread);
 	}
 }
 
@@ -544,7 +728,7 @@ static void detach_thread(AlifThread* _thread, AlifIntT detachedState) { // 2122
 	alifEval_releaseLock(_thread->interpreter, _thread, 0);
 }
 
-void alifThread_detach(AlifThread* _thread) { // 2140
+void _alifThread_detach(AlifThread* _thread) { // 2140
 	detach_thread(_thread, ALIF_THREAD_DETACHED);
 }
 
@@ -586,10 +770,10 @@ static void stop_theWorld(StopTheWorldState* _stw) { // 2239
 
 	ALIFMUTEX_LOCK(&_stw->mutex);
 	if (_stw->isGlobal) {
-		alifRWMutex_lock(&runtime->stopTheWorldMutex);
+		_alifRWMutex_lock(&runtime->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rLock(&runtime->stopTheWorldMutex);
+		_alifRWMutex_rLock(&runtime->stopTheWorldMutex);
 	}
 
 	HEAD_LOCK(runtime);
@@ -642,26 +826,26 @@ static void start_theWorld(class StopTheWorldState* _stw) { // 2294
 	ALIF_FOR_EACH_THREAD(_stw, i, t) {
 		if (t != _stw->requester) {
 			alifAtomic_storeInt(&t->state, ALIF_THREAD_DETACHED);
-			alifParkingLot_unparkAll(&t->state);
+			_alifParkingLot_unparkAll(&t->state);
 		}
 	}
 	_stw->requester = nullptr;
 	HEAD_UNLOCK(runtime);
 	if (_stw->isGlobal) {
-		alifRWMutex_unlock(&runtime->stopTheWorldMutex);
+		_alifRWMutex_unlock(&runtime->stopTheWorldMutex);
 	}
 	else {
-		alifRWMutex_rUnlock(&runtime->stopTheWorldMutex);
+		_alifRWMutex_rUnlock(&runtime->stopTheWorldMutex);
 	}
 	alifMutex_unlock(&_stw->mutex);
 }
 
 
-void alifEval_stopTheWorld(AlifInterpreter* _interp) { // 2342
+void _alifEval_stopTheWorld(AlifInterpreter* _interp) { // 2342
 	stop_theWorld(&_interp->stopTheWorld);
 }
 
-void alifEval_startTheWorld(AlifInterpreter* _interp) { // 2350
+void _alifEval_startTheWorld(AlifInterpreter* _interp) { // 2350
 	start_theWorld(&_interp->stopTheWorld);
 }
 
@@ -672,6 +856,20 @@ AlifThread* alifThread_get() { // 2419
 	return thread;
 }
 
+AlifThread* _alifThreadState_swap(AlifRuntime* runtime, AlifThread* newts) { // 2400
+	AlifThread* oldts = current_fastGet();
+	if (oldts != NULL) {
+		_alifThread_detach(oldts);
+	}
+	if (newts != NULL) {
+		_alifThread_attach(newts);
+	}
+	return oldts;
+}
+
+AlifThread* alifThreadState_swap(AlifThread* newts) { // 2413
+	return _alifThreadState_swap(&_alifRuntime_, newts);
+}
 
 void alifThread_bind(AlifThread* _thread) { // 2447
 
@@ -696,6 +894,9 @@ AlifInterpreter* alifInterpreter_head() { // 2485
 }
 
 
+AlifInterpreter* alifInterpreterState_main(void) { // 2463
+	return _alifInterpreterState_main();
+}
 
 
 AlifStatus alifGILState_init(AlifInterpreter* _interp) { // 2652
@@ -714,15 +915,21 @@ AlifStatus alifGILState_init(AlifInterpreter* _interp) { // 2652
 
 
 
-const AlifConfig* alifInterpreter_getConfig(AlifInterpreter* _interpreter) { // 2881
+const AlifConfig* _alifInterpreterState_getConfig(AlifInterpreter* _interpreter) { // 2881
 	return &_interpreter->config;
 }
 
 
-const AlifConfig* alif_getConfig() { // 2903
+const AlifConfig* _alif_getConfig() { // 2903
 	AlifThread* threadState = current_fastGet();
 	ALIF_ENSURETHREADNOTNULL(threadState);
-	return alifInterpreter_getConfig(threadState->interpreter);
+	return _alifInterpreterState_getConfig(threadState->interpreter);
+}
+
+
+AlifIntT _alifInterpreterState_hasFeature(AlifInterpreter* _interp,
+	unsigned long _feature) {
+	return ((_interp->featureFlags & _feature) != 0);
 }
 
 

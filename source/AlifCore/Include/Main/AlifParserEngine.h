@@ -263,6 +263,8 @@ ExprTy alifParserEngine_formattedValue(AlifParser*, ExprTy, AlifPToken*,
 	ResultTokenWithMetadata*, ResultTokenWithMetadata*, AlifPToken*, AlifIntT,
 	AlifIntT, AlifIntT, AlifIntT, AlifASTMem*); // 321
 AugOperator* alifParserEngine_augOperator(AlifParser*, Operator_); // 323
+StmtTy alifParserEngine_functionDefDecorators(AlifParser*, ASDLExprSeq*, StmtTy); // 324
+StmtTy alifParserEngine_classDefDecorators(AlifParser*, ASDLExprSeq*, StmtTy); // 325
 KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser*, void*, AlifIntT); // 326
 ASDLExprSeq* alifParserEngine_seqExtractStarExprs(AlifParser*, ASDLSeq*); // 327
 ASDLKeywordSeq* alifParserEngine_seqDeleteStarExprs(AlifParser*, ASDLSeq*); // 328

@@ -4,10 +4,10 @@
 
 
 
-AlifIntT alifTraceBack_here(AlifFrameObject*); // 9
+ALIFAPI_FUNC(AlifIntT) alifTraceBack_here(AlifFrameObject*); // 9
 
  // 13
-extern AlifTypeObject _alifTraceBackType_;
+ALIFAPI_DATA(AlifTypeObject) _alifTraceBackType_;
 #define ALIFTRACEBACK_CHECK(_v) ALIF_IS_TYPE(_v, &_alifTraceBackType_)
 
 

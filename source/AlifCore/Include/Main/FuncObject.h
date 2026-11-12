@@ -42,12 +42,12 @@ public:
 
 
 
-extern AlifTypeObject _alifFunctionType_; // 66
+ALIFAPI_DATA(AlifTypeObject) _alifFunctionType_; // 66
 
 #define ALIFFUNCTION_CHECK(_op) ALIF_IS_TYPE(_op, &_alifFunctionType_) // 68
 
 
-AlifObject* alifFunction_new(AlifObject*, AlifObject*); // 70
+ALIFAPI_FUNC(AlifObject*) alifFunction_new(AlifObject*, AlifObject*); // 70
 
 
 
@@ -68,13 +68,13 @@ static inline AlifObject* alifFunction_getGlobals(AlifObject* _func) { // 95
 #define ALIFFUNCTION_GET_GLOBALS(_func) alifFunction_getGlobals(ALIFOBJECT_CAST(_func))
 
 
-extern AlifTypeObject _alifClassMethodType_; // 126
-extern AlifTypeObject _alifStaticMethodType_; // 127
+ALIFAPI_DATA(AlifTypeObject) _alifClassMethodType_; // 126
+ALIFAPI_DATA(AlifTypeObject) _alifStaticMethodType_; // 127
 
-AlifObject* alifClassMethod_new(AlifObject*); // 129
+ALIFAPI_FUNC(AlifObject*) alifClassMethod_new(AlifObject*); // 129
 
 
-AlifObject* alifStaticMethod_new(AlifObject*); // 130
+ALIFAPI_FUNC(AlifObject*) alifStaticMethod_new(AlifObject*); // 130
 
 // 132
 #define ALIF_FOREACH_FUNC_EVENT(_v) \

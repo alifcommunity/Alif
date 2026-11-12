@@ -87,7 +87,19 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 	case 0:             /* look for leading 0b, 0o or 0x */
 		if (*_str == '0') {
 			++_str;
-			if (*_str == 'x' or *_str == 'X') {
+
+			/* //* alif
+				هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+				0م00000101
+			*/
+			if ((unsigned char)*_str == 216
+				or (unsigned char)*_str == 217) { _str++; }
+
+			if ((unsigned char)*_str == 179 /*س*/ or *_str == 'x' or *_str == 'X') {
+				if ((unsigned char)_str[1] == 216
+					or (unsigned char)_str[1] == 217) {
+					_str++;
+				}
 				/* there must be at least one digit after 0x */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 16) {
 					if (_ptr)
@@ -97,7 +109,7 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 				++_str;
 				_base = 16;
 			}
-			else if (*_str == 'o' or *_str == 'O') {
+			else if ((unsigned char)*_str == 133 /*م*/ or *_str == 'o' or *_str == 'O') {
 				/* there must be at least one digit after 0o */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 8) {
 					if (_ptr)
@@ -107,7 +119,7 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 				++_str;
 				_base = 8;
 			}
-			else if (*_str == 'b' or *_str == 'B') {
+			else if ((unsigned char)*_str == 171 /*ث*/ or *_str == 'b' or *_str == 'B') {
 				/* there must be at least one digit after 0b */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 2) {
 					if (_ptr)
@@ -136,7 +148,15 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 	case 16:
 		if (*_str == '0') {
 			++_str;
-			if (*_str == 'x' or *_str == 'X') {
+
+			/* //* alif
+			هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+			0م00000101
+			*/
+			if ((unsigned char)*_str == 216
+				or (unsigned char)*_str == 217) { _str++; }
+
+			if ((unsigned char)*_str == 179 /*س*/ or *_str == 'x' or *_str == 'X') {
 				/* there must be at least one digit after 0x */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 16) {
 					if (_ptr)
@@ -150,7 +170,15 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 	case 8:
 		if (*_str == '0') {
 			++_str;
-			if (*_str == 'o' or *_str == 'O') {
+
+			/* //* alif
+			هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+			0م00000101
+			*/
+			if ((unsigned char)*_str == 216
+				or (unsigned char)*_str == 217) { _str++; }
+
+			if ((unsigned char)*_str == 133 /*م*/ or *_str == 'o' or *_str == 'O') {
 				/* there must be at least one digit after 0o */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 8) {
 					if (_ptr)
@@ -164,7 +192,15 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 	case 2:
 		if (*_str == '0') {
 			++_str;
-			if (*_str == 'b' or *_str == 'B') {
+
+			/* //* alif
+			هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+			0م00000101
+			*/
+			if ((unsigned char)*_str == 216
+				or (unsigned char)*_str == 217) { _str++; }
+
+			if ((unsigned char)*_str == 171 /*ث*/ or *_str == 'b' or *_str == 'B') {
 				/* there must be at least one digit after 0b */
 				if (_alifLongDigitValue_[ALIF_CHARMASK(_str[1])] >= 2) {
 					if (_ptr)
@@ -187,6 +223,13 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 	/* skip leading zeroes */
 	while (*_str == '0')
 		++_str;
+
+	/* //* alif
+	هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+	0م00000101
+	*/
+	if ((unsigned char)*_str == 216
+		or (unsigned char)*_str == 217) { _str++; }
 
 	/* base is guaranteed to be in [2, 36] at this point */
 	ovLimit = _digitLimit_[_base];
@@ -218,6 +261,13 @@ unsigned long alifOS_strToULong(const char* _str, char** _ptr, AlifIntT _base) {
 
 		++_str;
 		--ovLimit;
+
+		/* //* alif
+		هذا للتعامل مع الارقام التي تحتوي أحرف عربية مثل
+		0م00000101
+		*/
+		if ((unsigned char)*_str == 216
+			or (unsigned char)*_str == 217) { _str++; }
 	}
 
 	/* set pointer to point to the last character scanned */

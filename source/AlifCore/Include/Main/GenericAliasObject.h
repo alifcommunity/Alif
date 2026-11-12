@@ -3,5 +3,5 @@
 
 
 
-AlifObject* alif_genericAlias(AlifObject*, AlifObject*);
-extern AlifTypeObject _alifGenericAliasType_;
+ALIFAPI_FUNC(AlifObject*) alif_genericAlias(AlifObject*, AlifObject*);
+ALIFAPI_DATA(AlifTypeObject) _alifGenericAliasType_;

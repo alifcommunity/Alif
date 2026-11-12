@@ -408,6 +408,10 @@ static inline void alifAtomic_storeUint8Relaxed(uint8_t* _obj, uint8_t _value) {
 	*(volatile uint8_t*)_obj = _value;
 }
 
+static inline void alifAtomic_storeUint16Relaxed(uint16_t* _obj, uint16_t _value) { // 853
+	*(volatile uint16_t *)_obj = _value;
+}
+
 static inline void alifAtomic_storeUint32Relaxed(uint32_t* _obj, uint32_t _value) { // 859
 	*(volatile uint32_t*)_obj = _value;
 }

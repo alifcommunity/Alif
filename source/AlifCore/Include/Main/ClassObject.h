@@ -16,11 +16,11 @@ public:
 };
 
 
-extern AlifTypeObject _alifMethodType_; // 20
+ALIFAPI_DATA(AlifTypeObject) _alifMethodType_; // 20
 
 #define ALIFMETHOD_CHECK(_op) ALIF_IS_TYPE((_op), &_alifMethodType_) // 22
 
-AlifObject* alifMethod_new(AlifObject*, AlifObject*); // 24
+ALIFAPI_FUNC(AlifObject*) alifMethod_new(AlifObject*, AlifObject*); // 24
 
 // 29
 #define ALIFMETHOD_CAST(_meth) \

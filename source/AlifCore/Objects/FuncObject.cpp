@@ -46,7 +46,7 @@ static inline void handle_funcEvent(AlifFunctionWatchEvent _event, AlifFunctionO
 
 AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor* _constr) { // 103
 	AlifObject* module{};
-	if (alifDict_getItemRef(_constr->globals, &ALIF_ID(__name__), &module) < 0) {
+	if (alifDict_getItemRef(_constr->globals, &ALIF_STR(__name__), &module) < 0) {
 		return nullptr;
 	}
 
@@ -111,10 +111,10 @@ AlifObject* alifFunction_newWithQualName(AlifObject* _code,
 	}
 	ALIF_INCREF(doc);
 
-	// __module__: Use globals['__name__'] if it exists, or nullptr.
+	// __وحدة__: Use globals['__اسم__'] if it exists, or nullptr.
 	AlifObject* module{};
 	AlifObject* builtins = nullptr;
-	if (alifDict_getItemRef(_globals, &ALIF_ID(__name__), &module) < 0) {
+	if (alifDict_getItemRef(_globals, &ALIF_STR(__name__), &module) < 0) {
 		goto error;
 	}
 
@@ -255,14 +255,46 @@ AlifTypeObject _alifFunctionType_ = { // 1142
 	.basicSize = sizeof(AlifFunctionObject),
 	.dealloc = func_dealloc,
 	.vectorCallOffset = offsetof(AlifFunctionObject, vectorCall),
-
+	.call = alifVectorCall_call,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
 	ALIF_TPFLAGS_HAVE_VECTORCALL |
 	ALIF_TPFLAGS_METHOD_DESCRIPTOR,
 
+	.weakListOffset = offsetof(AlifFunctionObject, weakRefList),
+
 	.descrGet = func_descrGet,
 	.dictOffset = offsetof(AlifFunctionObject, dict),
 };
+
+
+static AlifIntT funcTools_copyAttr(AlifObject* _wrapper,
+	AlifObject* _wrapped, AlifObject* _name) { // 1196
+	AlifObject* value{};
+	AlifIntT res = alifObject_getOptionalAttr(_wrapped, _name, &value);
+	if (value != nullptr) {
+		res = alifObject_setAttr(_wrapper, _name, value);
+		ALIF_DECREF(value);
+	}
+	return res;
+}
+
+static AlifIntT funcTools_wraps(AlifObject* _wrapper,
+	AlifObject* _wrapped) { // 1209
+#define COPY_ATTR(ATTR) \
+    do { \
+        if (funcTools_copyAttr(_wrapper, _wrapped, &ALIF_STR(ATTR)) < 0) { \
+            return -1; \
+        } \
+    } while (0) \
+
+	COPY_ATTR(__module__);
+	COPY_ATTR(__name__);
+	COPY_ATTR(__qualname__);
+	//COPY_ATTR(__doc__);
+	return 0;
+
+#undef COPY_ATTR
+}
 
 
 class ClassMethod { // 1248
@@ -277,22 +309,65 @@ public:
      ALIF_CAST(ClassMethod*, _cm))
 
 
+
+static AlifObject* cm_descrGet(AlifObject* _self,
+	AlifObject* _obj, AlifObject* _type) { // 1352
+	ClassMethod* cm = (ClassMethod*)_self;
+
+	if (cm->callable == nullptr) {
+		alifErr_setString(_alifExcRuntimeError_,
+			"كائن وظيفة_صنف غير مهيئ");
+		return nullptr;
+	}
+	if (_type == nullptr)
+		_type = (AlifObject *)(ALIF_TYPE(_obj));
+	return alifMethod_new(cm->callable, _type);
+}
+
+static AlifIntT cm_init(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwds) { // 1367
+	ClassMethod* cm = (ClassMethod*)_self;
+	AlifObject* callable{};
+
+	if (!_ALIFARG_NOKEYWORDS("وظيفة_صنف", _kwds))
+		return -1;
+	if (!alifArg_unpackTuple(_args, "وظيفة_صنف", 1, 1, &callable))
+		return -1;
+	ALIF_XSETREF(cm->callable, ALIF_NEWREF(callable));
+
+	if (funcTools_wraps((AlifObject *)cm, cm->callable) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static AlifMemberDef _cmMemberList_[] = { // 1385
+	{"__func__", ALIF_T_OBJECT, offsetof(ClassMethod, callable), ALIF_READONLY},
+	{"__wrapped__", ALIF_T_OBJECT, offsetof(ClassMethod, callable), ALIF_READONLY},
+	{nullptr}  /* Sentinel */
+};
+
+static AlifGetSetDef _cmGetSetList_[] = { // 1432
+	{"__فهرس__", alifObject_genericGetDict, alifObject_genericSetDict, nullptr, nullptr},
+	{nullptr} /* Sentinel */
+};
+
 AlifTypeObject _alifClassMethodType_ = { // 1395
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "صفة_صنف",
+	.name = "وظيفة_صنف",
 	.basicSize = sizeof(ClassMethod),
 	//.dealloc = cm_dealloc,
 	//.repr = cm_repr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC,
 	//.traverse = cm_traverse,
-	//cm_clear,                   
-	//.members = cm_memberlist, 
-	//.getSet = cm_getsetlist,
-	//.descrGet = cm_descr_get,
+	//.clear = cm_clear,                   
+	.members = _cmMemberList_, 
+	.getSet = _cmGetSetList_,
+	.descrGet = cm_descrGet,
 	.dictOffset = offsetof(ClassMethod, dict),
-	//.init = cm_init,
+	.init = cm_init,
 	.alloc = alifType_genericAlloc,
-	//.new_ = alifType_genericNew,
+	.new_ = alifType_genericNew,
 	.free = alifObject_gcDel,
 };
 
@@ -308,7 +383,7 @@ AlifObject* alifClassMethod_new(AlifObject* _callable) { // 1437
 
 
 
-class StaticMethod { // 1467
+class StaticMethod { // 1542
 public:
 	ALIFOBJECT_HEAD{};
 	AlifObject* callable{};
@@ -317,23 +392,59 @@ public:
 
 
 
-AlifTypeObject _alifStaticMethodType_ = { // 1615
+static AlifObject* sm_descrGet(AlifObject* _self,
+	AlifObject* _obj, AlifObject* _type) { // 1580
+	StaticMethod* sm = (StaticMethod*)_self;
+
+	if (sm->callable == nullptr) {
+		alifErr_setString(_alifExcRuntimeError_,
+			"وظيفة_ساكنة غير مهيئ");
+		return nullptr;
+	}
+	return ALIF_NEWREF(sm->callable);
+}
+
+static AlifIntT sm_init(AlifObject* _self,
+	AlifObject* _args, AlifObject* _kwds) {
+	StaticMethod* sm = (StaticMethod*)_self;
+	AlifObject* callable{};
+
+	if (!_ALIFARG_NOKEYWORDS("وظيفة_ساكنة", _kwds))
+		return -1;
+	if (!alifArg_unpackTuple(_args, "وظيفة_ساكنة", 1, 1, &callable))
+		return -1;
+	ALIF_XSETREF(sm->callable, ALIF_NEWREF(callable));
+
+	if (funcTools_wraps((AlifObject*)sm, sm->callable) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static AlifMemberDef _smMemberList_[] = { // 1618
+	{"__func__", ALIF_T_OBJECT, offsetof(StaticMethod, callable), ALIF_READONLY},
+	{"__wrapped__", ALIF_T_OBJECT, offsetof(StaticMethod, callable), ALIF_READONLY},
+	{nullptr}  /* Sentinel */
+};
+
+
+AlifTypeObject _alifStaticMethodType_ = { // 1700
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "صفة_ساكنة",
+	.name = "وظيفة_ساكنة",
 	.basicSize = sizeof(StaticMethod),
 	//sm_dealloc,
 	//sm_repr,
 	//sm_call,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_HAVE_GC,
 	//sm_traverse,
-	//sm_clear,
-	//sm_memberlist,
+    //.clear = sm_clear,
+	.members = _smMemberList_,
 	//sm_getsetlist,
-	//sm_descr_get,
+	.descrGet = sm_descrGet,
 	.dictOffset = offsetof(StaticMethod, dict),
-	//sm_init,
+	.init = sm_init,
 	.alloc = alifType_genericAlloc,
-	//alifType_genericNew,
+	.new_ = alifType_genericNew,
 	.free = alifObject_gcDel,
 };
 

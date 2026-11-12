@@ -17,7 +17,7 @@ AlifIntT pthread_cond_init(pthread_cond_t* restrict cond,
 	return 0;
 }
 
-AlifIntT pthread_cond_destroy(pthread_cond_t* cond) { // 47
+ALIFAPI_FUNC(AlifIntT) pthread_cond_destroy(pthread_cond_t* cond) { // 47
 	return 0;
 }
 

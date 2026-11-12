@@ -256,9 +256,12 @@ Fail:
 
 
 static AlifObject* range_iter(AlifObject*); // 739
+static AlifObject* range_reverse(AlifObject*, AlifObject*); // 740
 
-
-
+static AlifMethodDef _rangeMethods_[] = { // 752
+	{"__معكوس__",    range_reverse, METHOD_NOARGS},
+	{nullptr, nullptr}
+};
 
 
 
@@ -276,7 +279,7 @@ AlifTypeObject _alifRangeType_ = { // 767
 		.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_SEQUENCE,
 		//.richCompare = range_richCompare,
 		.iter = range_iter,
-		//.methods = range_methods,
+		.methods = _rangeMethods_,
 		//.members = range_members,
 		//.new_ = range_new,
 		.vectorCall = range_vectorCall
@@ -422,4 +425,85 @@ long_range:
 	it->step = ALIF_NEWREF(r->step);
 	it->len = ALIF_NEWREF(r->length);
 	return (AlifObject*)it;
+}
+
+
+
+static AlifObject* range_reverse(AlifObject* _seq,
+	AlifObject* ALIF_UNUSED(ignored)) { // 1181
+	RangeObject* range = (RangeObject*)_seq;
+	LongRangeIterObject* it{};
+	AlifObject* sum{}, * diff{}, * product{};
+	long lstart, lstop, lstep, new_start, new_stop;
+	unsigned long ulen;
+
+	lstart = alifLong_asLong(range->start);
+	if (lstart == -1 and alifErr_occurred()) {
+		alifErr_clear();
+		goto long_range;
+	}
+	lstop = alifLong_asLong(range->stop);
+	if (lstop == -1 and alifErr_occurred()) {
+		alifErr_clear();
+		goto long_range;
+	}
+	lstep = alifLong_asLong(range->step);
+	if (lstep == -1 and alifErr_occurred()) {
+		alifErr_clear();
+		goto long_range;
+	}
+	/* check for possible overflow of -lstep */
+	if (lstep == LONG_MIN)
+		goto long_range;
+
+	if (lstep > 0) {
+		if ((unsigned long)lstart - LONG_MIN < (unsigned long)lstep)
+			goto long_range;
+	}
+	else {
+		if (LONG_MAX - (unsigned long)lstart < 0UL - lstep)
+			goto long_range;
+	}
+
+	ulen = get_lenOfRange(lstart, lstop, lstep);
+	if (ulen > (unsigned long)LONG_MAX)
+		goto long_range;
+
+	new_stop = lstart - lstep;
+	new_start = (long)(new_stop + ulen * lstep);
+	return fast_rangeIter(new_start, new_stop, -lstep, (long)ulen);
+
+long_range:
+	it = ALIFOBJECT_NEW(LongRangeIterObject, &_alifLongRangeIterType_);
+	if (it == nullptr)
+		return nullptr;
+	it->start = it->step = nullptr;
+
+	/* start + (len - 1) * step */
+	it->len = ALIF_NEWREF(range->length);
+
+	diff = alifNumber_subtract(it->len, _alifLong_getOne());
+	if (!diff)
+		goto create_failure;
+
+	product = alifNumber_multiply(diff, range->step);
+	ALIF_DECREF(diff);
+	if (!product)
+		goto create_failure;
+
+	sum = alifNumber_add(range->start, product);
+	ALIF_DECREF(product);
+	it->start = sum;
+	if (!it->start)
+		goto create_failure;
+
+	it->step = alifNumber_negative(range->step);
+	if (!it->step)
+		goto create_failure;
+
+	return (AlifObject*)it;
+
+create_failure:
+	ALIF_DECREF(it);
+	return nullptr;
 }

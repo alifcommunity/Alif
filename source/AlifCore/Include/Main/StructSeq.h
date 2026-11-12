@@ -18,14 +18,15 @@ public:
 	AlifIntT nInSequence{};
 };
 
+ALIFAPI_DATA(const char* const) _alifStructSequenceUnnamedField_; // 22
 
 
-AlifTypeObject* alifStructSequence_newType(AlifStructSequenceDesc*); // 30
+ALIFAPI_FUNC(AlifTypeObject*) alifStructSequence_newType(AlifStructSequenceDesc*); // 30
 
-AlifObject* alifStructSequence_new(AlifTypeObject*); // 32
+ALIFAPI_FUNC(AlifObject*) alifStructSequence_new(AlifTypeObject*); // 32
 
-void alifStructSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 34
-AlifObject* alifStructSequence_getItem(AlifObject*, AlifSizeT);
+ALIFAPI_FUNC(void) alifStructSequence_setItem(AlifObject*, AlifSizeT, AlifObject*); // 34
+ALIFAPI_FUNC(AlifObject*) alifStructSequence_getItem(AlifObject*, AlifSizeT);
 
 
 

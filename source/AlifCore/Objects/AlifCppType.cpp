@@ -133,7 +133,19 @@ const unsigned int _alifCppTypeTable_[256] = {
 	0, /* 0x7f '\x7f' */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0,
+	//* alif
+	ALIF_CPPTF_XDIGIT, // 0xa3 'أ'
+	0, 0, 0,
+	ALIF_CPPTF_XDIGIT, // 0xa7 'ا'
+	ALIF_CPPTF_XDIGIT, // 0xa8 'ب'
+	0,
+	ALIF_CPPTF_XDIGIT, // 0xaa 'ت'
+	ALIF_CPPTF_XDIGIT, // 0xab 'ث'
+	ALIF_CPPTF_XDIGIT, // 0xac 'ج'
+	ALIF_CPPTF_XDIGIT, // 0xad 'ح'
+	//* alif
+	0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

@@ -37,7 +37,7 @@ class AlifFuncState { // 32
 
 extern AlifFunctionObject* _alifFunction_fromConstructor(AlifFrameConstructor*); // 54
 
-void _alifFunction_setVersion(AlifFunctionObject*, uint32_t); // 55
+ALIFAPI_FUNC(void) _alifFunction_setVersion(AlifFunctionObject*, uint32_t); // 55
 
 
 

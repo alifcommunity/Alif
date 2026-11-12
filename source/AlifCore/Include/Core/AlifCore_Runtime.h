@@ -88,7 +88,7 @@ public:
 	AlifInterpreter mainInterpreter{};
 };
 
-extern AlifRuntime _alifRuntime_; // 318
+ALIFAPI_DATA(AlifRuntime) _alifRuntime_; // 318
 
 extern AlifStatus _alifRuntimeState_init(AlifRuntime*); // 320
 extern void _alifRuntimeState_fini(AlifRuntime*); // 321
@@ -99,7 +99,7 @@ extern AlifStatus _alifRuntime_initialize(); // 329
 
 
 
-extern void _alifRuntime_finalize(void);
+extern void _alifRuntime_finalize(void); // 220
 
 static inline AlifThread* alifRuntimeState_getFinalizing(AlifRuntime* _runtime) { // 383
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_runtime->finalizing_);

@@ -14,12 +14,17 @@ jobs:
       matrix:
         BUILD-CONFIGURATION: [debug, release]
 
+    # Sets the directory for all steps in this job
+    defaults:
+      run:
+        working-directory: ./linuxBuild
+
     steps:
       - uses: actions/checkout@v4
-      # - name: configure
-      #   run: ./configure
+      - name: configure
+        run: ./configure
       - name: make
-        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
+        run: make ${{matrix.BUILD-CONFIGURATION}}
     # - name: make check
     #   run: make check
     # - name: make distcheck
@@ -32,11 +37,18 @@ jobs:
       matrix:
         BUILD-CONFIGURATION: [debug, release]
 
+    # Sets the directory for all steps in this job
+    defaults:
+      run:
+        working-directory: ./linuxBuild
+
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           # lfs: true
 
+      - name: configure
+        run: ./configure
       - name: make
-        run: cd linuxBuild && make ${{matrix.BUILD-CONFIGURATION}}
+        run: make ${{matrix.BUILD-CONFIGURATION}}

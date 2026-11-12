@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifTypeObject _alifZipType_;
+ALIFAPI_DATA(AlifTypeObject) _alifZipType_;
 
 
 

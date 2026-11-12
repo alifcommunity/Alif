@@ -31,4 +31,4 @@ extern void _alifObject_disablePerThreadRefcounting(AlifObject*); // 55
 
 
 
-void _alifObject_threadIncrefSlow(AlifObject*, AlifSizeT); // 68
+ALIFAPI_FUNC(void) _alifObject_threadIncrefSlow(AlifObject*, AlifSizeT); // 68

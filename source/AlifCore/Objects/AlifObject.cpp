@@ -219,7 +219,7 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 	if (_v == nullptr)
 		return alifUStr_fromString("<nullptr>"); //* alif
 	if (ALIF_TYPE(_v)->repr == nullptr)
-		return alifUStr_fromFormat("<%s كائن في %p>",
+		return alifUStr_fromFormat("<كائن %s في %p>",
 			ALIF_TYPE(_v)->name, _v);
 
 	AlifThread* thread = _alifThread_get();
@@ -243,17 +243,6 @@ AlifObject* alifObject_repr(AlifObject* _v) { // 662
 		ALIF_DECREF(res);
 		return nullptr;
 	}
-
-	//* alif
-	/*
-		تمت إضافة هذه السطر لضمان تحويل النصوص الثابتة مثل صح وخطأ إلى
-		ترميز صحيح ليتمكن من طباعتها بشكل صحيح ضمن الفهرس
-		س = {"ص": صح} مثال
-		س = م"صح" مثال
-		اطبع(س) مثال
-	*/
-	res = alifUStr_fromString(alifUStr_asUTF8(res)); //* review //* todo
-	//* alif
 
 	return res;
 }
@@ -299,7 +288,7 @@ AlifObject* alifObject_str(AlifObject* _v) { // 711
 
 AlifObject* _alifObject_functionStr(AlifObject* _x) { // 886
 	AlifObject* qualname{};
-	AlifIntT ret = alifObject_getOptionalAttr(_x, &ALIF_ID(__qualname__), &qualname);
+	AlifIntT ret = alifObject_getOptionalAttr(_x, &ALIF_STR(__qualname__), &qualname);
 	if (qualname == nullptr) {
 		if (ret < 0) {
 			return nullptr;
@@ -308,9 +297,9 @@ AlifObject* _alifObject_functionStr(AlifObject* _x) { // 886
 	}
 	AlifObject* module{};
 	AlifObject* result = nullptr;
-	ret = alifObject_getOptionalAttr(_x, &ALIF_ID(__module__), &module);
+	ret = alifObject_getOptionalAttr(_x, &ALIF_STR(__module__), &module);
 	if (module != nullptr and module != ALIF_NONE) {
-		ret = alifObject_richCompareBool(module, &ALIF_ID(Builtins), ALIF_NE);
+		ret = alifObject_richCompareBool(module, &ALIF_STR(Builtins), ALIF_NE);
 		if (ret < 0) {
 			// error
 			goto done;
@@ -495,7 +484,7 @@ AlifObject* alifObject_getAttr(AlifObject* _v, AlifObject* _name) { // 1204
 	AlifTypeObject* tp_ = ALIF_TYPE(_v);
 	if (!ALIFUSTR_CHECK(_name)) {
 		alifErr_format(_alifExcTypeError_,
-			"اسم الخاصية يجب أن يكون نص, وليس '%.200s'",
+			"اسم الصفة يجب أن يكون نص, وليس '%.200s'",
 			ALIF_TYPE(_name)->name);
 		return nullptr;
 	}
@@ -513,7 +502,7 @@ AlifObject* alifObject_getAttr(AlifObject* _v, AlifObject* _name) { // 1204
 	}
 	else {
 		alifErr_format(_alifExcAttributeError_,
-			"الكائن '%.100s' لا يملك هذه الخاصية '%U'",
+			"الكائن '%.100s' لا يملك هذه الصفة '%U'",
 			tp_->name, _name);
 	}
 
@@ -529,14 +518,14 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		alifErr_format(_alifExcTypeError_,
-			"اسم الخاصية يجب أن يكون نص, وليس '%.200s'",
+			"اسم الصفة يجب أن يكون نص, وليس '%.200s'",
 			ALIF_TYPE(_name)->name);
 		*_result = nullptr;
 		return -1;
 	}
 
 	if (tp_->getAttro == alifObject_genericGetAttr) {
-		*_result = alifObject_genericGetAttrWithDict(_v, _name, nullptr, 1);
+		*_result = _alifObject_genericGetAttrWithDict(_v, _name, nullptr, 1);
 		if (*_result != nullptr) {
 			return 1;
 		}
@@ -545,9 +534,9 @@ AlifIntT alifObject_getOptionalAttr(AlifObject* _v,
 		}
 		return 0;
 	}
-	if (tp_->getAttro == alifType_getAttro) {
+	if (tp_->getAttro == _alifType_getAttro) {
 		AlifIntT suppressMissingAttributeException = 0;
-		*_result = alifType_getAttroImpl((AlifTypeObject*)_v, _name, &suppressMissingAttributeException);
+		*_result = _alifType_getAttroImpl((AlifTypeObject*)_v, _name, &suppressMissingAttributeException);
 		if (suppressMissingAttributeException) {
 			return 0;
 		}
@@ -604,14 +593,14 @@ AlifIntT alifObject_setAttr(AlifObject* _v,
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		alifErr_format(_alifExcTypeError_,
-			"اسم الخاصية يجب أن يكون نص, وليس '%.200s'",
+			"اسم الصفة يجب أن يكون نص, وليس '%.200s'",
 			ALIF_TYPE(_name)->name);
 		return -1;
 	}
 	ALIF_INCREF(_name);
 
 	AlifInterpreter* interp = _alifInterpreter_get();
-	alifUStr_internMortal(interp, &_name);
+	_alifUStr_internMortal(interp, &_name);
 	if (tp_->setAttro != nullptr) {
 		err = (*tp_->setAttro)(_v, _name, _value);
 		ALIF_DECREF(_name);
@@ -648,7 +637,7 @@ AlifIntT alifObject_delAttr(AlifObject* _v, AlifObject* _name) { // 1404
 }
 
 
-AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1409
+AlifObject** _alifObject_computedDictPointer(AlifObject* _obj) { // 1409
 	AlifTypeObject* tp = ALIF_TYPE(_obj);
 
 	AlifSizeT dictOffset = tp->dictOffset;
@@ -665,6 +654,21 @@ AlifObject** alifObject_computedDictPointer(AlifObject* _obj) { // 1409
 		dictOffset += (AlifSizeT)size;
 	}
 	return (AlifObject**)((char*)_obj + dictOffset);
+}
+
+AlifObject** _alifObject_getDictPtr(AlifObject* _obj) { // 1483
+	if ((ALIF_TYPE(_obj)->flags & ALIF_TPFLAGS_MANAGED_DICT) == 0) {
+		return _alifObject_computedDictPointer(_obj);
+	}
+	AlifDictObject* dict = _alifObject_getManagedDict(_obj);
+	if (dict == nullptr and ALIF_TYPE(_obj)->flags & ALIF_TPFLAGS_INLINE_VALUES) {
+		dict = _alifObject_materializeManagedDict(_obj);
+		if (dict == nullptr) {
+			alifErr_clear();
+			return nullptr;
+		}
+	}
+	return (AlifObject**)&_alifObject_managedDictPointer(_obj)->dict;
 }
 
 AlifObject* alifObject_selfIter(AlifObject* _obj) { // 1461
@@ -695,7 +699,7 @@ AlifIntT _alifObject_getMethod(AlifObject* _obj,
 		return 0;
 	}
 
-	AlifObject* descr = alifType_lookupRef(tp, _name);
+	AlifObject* descr = _alifType_lookupRef(tp, _name);
 	DescrGetFunc f = nullptr;
 	if (descr != nullptr) {
 		if (_alifType_hasFeature(ALIF_TYPE(descr), ALIF_TPFLAGS_METHOD_DESCRIPTOR)) {
@@ -721,10 +725,10 @@ AlifIntT _alifObject_getMethod(AlifObject* _obj,
 		dict = nullptr;
 	}
 	else if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
-		dict = (AlifObject*)alifObject_getManagedDict(_obj);
+		dict = (AlifObject*)_alifObject_getManagedDict(_obj);
 	}
 	else {
-		AlifObject** dictptr = alifObject_computedDictPointer(_obj);
+		AlifObject** dictptr = _alifObject_computedDictPointer(_obj);
 		if (dictptr != nullptr) {
 			dict = *dictptr;
 		}
@@ -761,7 +765,7 @@ AlifIntT _alifObject_getMethod(AlifObject* _obj,
 	}
 
 	alifErr_format(_alifExcAttributeError_,
-		"الكائن '%.100s' لا يملك هذه الخاصية '%U'",
+		"الكائن '%.100s' لا يملك هذه الصفة '%U'",
 		tp->name, _name);
 
 	_alifObject_setAttributeErrorContext(_obj, _name);
@@ -769,7 +773,7 @@ AlifIntT _alifObject_getMethod(AlifObject* _obj,
 }
 
 
-AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
+AlifObject* _alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _dict, AlifIntT _suppress) { // 1587
 
 	AlifTypeObject* tp = ALIF_TYPE(_obj);
@@ -779,7 +783,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		alifErr_format(_alifExcTypeError_,
-			"اسم الخاصية يجب أن يكون نص, وليس '%.200s'",
+			"اسم الصفة يجب أن يكون نص, وليس '%.200s'",
 			ALIF_TYPE(_name)->name);
 		return nullptr;
 	}
@@ -790,7 +794,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 			goto done;
 	}
 
-	descr = alifType_lookupRef(tp, _name);
+	descr = _alifType_lookupRef(tp, _name);
 
 	f_ = nullptr;
 	if (descr != nullptr) {
@@ -814,7 +818,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 				}
 			}
 			else {
-				_dict = (AlifObject*)alifObject_materializeManagedDict(_obj);
+				_dict = (AlifObject*)_alifObject_materializeManagedDict(_obj);
 				if (_dict == nullptr) {
 					res = nullptr;
 					goto done;
@@ -822,10 +826,10 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 			}
 		}
 		else if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
-			_dict = (AlifObject*)alifObject_getManagedDict(_obj);
+			_dict = (AlifObject*)_alifObject_getManagedDict(_obj);
 		}
 		else {
-			AlifObject** dictPtr = alifObject_computedDictPointer(_obj);
+			AlifObject** dictPtr = _alifObject_computedDictPointer(_obj);
 			if (dictPtr) {
 				_dict = *dictPtr;
 			}
@@ -868,7 +872,7 @@ AlifObject* alifObject_genericGetAttrWithDict(AlifObject* _obj, AlifObject* _nam
 
 	if (!_suppress) {
 		alifErr_format(_alifExcAttributeError_,
-			"الكائن'%.100s' لا يملك هذه الخاصية '%U'",
+			"الكائن '%.100s' لا يملك هذه الصفة '%U'",
 			tp->name, _name);
 
 		_alifObject_setAttributeErrorContext(_obj, _name);
@@ -880,10 +884,10 @@ done:
 }
 
 AlifObject* alifObject_genericGetAttr(AlifObject* _obj, AlifObject* _name) { // 1699
-	return alifObject_genericGetAttrWithDict(_obj, _name, nullptr, 0);
+	return _alifObject_genericGetAttrWithDict(_obj, _name, nullptr, 0);
 }
 
-AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
+AlifIntT _alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 	AlifObject* _value, AlifObject* _dict) { // 1705
 	AlifTypeObject* tp = ALIF_TYPE(_obj);
 	AlifObject* descr{};
@@ -892,7 +896,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 
 	if (!ALIFUSTR_CHECK(_name)) {
 		alifErr_format(_alifExcTypeError_,
-			"اسم الخاصية يجب أن يكون نص, وليس '%.200s'",
+			"اسم الصفة يجب أن يكون نص, وليس '%.200s'",
 			ALIF_TYPE(_name)->name);
 		return -1;
 	}
@@ -903,7 +907,7 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 
 	ALIF_INCREF(_name);
 	ALIF_INCREF(tp);
-	descr = alifType_lookupRef(tp, _name);
+	descr = _alifType_lookupRef(tp, _name);
 
 	if (descr != nullptr) {
 		f = ALIF_TYPE(descr)->descrSet;
@@ -922,30 +926,30 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 		}
 
 		if ((tp->flags & ALIF_TPFLAGS_MANAGED_DICT)) {
-			AlifManagedDictPointer* managed_dict = alifObject_managedDictPointer(_obj);
+			AlifManagedDictPointer* managed_dict = _alifObject_managedDictPointer(_obj);
 			dictptr = (AlifObject**)&managed_dict->dict;
 		}
 		else {
-			dictptr = alifObject_computedDictPointer(_obj);
+			dictptr = _alifObject_computedDictPointer(_obj);
 		}
 		if (dictptr == nullptr) {
 			if (descr == nullptr) {
 				if (tp->setAttro == alifObject_genericSetAttr) {
 					alifErr_format(_alifExcAttributeError_,
-						"الكائن '%.100s' لا يملك هذه الخاصية '%U' ولا يملك "
-						"__فهرس__ لإضافة خاصية جديدة",
+						"الكائن '%.100s' لا يملك هذه الصفة '%U' ولا يملك "
+						"__فهرس__ لإضافة صفة جديدة",
 						tp->name, _name);
 				}
 				else {
 					alifErr_format(_alifExcAttributeError_,
-						"الكائن '%.100s' لا يملك هذه الخاصية '%U'",
+						"الكائن '%.100s' لا يملك هذه الصفة '%U'",
 						tp->name, _name);
 				}
 				_alifObject_setAttributeErrorContext(_obj, _name);
 			}
 			else {
 				alifErr_format(_alifExcAttributeError_,
-					"خاصية الكائن '%.100s' '%U' للقراءة-فقط",
+					"صفة الكائن '%.100s' '%U' للقراءة-فقط",
 					tp->name, _name);
 			}
 			goto done;
@@ -963,12 +967,12 @@ AlifIntT alifObject_genericSetAttrWithDict(AlifObject* _obj, AlifObject* _name,
 		ALIF_DECREF(_dict);
 	}
 error_check:
-	//if (res < 0 and alifErr_exceptionMatches(_alifExcKeyError_)) {
-	//	alifErr_format(_alifExcAttributeError_,
-	//		"الكائن '%.100s' لا يملك الخاصية '%U'",
-	//		tp->name, _name);
-	//	_alifObject_setAttributeErrorContext(_obj, _name);
-	//}
+	if (res < 0 and alifErr_exceptionMatches(_alifExcKeyError_)) {
+		alifErr_format(_alifExcAttributeError_,
+			"الكائن '%.100s' لا يملك الصفة '%U'",
+			tp->name, _name);
+		_alifObject_setAttributeErrorContext(_obj, _name);
+	}
 done:
 	ALIF_XDECREF(descr);
 	ALIF_DECREF(tp);
@@ -978,11 +982,43 @@ done:
 
 
 AlifIntT alifObject_genericSetAttr(AlifObject* _obj,
-	AlifObject* _name, AlifObject* _value) { // 1801
-	return alifObject_genericSetAttrWithDict(_obj, _name, _value, nullptr);
+	AlifObject* _name, AlifObject* _value) { // 1840
+	return _alifObject_genericSetAttrWithDict(_obj, _name, _value, nullptr);
 }
 
-AlifIntT alifObject_isTrue(AlifObject* _v) { // 1845
+AlifIntT alifObject_genericSetDict(AlifObject* _obj,
+	AlifObject* _value, void* _context) { // 1846
+	AlifObject** dictptr = _alifObject_getDictPtr(_obj);
+	if (dictptr == nullptr) {
+		if (_alifType_hasFeature(ALIF_TYPE(_obj), ALIF_TPFLAGS_INLINE_VALUES) and
+			_alifObject_getManagedDict(_obj) == nullptr
+			) {
+			/* Was unable to convert to dict */
+			//alifErr_noMemory();
+		}
+		else {
+			alifErr_setString(_alifExcAttributeError_,
+				"هذا الكائن لا يملك __فهرس__");
+		}
+		return -1;
+	}
+	if (_value == nullptr) {
+		alifErr_setString(_alifExcTypeError_, "لا يمكن حذف __فهرس__");
+		return -1;
+	}
+	if (!ALIFDICT_CHECK(_value)) {
+		alifErr_format(_alifExcTypeError_,
+			"__فهرس__ يجب أن يضبط إلى فهرس, "
+			"وليس '%.200s'", ALIF_TYPE(_value)->name);
+		return -1;
+	}
+	ALIF_BEGIN_CRITICAL_SECTION(_obj);
+	ALIF_XSETREF(*dictptr, ALIF_NEWREF(_value));
+	ALIF_END_CRITICAL_SECTION();
+	return 0;
+}
+
+AlifIntT alifObject_isTrue(AlifObject* _v) { // 1883
 	AlifSizeT res_{};
 	if (_v == ALIF_TRUE)
 		return 1;
@@ -1019,6 +1055,7 @@ AlifTypeObject _alifNoneType_ = { // 2049
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "عدم",
 	.repr = none_repr,
+	.flags = ALIF_TPFLAGS_DEFAULT,
 };
 
 AlifObject _alifNoneClass_ = ALIFOBJECT_HEAD_INIT(&_alifNoneType_); // 2090
@@ -1069,11 +1106,11 @@ static AlifTypeObject* staticTypes[] = {
 	&_alifDictValuesType_,
 	&_alifDictType_,
 	//&_alifEllipsisType_,
-	//&_alifEnumType_,
+	&_alifEnumType_,
 	//&_alifFilterType_,
 	&_alifFloatType_,
 	&_alifFrameType_,
-	//&_alifFrameLocalsProxyType_,
+	&_alifFrameLocalsProxyType_,
 	&_alifFrozenSetType_,
 	&_alifFunctionType_,
 	//&_alifGenType_,
@@ -1093,7 +1130,7 @@ static AlifTypeObject* staticTypes[] = {
 	&_alifModuleType_,
 	//&_alifODictIterType_,
 	//&_alifPickleBufferType_,
-	//&_alifPropertyType_,
+	&_alifPropertyType_,
 	&_alifRangeIterType_,
 	&_alifRangeType_,
 	&_alifReversedType_,
@@ -1103,7 +1140,7 @@ static AlifTypeObject* staticTypes[] = {
 	&_alifSetType_,
 	&_alifSliceType_,
 	&_alifStaticMethodType_,
-	//&_alifStdPrinterType_,
+	&_alifStdPrinterType_,
 	&_alifSuperType_,
 	//&_alifTraceBackType_,
 	//&_alifTupleIterType_,
@@ -1179,35 +1216,31 @@ static inline void new_reference(AlifObject* _op) { // 2405
 	_op->refLocal = 1;
 	_op->refShared = 0;
 
-	RefTracerRuntimeState* tracer = &_alifRuntime_.refTracer;
-	if (tracer->tracerFunc != nullptr) {
-		void* data = tracer->tracerData;
-		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Create, data);
-	}
+	_ALIFREFTRACERTRACK(_op, AlifRefTracerEvent_::Alif_RefTracer_Create);
 }
 
-void alif_newReference(AlifObject* _op) { // 2429
+void _alif_newReference(AlifObject* _op) { // 2429
 	new_reference(_op);
 }
 
 
 
-void alif_newReferenceNoTotal(AlifObject* _op) { //2438
+void _alif_newReferenceNoTotal(AlifObject* _op) { //2438
 	new_reference(_op);
 }
 
-void alif_setImmortalUntracked(AlifObject* _op) { // 2444
+void _alif_setImmortalUntracked(AlifObject* _op) { // 2444
 
 	_op->threadID = ALIF_UNOWNED_TID;
 	_op->refLocal = ALIF_IMMORTAL_REFCNT_LOCAL;
 	_op->refShared = 0;
 }
 
-void alif_setImmortal(AlifObject* _op) { // 2463
+void _alif_setImmortal(AlifObject* _op) { // 2463
 	if (alifObject_isGC(_op) and ALIFOBJECT_GC_IS_TRACKED(_op)) {
 		ALIFOBJECT_GC_UNTRACK(_op);
 	}
-	alif_setImmortalUntracked(_op);
+	_alif_setImmortalUntracked(_op);
 }
 
 void alifObject_setDeferredRefcount(AlifObject* _op) { // 2472
@@ -1301,11 +1334,7 @@ void alif_dealloc(AlifObject* _op) { // 2868
 	AlifTypeObject* type = ALIF_TYPE(_op);
 	Destructor dealloc = type->dealloc;
 
-	RefTracerRuntimeState* tracer = &_alifRuntime_.refTracer;
-	if (tracer->tracerFunc != nullptr) {
-		void* data = tracer->tracerData;
-		tracer->tracerFunc(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy, data);
-	}
+	_ALIFREFTRACERTRACK(_op, AlifRefTracerEvent_::Alif_RefTracer_Destroy);
 
 	(*dealloc)(_op);
 }

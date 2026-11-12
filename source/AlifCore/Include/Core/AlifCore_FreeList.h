@@ -7,23 +7,23 @@
 
 
 
-static inline AlifFreeLists* alifFreeLists_get(void) { // 16 
+static inline AlifFreeLists* _alifFreeLists_get(void) { // 16 
 	AlifThread* thread = _alifThread_get();
 	
 	return &((AlifThreadImpl*)thread)->freeLists;
 }
 
 #define ALIF_FREELIST_FREE(_name , _nameMcro, _op, _freeFunc) \
-    alifFreeList_free(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op),	\
+    alifFreeList_free(&_alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op),	\
 		ALIF ## _nameMcro ## _MAXFREELIST, _freeFunc) // 39
 
 #define ALIF_FREELIST_PUSH(_name, _op, _limit) \
-    alifFreeList_push(&alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op), _limit)
+    alifFreeList_push(&_alifFreeLists_get()->_name, ALIFOBJECT_CAST(_op), _limit)
 
-#define ALIF_FREELIST_POP(_type, _name) ALIF_CAST(_type*, alifFreeList_pop(&alifFreeLists_get()->_name)) // 46
+#define ALIF_FREELIST_POP(_type, _name) ALIF_CAST(_type*, alifFreeList_pop(&_alifFreeLists_get()->_name)) // 46
 
 #define ALIF_FREELIST_POP_MEM(_name) \
-    alifFreeList_popMem(&alifFreeLists_get()->_name) // 52
+    alifFreeList_popMem(&_alifFreeLists_get()->_name) // 52
 
 static inline AlifIntT alifFreeList_push(AlifFreeList* _fl,
 	void* _obj, AlifSizeT _maxSize) {  // 57
@@ -55,7 +55,7 @@ static inline void* alifFreeList_popNoStats(AlifFreeList* _fl)  { // 80
 static inline AlifObject* alifFreeList_pop(AlifFreeList* _fl)  {// 91
 	AlifObject* op_ = (AlifObject*)alifFreeList_popNoStats(_fl);
 	if (op_ != nullptr) {
-		alif_newReference(op_);
+		_alif_newReference(op_);
 	}
 	return op_;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifTypeObject _alifDictType_; // 15
+ALIFAPI_DATA(AlifTypeObject) _alifDictType_; // 15
 
 
 // 17
@@ -11,44 +11,45 @@ extern AlifTypeObject _alifDictType_; // 15
 #define ALIFDICT_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifDictType_)
 
 
-AlifObject* alifDict_new(); // 21
-AlifObject* alifDict_getItemWithError(AlifObject*, AlifObject*); // 23
-AlifIntT alifDict_setItem(AlifObject*, AlifObject*, AlifObject*); // 24
-AlifIntT alifDict_delItem(AlifObject*, AlifObject*); // 25
-AlifIntT alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** ); // 27
+ALIFAPI_FUNC(AlifObject*) alifDict_new(); // 21
+ALIFAPI_FUNC(AlifObject*) alifDict_getItem(AlifObject*, AlifObject*); // 22
+ALIFAPI_FUNC(AlifObject*) alifDict_getItemWithError(AlifObject*, AlifObject*); // 23
+ALIFAPI_FUNC(AlifIntT) alifDict_setItem(AlifObject*, AlifObject*, AlifObject*); // 24
+ALIFAPI_FUNC(AlifIntT) alifDict_delItem(AlifObject*, AlifObject*); // 25
+ALIFAPI_FUNC(AlifIntT) alifDict_next(AlifObject* , AlifSizeT* , AlifObject** , AlifObject** ); // 27
 
-AlifObject* alifDict_keys(AlifObject*); // 29
-AlifSizeT alifDict_size(AlifObject*); // 32
-AlifObject* alifDict_copy(AlifObject*); // 33
-AlifIntT alifDict_contains(AlifObject*, AlifObject*); // 34
+ALIFAPI_FUNC(AlifObject*) alifDict_keys(AlifObject*); // 29
+ALIFAPI_FUNC(AlifSizeT) alifDict_size(AlifObject*); // 32
+ALIFAPI_FUNC(AlifObject*) alifDict_copy(AlifObject*); // 33
+ALIFAPI_FUNC(AlifIntT) alifDict_contains(AlifObject*, AlifObject*); // 34
 
-AlifIntT alifDict_update(AlifObject*, AlifObject*); // 37
+ALIFAPI_FUNC(AlifIntT) alifDict_update(AlifObject*, AlifObject*); // 37
 
-AlifIntT alifDict_setItemString(AlifObject*, const char*, AlifObject*); // 58
-AlifIntT alifDict_delItemString(AlifObject*, const char* ); // 59
+ALIFAPI_FUNC(AlifIntT) alifDict_setItemString(AlifObject*, const char*, AlifObject*); // 58
+ALIFAPI_FUNC(AlifIntT) alifDict_delItemString(AlifObject*, const char* ); // 59
 
-AlifIntT alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
+ALIFAPI_FUNC(AlifIntT) alifDict_getItemRef(AlifObject* , AlifObject* , AlifObject** ); // 67
 
-AlifIntT alifDict_getItemStringRef(AlifObject* , const char* , AlifObject** ); // 68
-
-
-AlifObject* alifObject_genericGetDict(AlifObject*, void*); // 72
+ALIFAPI_FUNC(AlifIntT) alifDict_getItemStringRef(AlifObject* , const char* , AlifObject** ); // 68
 
 
+ALIFAPI_FUNC(AlifObject*) alifObject_genericGetDict(AlifObject*, void*); // 72
 
 
-extern AlifTypeObject _alifDictKeysType_; // 77
-extern AlifTypeObject _alifDictValuesType_;
-extern AlifTypeObject _alifDictItemsType_;
 
 
-extern AlifTypeObject _alifDictIterKeyType_; // 90
+ALIFAPI_DATA(AlifTypeObject) _alifDictKeysType_; // 77
+ALIFAPI_DATA(AlifTypeObject) _alifDictValuesType_;
+ALIFAPI_DATA(AlifTypeObject) _alifDictItemsType_;
 
-extern AlifTypeObject _alifDictIterItemType_; // 92
 
-extern AlifTypeObject _alifDictRevIterKeyType_; // 94
-extern AlifTypeObject _alifDictRevIterItemType_; // 95
-extern AlifTypeObject _alifDictRevIterValueType_; // 96
+ALIFAPI_DATA(AlifTypeObject) _alifDictIterKeyType_; // 90
+
+ALIFAPI_DATA(AlifTypeObject) _alifDictIterItemType_; // 92
+
+ALIFAPI_DATA(AlifTypeObject) _alifDictRevIterKeyType_; // 94
+ALIFAPI_DATA(AlifTypeObject) _alifDictRevIterItemType_; // 95
+ALIFAPI_DATA(AlifTypeObject) _alifDictRevIterValueType_; // 96
 
 /* ---------------------------------------------------------------------------------------------------------------- */
 
@@ -78,10 +79,10 @@ public:
 
 
 
-AlifObject* _alifDict_getItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 38
+ALIFAPI_FUNC(AlifObject*) _alifDict_getItemKnownHash(AlifObject*, AlifObject*, AlifHashT); // 38
 
 
-AlifIntT alifDict_setDefaultRef(AlifObject*, AlifObject*, AlifObject*, AlifObject**); // 53
+ALIFAPI_FUNC(AlifIntT) alifDict_setDefaultRef(AlifObject*, AlifObject*, AlifObject*, AlifObject**); // 53
 
 static inline AlifSizeT _alifDict_getSize(AlifObject* _op) { // 56
 	AlifDictObject* mp_{};
@@ -91,10 +92,10 @@ static inline AlifSizeT _alifDict_getSize(AlifObject* _op) { // 56
 #define ALIFDICT_GET_SIZE(_op) _alifDict_getSize(ALIFOBJECT_CAST(_op))
 
 
-AlifIntT alifDict_containsString(AlifObject*, const char*); // 68
+ALIFAPI_FUNC(AlifIntT) alifDict_containsString(AlifObject*, const char*); // 68
 
-AlifIntT alifDict_pop(AlifObject*, AlifObject*, AlifObject**); // 72
-AlifIntT alifDict_popString(AlifObject*, const char*, AlifObject**); // 73
+ALIFAPI_FUNC(AlifIntT) alifDict_pop(AlifObject*, AlifObject*, AlifObject**); // 72
+ALIFAPI_FUNC(AlifIntT) alifDict_popString(AlifObject*, const char*, AlifObject**); // 73
 
 
 // 78

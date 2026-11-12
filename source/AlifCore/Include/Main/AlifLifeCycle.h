@@ -2,30 +2,30 @@
 
 
 
-void alif_finalize(void); // 14
+ALIFAPI_FUNC(void) alif_finalize(void); // 14
 
 
-AlifStatus alif_initFromConfig(const AlifConfig*); // 25
 
-void ALIF_NO_RETURN alif_exit(AlifIntT); // 30
+ALIFAPI_FUNC(void) ALIF_NO_RETURN alif_exit(AlifIntT); // 30
 
 
-const char* alif_getVersion(); // 52
-
+ALIFAPI_FUNC(const char*) alif_getVersion(); // 52
+ALIFAPI_FUNC(const char*) alif_getPlatform(void); // 53
 
 
 typedef void (*AlifOSSigHandlerT)(int); // 59
-AlifOSSigHandlerT alifOS_setSig(AlifIntT, AlifOSSigHandlerT); // 61
+ALIFAPI_FUNC(AlifOSSigHandlerT) alifOS_setSig(AlifIntT, AlifOSSigHandlerT); // 61
 
 
 
 
 /* ----------------------------------------------------------------------------- */
 
+ALIFAPI_FUNC(AlifStatus) alif_initFromConfig(const AlifConfig*); // 25
 
-AlifIntT alif_runMain(); // 31
+ALIFAPI_FUNC(AlifIntT) alif_runMain(); // 31
 
-void ALIF_NO_RETURN alif_exitStatusException(AlifStatus);
+ALIFAPI_FUNC(void) ALIF_NO_RETURN alif_exitStatusException(AlifStatus);
 
 // 40
 #define ALIF_INTERPRETERCONFIG_DEFAULT_GIL (0)

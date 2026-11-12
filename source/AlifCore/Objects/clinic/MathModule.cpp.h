@@ -5,42 +5,35 @@
 #define MATH_GCD_METHODDEF    \
     {"قم_اكبر", ALIF_CPPFUNCTION_CAST(math_gcd), METHOD_FASTCALL},
 
-static AlifObject* math_gcdImpl(AlifObject*, AlifSizeT, AlifObject* const*);
+static AlifObject* math_gcdImpl(AlifObject*, AlifObject* const*, AlifSizeT);
 
 static AlifObject* math_gcd(AlifObject* _module,
 	AlifObject* const* _args, AlifSizeT _nArgs) { // 23
 	AlifObject* returnValue{};
-	AlifSizeT nvararg = _nArgs - 0;
 	AlifObject* const* __clinicArgs{};
+	AlifSizeT argsLength{};
 
-	if (!_ALIFARG_CHECKPOSITIONAL("قم_اكبر", _nArgs, 0, ALIF_SIZET_MAX)) {
-		goto exit;
-	}
-	__clinicArgs = _args + 0;
-	returnValue = math_gcdImpl(_module, nvararg, __clinicArgs);
-
-exit:
+	__clinicArgs = _args;
+	argsLength = _nArgs;
+	returnValue = math_gcdImpl(_module, __clinicArgs, argsLength);
 	return returnValue;
 }
 
 #define MATH_LCM_METHODDEF    \
     {"قم_اصغر", ALIF_CPPFUNCTION_CAST(math_lcm), METHOD_FASTCALL},
 
-static AlifObject* math_lcmImpl(AlifObject*, AlifSizeT, AlifObject *const*);
+static AlifObject* math_lcmImpl(AlifObject*, AlifObject* const*, AlifSizeT);
 
 static AlifObject* math_lcm(AlifObject* _module,
 	AlifObject* const* _args, AlifSizeT _nArgs) { // 52
 	AlifObject* returnValue{};
-	AlifSizeT nvararg = _nArgs - 0;
 	AlifObject* const* __clinicArgs{};
+	AlifSizeT argsLength{};
 
-	if (!_ALIFARG_CHECKPOSITIONAL("قم_اصغر", _nArgs, 0, ALIF_SIZET_MAX)) {
-		goto exit;
-	}
-	__clinicArgs = _args + 0;
-	returnValue = math_lcmImpl(_module, nvararg, __clinicArgs);
+	__clinicArgs = _args;
+	argsLength = _nArgs;
+	returnValue = math_lcmImpl(_module, __clinicArgs, argsLength);
 
-exit:
 	return returnValue;
 }
 

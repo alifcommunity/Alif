@@ -52,4 +52,4 @@ static inline AlifGenObject* _alifGen_getGeneratorFromFrame(AlifInterpreterFrame
 
 
 
-AlifIntT _alifGen_setStopIterationValue(AlifObject*); // 59
+ALIFAPI_FUNC(AlifIntT) _alifGen_setStopIterationValue(AlifObject*); // 59

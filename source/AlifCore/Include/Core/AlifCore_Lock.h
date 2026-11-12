@@ -43,7 +43,7 @@ public:
 
 
 
-AlifIntT alifEvent_waitTimed(AlifEvent*, AlifTimeT, AlifIntT); // 94
+ALIFAPI_FUNC(AlifIntT) alifEvent_waitTimed(AlifEvent*, AlifTimeT, AlifIntT); // 94
 
 
 
@@ -69,7 +69,7 @@ static inline void alifRawMutex_unlock(AlifRawMutex* m) { // 131
 typedef AlifIntT AlifOnceFnT(void* _arg); // 133
 
 
-AlifIntT _alifOnceFlag_callOnceSlow(AlifOnceFlag*, AlifOnceFnT*, void*); // 137
+ALIFAPI_FUNC(AlifIntT) _alifOnceFlag_callOnceSlow(AlifOnceFlag*, AlifOnceFnT*, void*); // 137
 
 static inline AlifIntT _alifOnceFlag_callOnce(AlifOnceFlag* _flag, AlifOnceFnT* _fn, void* _arg) { // 145
 	if (alifAtomic_loadUint8(&_flag->v) == ALIF_ONCE_INITIALIZED) {
@@ -88,11 +88,11 @@ public:
 };
 
 
-void alifRWMutex_rLock(AlifRWMutex*); // 197
-void alifRWMutex_rUnlock(AlifRWMutex*); // 198
+ALIFAPI_FUNC(void) _alifRWMutex_rLock(AlifRWMutex*); // 197
+ALIFAPI_FUNC(void) _alifRWMutex_rUnlock(AlifRWMutex*); // 198
 
-void alifRWMutex_lock(AlifRWMutex*); // 201
-void alifRWMutex_unlock(AlifRWMutex*);
+ALIFAPI_FUNC(void) _alifRWMutex_lock(AlifRWMutex*); // 201
+ALIFAPI_FUNC(void) _alifRWMutex_unlock(AlifRWMutex*);
 
 
 class AlifSeqLock { // 213
@@ -103,7 +103,7 @@ public:
 
 
 
-uint32_t alifSeqLock_beginRead(AlifSeqLock*); // 228
+ALIFAPI_FUNC(uint32_t) _alifSeqLock_beginRead(AlifSeqLock*); // 228
 
 
-AlifIntT alifSeqLock_endRead(AlifSeqLock*, uint32_t); // 232
+ALIFAPI_FUNC(AlifIntT) _alifSeqLock_endRead(AlifSeqLock*, uint32_t); // 232

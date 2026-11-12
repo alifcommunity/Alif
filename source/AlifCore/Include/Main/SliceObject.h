@@ -1,7 +1,7 @@
 #pragma once
 
 
-extern AlifObject _alifEllipsisObject_; // 9
+ALIFAPI_DATA(AlifObject) _alifEllipsisObject_; // 9
 
 
 #define ALIF_ELLIPSIS (&_alifEllipsisObject_) // 14
@@ -14,13 +14,13 @@ public:
 	AlifObject* start{}, * stop{}, * step{};
 };
 
-extern AlifTypeObject _alifSliceType_; // 32
+ALIFAPI_DATA(AlifTypeObject) _alifSliceType_; // 32
 
 #define ALIFSLICE_CHECK(_op) ALIF_IS_TYPE((_op), &_alifSliceType_) // 35
 
-AlifObject* alifSlice_new(AlifObject* , AlifObject* , AlifObject* ); // 37
+ALIFAPI_FUNC(AlifObject*) alifSlice_new(AlifObject*, AlifObject*, AlifObject*); // 37
 
 
 
-AlifIntT alifSlice_unpack(AlifObject*, AlifSizeT*, AlifSizeT*, AlifSizeT*); // 59
-AlifSizeT alifSlice_adjustIndices(AlifSizeT, AlifSizeT*, AlifSizeT*, AlifSizeT);
+ALIFAPI_FUNC(AlifIntT) alifSlice_unpack(AlifObject*, AlifSizeT*, AlifSizeT*, AlifSizeT*); // 59
+ALIFAPI_FUNC(AlifSizeT) alifSlice_adjustIndices(AlifSizeT, AlifSizeT*, AlifSizeT*, AlifSizeT);

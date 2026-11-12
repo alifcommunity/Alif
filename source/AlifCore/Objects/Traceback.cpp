@@ -82,16 +82,16 @@ static void tb_dealloc(AlifTracebackObject *_tb) { // 182
 
 AlifTypeObject _alifTraceBackType_ = { // 209
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "تتبع",
+	.name = "تتبع_عكسي",
 	.basicSize = sizeof(AlifTracebackObject),
 	.dealloc = (Destructor)tb_dealloc,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
 	//.traverse = (TraverseProc)tb_traverse,
 	//(Inquiry)tb_clear,
-	//.methods = tb_methods,
-	//.members = tb_memberlist,
-	//.getSet = tb_getsetters,
+	//.methods = _tbMethods_,
+	//.members = _tbMemberlist_,
+	//.getSet = _tbGetSetters_,
 	.new_ = tb_new,
 };
 

@@ -9,6 +9,7 @@
 #include "AlifCore_Dict.h"
 #include "AlifCore_GC.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_Errors.h"
 #include "StringLib/Equal.h"
 
 #define IS_DICT_SHARED(_mp) ALIFOBJECT_GC_IS_SHARED(_mp) // 166
@@ -266,7 +267,7 @@ static AlifDictKeysObject* new_keysObject(AlifInterpreter* _interp,
 
 static void free_keysObject(AlifDictKeysObject* _keys, bool _useqsbr) { // 804
 	if (_useqsbr) {
-		alifMem_freeDelayed(_keys);
+		_alifMem_freeDelayed(_keys);
 		return;
 	}
 	if (DK_LOG_SIZE(_keys) == ALIFDICT_LOG_MINSIZE and _keys->kind == DictKeysKind_::Dict_Keys_UStr) {
@@ -300,7 +301,7 @@ static inline AlifDictValues* new_values(AlifUSizeT _size) { // 832
 
 static inline void free_values(AlifDictValues* _values, bool _useqsbr) { // 848
 	if (_useqsbr) {
-		alifMem_freeDelayed(_values);
+		_alifMem_freeDelayed(_values);
 		return;
 	}
 	alifMem_objFree(_values);
@@ -309,10 +310,10 @@ static inline void free_values(AlifDictValues* _values, bool _useqsbr) { // 848
 static AlifObject* new_dict(AlifInterpreter* _interp,
 	AlifDictKeysObject* _keys, AlifDictValues* _values,
 	AlifSizeT _used, AlifIntT _freeValuesOnFailure) { // 860
-	AlifDictObject* mp_ = ALIF_FREELIST_POP(AlifDictObject, dicts);
-	if (mp_ == nullptr) {
-		mp_ = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
-		if (mp_ == nullptr) {
+	AlifDictObject* mp = ALIF_FREELIST_POP(AlifDictObject, dicts);
+	if (mp == nullptr) {
+		mp = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
+		if (mp == nullptr) {
 			dictKeys_decRef(_interp, _keys, false);
 			if (_freeValuesOnFailure) {
 				free_values(_values, false);
@@ -320,11 +321,12 @@ static AlifObject* new_dict(AlifInterpreter* _interp,
 			return nullptr;
 		}
 	}
-	mp_->keys = _keys;
-	mp_->values = _values;
-	mp_->used = _used;
-	mp_->watcherTag = 0;
-	return (AlifObject*)mp_;
+	mp->keys = _keys;
+	mp->values = _values;
+	mp->used = _used;
+	mp->watcherTag = 0;
+	ALIFOBJECT_GC_TRACK(mp);
+	return (AlifObject*)mp;
 }
 
 
@@ -876,16 +878,6 @@ AlifIntT _alifDict_hasOnlyStringKeys(AlifObject* _dict) { // 1511
 }
 
 
-// 1526
-#define MAINTAIN_TRACKING(_mp, _key, _value) do { \
-        if (!ALIFOBJECT_GC_IS_TRACKED(_mp)) { \
-            if (alifObject_gcMayBeTracked(_key) or \
-				alifObject_gcMayBeTracked(_value)) { \
-                ALIFOBJECT_GC_TRACK(_mp); \
-            } \
-        } \
-    } while(0)
-
 
 static inline AlifIntT is_unusableSlot(AlifSizeT _ix) { // 1585
 	return _ix >= 0 or _ix == DKIX_DUMMY;
@@ -981,7 +973,6 @@ static AlifSizeT insert_splitKey(AlifDictKeysObject* _keys,
 static void insert_splitValue(AlifInterpreter* _interp,
 	AlifDictObject* _mp, AlifObject* _key, AlifObject* _value, AlifSizeT ix_) { // 1689
 
-	MAINTAIN_TRACKING(_mp, _key, _value);
 	AlifObject* oldValue = _mp->values->values[ix_];
 	if (oldValue == nullptr) {
 		_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
@@ -997,7 +988,7 @@ static void insert_splitValue(AlifInterpreter* _interp,
 }
 
 static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
-	AlifObject* _key, AlifUSizeT _hash, AlifObject* _value) { // 1720
+	AlifObject* _key, AlifUSizeT _hash, AlifObject* _value) { // 1788
 	AlifObject* oldValue{};
 	AlifSizeT ix_{};
 	if (DK_IS_USTR(_mp->keys) and !ALIFUSTR_CHECKEXACT(_key)) {
@@ -1022,8 +1013,6 @@ static AlifIntT insert_dict(AlifInterpreter* _interp, AlifDictObject* _mp,
 	ix_ = alifDict_lookup(_mp, _key, _hash, &oldValue);
 	if (ix_ == DKIX_ERROR)
 		goto Fail;
-
-	MAINTAIN_TRACKING(_mp, _key, _value);
 
 	if (ix_ == DKIX_EMPTY) {
 		if (insert_combinedDict(_interp, _mp, _hash, _key, _value) < 0) {
@@ -1067,8 +1056,6 @@ static AlifIntT insertTo_emptyDict(AlifInterpreter* _interp, AlifDictObject* _mp
 		return -1;
 	}
 	_alifDict_notifyEvent(_interp, AlifDictWatchEvent_::AlifDict_Event_Added, _mp, _key, _value);
-
-	MAINTAIN_TRACKING(_mp, _key, _value);
 
 	AlifUSizeT hasPos = (AlifUSizeT)_hash & (ALIFDICT_MINSIZE - 1);
 	dictKeys_setIndex(newKeys, hasPos, 0);
@@ -1327,18 +1314,18 @@ static AlifObject* dict_getItem(AlifObject* _op,
 	AlifObject* value{};
 	AlifSizeT ix{}; (void)ix;
 
-	//AlifObject* exc = _alifErr_getRaisedException(tstate);
+	AlifObject* exc = _alifErr_getRaisedException(tstate);
 
 	ix = alifDict_lookupThreadSafe(mp, _key, hash, &value);
 	ALIF_XDECREF(value);
 
 
 	/* Ignore any exception raised by the lookup */
-	//AlifObject* exc2 = _alifErr_occurred(tstate);
-	//if (exc2 and !alifErr_givenExceptionMatches(exc2, _alifExcKeyError_)) {
-	//	alifErr_formatUnraisable(warnmsg);
-	//}
-	//_alifErr_setRaisedException(tstate, exc);
+	AlifObject* exc2 = _alifErr_occurred(tstate);
+	if (exc2 and !alifErr_givenExceptionMatches(exc2, _alifExcKeyError_)) {
+		//alifErr_formatUnraisable(warnmsg);
+	}
+	_alifErr_setRaisedException(tstate, exc);
 
 	return value;  // borrowed reference
 }
@@ -1800,7 +1787,18 @@ AlifIntT alifDict_popString(AlifObject* _op,
 }
 
 
-
+AlifObject* _alifDict_pop(AlifObject* _dict,
+	AlifObject* _key, AlifObject* _defaultValue) { // 3069
+	AlifObject* result{};
+	if (alifDict_pop(_dict, _key, &result) == 0) {
+		if (_defaultValue != nullptr) {
+			return ALIF_NEWREF(_defaultValue);
+		}
+		//_alifErr_setKeyError(_key);
+		return nullptr;
+	}
+	return result;
+}
 
 
 static void dict_dealloc(AlifObject* _self) { // 3089
@@ -1954,19 +1952,19 @@ static AlifObject* dict_subscript(AlifObject* _self, AlifObject* _key) { // 3234
 	if (ix == DKIX_ERROR)
 		return nullptr;
 	if (ix == DKIX_EMPTY or value == nullptr) {
-		if (!ALIFDICT_CHECKEXACT(mp)) {
-			AlifObject* missing{}, * res{};
-			//missing = _alifObject_lookupSpecial(
-			//	(AlifObject*)mp, &ALIF_ID(__missing__));
-			//if (missing != nullptr) {
-			//	res = AlifObject_callOneArg(missing, key);
-			//	ALIF_DECREF(missing);
-			//	return res;
-			//}
-			//else if (alifErr_occurred())
-			//	return nullptr;
-		}
-		//_alifErr_setKeyError(key);
+		//if (!ALIFDICT_CHECKEXACT(mp)) {
+		//	AlifObject* missing{}, * res{};
+		//	missing = _alifObject_lookupSpecial(
+		//		(AlifObject*)mp, &ALIF_ID(__missing__));
+		//	if (missing != nullptr) {
+		//		res = alifObject_callOneArg(missing, _key);
+		//		ALIF_DECREF(missing);
+		//		return res;
+		//	}
+		//	else if (alifErr_occurred())
+		//		return nullptr;
+		//}
+		_alifErr_setKeyError(_key);
 		return nullptr;
 	}
 	return value;
@@ -2047,7 +2045,8 @@ static AlifIntT dict_dictMerge(AlifInterpreter* interp, AlifDictObject* mp, Alif
 			mp->keys = keys;
 			STORE_USED(mp, other->used);
 
-			if (ALIFOBJECT_GC_IS_TRACKED(other) and !ALIFOBJECT_GC_IS_TRACKED(mp)) {
+			if (ALIFOBJECT_GC_IS_TRACKED(other)
+				and !ALIFOBJECT_GC_IS_TRACKED(mp)) {
 				/* Maintain tracking. */
 				ALIFOBJECT_GC_TRACK(mp);
 			}
@@ -2238,6 +2237,7 @@ static AlifObject* copy_lockHeld(AlifObject* o) { // 3993
 		AlifDictValues* newvalues = copy_values(mp->values);
 		if (newvalues == nullptr) {
 			//return alifErr_noMemory();
+			return nullptr; // temp
 		}
 		split_copy = ALIFOBJECT_GC_NEW(AlifDictObject, &_alifDictType_);
 		if (split_copy == nullptr) {
@@ -2252,8 +2252,7 @@ static AlifObject* copy_lockHeld(AlifObject* o) { // 3993
 		split_copy->used = mp->used;
 		split_copy->watcherTag = 0;
 		dictKeys_incRef(mp->keys);
-		if (ALIFOBJECT_GC_IS_TRACKED(mp))
-			ALIFOBJECT_GC_TRACK(split_copy);
+		ALIFOBJECT_GC_TRACK(split_copy);
 		return (AlifObject*)split_copy;
 	}
 
@@ -2270,10 +2269,6 @@ static AlifObject* copy_lockHeld(AlifObject* o) { // 3993
 		}
 
 		new_->used = mp->used;
-		if (ALIFOBJECT_GC_IS_TRACKED(mp)) {
-			/* Maintain tracking. */
-			ALIFOBJECT_GC_TRACK(new_);
-		}
 
 		return (AlifObject*)new_;
 	}
@@ -2397,7 +2392,6 @@ static AlifIntT dictSetDefault_refLockHeld(AlifObject* _d, AlifObject* _key, Ali
 			}
 		}
 
-		MAINTAIN_TRACKING(mp_, _key, value);
 		STORE_USED(mp_, mp_->used + 1);
 		if (_result) {
 			*_result = _incRefResult ? ALIF_NEWREF(value) : value;
@@ -2445,6 +2439,16 @@ AlifIntT alifDict_setDefaultRef(AlifObject* _d, AlifObject* _key,
 	return res;
 }
 
+
+
+static AlifObject* dict_popImpl(AlifDictObject* _self,
+	AlifObject* _key, AlifObject* _defaultValue) { // 4450
+	return _alifDict_pop((AlifObject*)_self, _key, _defaultValue);
+}
+
+
+
+
 static AlifObject* dictIter_new(AlifDictObject*, AlifTypeObject*); // 4480
 
 
@@ -2485,8 +2489,9 @@ AlifUSizeT _alifDict_keysSize(AlifDictKeysObject* _keys) { // 4509
 
 static AlifMethodDef _dictMethods_[] = { // 4570
 	DICT_GET_METHODDEF
+	DICT_POP_METHODDEF
 	DICT_KEYS_METHODDEF
-	//DICT_ITEMS_METHODDEF
+	DICT_ITEMS_METHODDEF
 	DICT_VALUES_METHODDEF
 	{nullptr, nullptr}   /* sentinel */
 };
@@ -2572,6 +2577,7 @@ AlifTypeObject _alifDictType_ = { // 4760
 	.alloc = alifType_allocNoTrack,
 	//.new_ = dict_new,
 	.free = alifObject_gcDel,
+	.versionTag = _ALIF_TYPE_VERSION_DICT,
 };
 
 
@@ -2605,7 +2611,7 @@ AlifIntT alifDict_setItemString(AlifObject* _v,
 	kv = alifUStr_fromString(_key);
 	if (kv == nullptr) return -1;
 	AlifInterpreter* interp = _alifInterpreter_get();
-	alifUStr_internImmortal(interp, &kv);
+	_alifUStr_internImmortal(interp, &kv);
 	err = alifDict_setItem(_v, kv, _item);
 	ALIF_DECREF(kv);
 	return err;
@@ -2997,7 +3003,16 @@ AlifTypeObject _alifDictRevIterValueType_ = { // 5719
 	//.methods = dictIter_methods
 };
 
+/***********************************************/
+/* View objects for مفاتيح(), عناصر(), قيم(). */
+/***********************************************/
 
+static void dictView_dealloc(AlifObject* _self) { // 5850
+	AlifDictViewObject* dv = (AlifDictViewObject*)_self;
+	ALIFOBJECT_GC_UNTRACK(dv);
+	ALIF_XDECREF(dv->dict);
+	alifObject_gcDel(dv);
+}
 
 AlifObject* _alifDictView_new(AlifObject* dict, AlifTypeObject* type) { // 5765
 	AlifDictViewObject* dv{};
@@ -3006,9 +3021,9 @@ AlifObject* _alifDictView_new(AlifObject* dict, AlifTypeObject* type) { // 5765
 		return nullptr;
 	}
 	if (!ALIFDICT_CHECK(dict)) {
-		//alifErr_format(_alifExcTypeError_,
-		//	"%s() requires a dict argument, not '%s'",
-		//	type->name, ALIF_TYPE(dict)->name);
+		alifErr_format(_alifExcTypeError_,
+			"%s() يتطلب وسيط من نوع فهرس, وليس '%s'",
+			type->name, ALIF_TYPE(dict)->name);
 		return nullptr;
 	}
 	dv = ALIFOBJECT_GC_NEW(AlifDictViewObject, type);
@@ -3059,14 +3074,30 @@ static AlifObject* dict_keysImpl(AlifDictObject* self) { // 6339
 	return _alifDictView_new((AlifObject*)self, &_alifDictKeysType_);
 }
 
-AlifTypeObject _alifDictItemsType_ = { // 6412
+static AlifObject* dictItems_iter(AlifObject* _self) { // 6471
+	AlifDictViewObject* dv = (AlifDictViewObject*)_self;
+	if (dv->dict == nullptr) {
+		return ALIF_NONE;
+	}
+	return dictIter_new(dv->dict, &_alifDictIterItemType_);
+}
+
+AlifTypeObject _alifDictItemsType_ = { // 6525
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
 	.name = "عناصر_فهرس",
 	.basicSize = sizeof(AlifDictViewObject),
 	/* methods */
+	.dealloc = dictView_dealloc,
+	.repr = dictView_repr,
+	//.asSequence = &_dictItemsAsSequence_,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	.iter = dictItems_iter,
 };
+
+static AlifObject* dict_itemsImpl(AlifDictObject* _self) { // 6564
+	return _alifDictView_new((AlifObject*)_self, &_alifDictItemsType_);
+}
 
 
 AlifTypeObject _alifDictValuesType_ = { // 6562
@@ -3133,26 +3164,21 @@ void alifObject_initInlineValues(AlifObject* _obj, AlifTypeObject* _tp) {  // 65
 	for (AlifUSizeT i = 0; i < size; i++) {
 		values->values[i] = nullptr;
 	}
-	alifObject_managedDictPointer(_obj)->dict = nullptr;
+	_alifObject_managedDictPointer(_obj)->dict = nullptr;
 }
 
 static AlifDictObject* makeDict_fromInstanceAttributes(AlifInterpreter* _interp,
 	AlifDictKeysObject* _keys, AlifDictValues* _values) { // 6616
 	dictKeys_incRef(_keys);
 	AlifSizeT used = 0;
-	AlifSizeT track = 0;
 	AlifUSizeT size = sharedKeys_usableSize(_keys);
 	for (AlifUSizeT i = 0; i < size; i++) {
 		AlifObject* val = _values->values[i];
 		if (val != nullptr) {
 			used += 1;
-			track += alifObject_gcMayBeTracked(val);
 		}
 	}
 	AlifDictObject* res = (AlifDictObject*)new_dict(_interp, _keys, _values, used, 0);
-	if (track and res) {
-		ALIFOBJECT_GC_TRACK(res);
-	}
 	return res;
 }
 
@@ -3168,19 +3194,19 @@ AlifDictObject* alifObject_materializeManagedDictLockHeld(AlifObject* _obj) { //
 	else {
 		dict = (AlifDictObject*)alifDict_new();
 	}
-	alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, dict);
+	alifAtomic_storePtrRelease(&_alifObject_managedDictPointer(_obj)->dict, dict);
 	return dict;
 }
 
-AlifDictObject* alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
-	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+AlifDictObject* _alifObject_materializeManagedDict(AlifObject* _obj) { // 6660
+	AlifDictObject* dict = _alifObject_getManagedDict(_obj);
 	if (dict != nullptr) {
 		return dict;
 	}
 
 	ALIF_BEGIN_CRITICAL_SECTION(_obj);
 
-	dict = alifObject_getManagedDict(_obj);
+	dict = _alifObject_getManagedDict(_obj);
 	if (dict != nullptr) {
 		goto exit;
 	}
@@ -3197,7 +3223,7 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 	AlifObject* name, AlifObject* value) { // 6702
 	AlifDictKeysObject* keys = CACHED_KEYS(ALIF_TYPE(obj));
 	AlifSizeT ix = DKIX_EMPTY;
-	AlifDictObject* dict = alifObject_getManagedDict(obj);
+	AlifDictObject* dict = _alifObject_getManagedDict(obj);
 	if (ALIFUSTR_CHECKEXACT(name)) {
 		AlifHashT hash = uStr_getHash(name);
 		if (hash == -1) {
@@ -3233,7 +3259,7 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 				return -1;
 			}
 
-			alifAtomic_storePtrRelease(&alifObject_managedDictPointer(obj)->dict,
+			alifAtomic_storePtrRelease(&_alifObject_managedDictPointer(obj)->dict,
 				(AlifDictObject*)dict);
 			return 0;
 		}
@@ -3246,7 +3272,7 @@ static AlifIntT storeInstance_attrLockHeld(AlifObject* obj, AlifDictValues* valu
 
 	if (oldValue == nullptr and value == nullptr) {
 		alifErr_format(_alifExcAttributeError_,
-			"'%.100s' الكائن لا يحتوي خاصية '%U'",
+			"'%.100s' الكائن لا يحتوي الصفة '%U'",
 			ALIF_TYPE(obj)->name, name);
 		return -1;
 	}
@@ -3300,7 +3326,7 @@ AlifIntT alifObject_storeInstanceAttribute(AlifObject* _obj,
 	AlifObject* _name, AlifObject* _value) { // 6807
 	AlifDictValues* values = alifObject_inlineValues(_obj);
 	if (!alifAtomic_loadUint8(&values->valid)) {
-		AlifDictObject* dict = alifObject_getManagedDict(_obj);
+		AlifDictObject* dict = _alifObject_getManagedDict(_obj);
 		if (dict == nullptr) {
 			dict = (AlifDictObject*)alifObject_genericGetDict(_obj, nullptr);
 			if (dict == nullptr) {
@@ -3313,11 +3339,11 @@ AlifIntT alifObject_storeInstanceAttribute(AlifObject* _obj,
 		return storeInstance_attrDict(_obj, dict, _name, _value);
 	}
 
-	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	AlifDictObject* dict = _alifObject_getManagedDict(_obj);
 	if (dict == nullptr) {
 		AlifIntT res{};
 		ALIF_BEGIN_CRITICAL_SECTION(_obj);
-		dict = alifObject_getManagedDict(_obj);
+		dict = _alifObject_getManagedDict(_obj);
 
 		if (dict == nullptr) {
 			res = storeInstance_attrLockHeld(_obj, values, _name, _value);
@@ -3351,12 +3377,12 @@ bool alifObject_tryGetInstanceAttribute(AlifObject* _obj,
 		return true;
 	}
 
-	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	AlifDictObject* dict = _alifObject_getManagedDict(_obj);
 	if (dict == nullptr) {
 		bool success = false;
 		ALIF_BEGIN_CRITICAL_SECTION(_obj);
 
-		dict = alifObject_getManagedDict(_obj);
+		dict = _alifObject_getManagedDict(_obj);
 		if (dict == nullptr) {
 			value = values->values[ix_];
 			*_attr = ALIF_XNEWREF(value);
@@ -3407,12 +3433,6 @@ AlifIntT alifDict_setItemLockHeld(AlifDictObject* _dict,
 
 
 
-//void alifObject_clearManagedDict(AlifObject* _obj) { // 7098
-//	if (_alifObject_setManagedDict(_obj, nullptr) < 0) {
-//		alifErr_writeUnraisable(nullptr);
-//	}
-//}
-
 
 
 
@@ -3445,21 +3465,21 @@ done:
 
 
 static inline AlifObject* ensure_managedDict(AlifObject* _obj) { // 7138
-	AlifDictObject* dict = alifObject_getManagedDict(_obj);
+	AlifDictObject* dict = _alifObject_getManagedDict(_obj);
 	if (dict == nullptr) {
 		AlifTypeObject* tp = ALIF_TYPE(_obj);
 		if ((tp->flags & ALIF_TPFLAGS_INLINE_VALUES) &&
 			alifAtomic_loadUint8(&alifObject_inlineValues(_obj)->valid)) {
-			dict = alifObject_materializeManagedDict(_obj);
+			dict = _alifObject_materializeManagedDict(_obj);
 		}
 		else {
 			ALIF_BEGIN_CRITICAL_SECTION(_obj);
-			dict = alifObject_getManagedDict(_obj);
+			dict = _alifObject_getManagedDict(_obj);
 			if (dict != nullptr) {
 				goto done;
 			}
 			dict = (AlifDictObject*)newDict_withSharedKeys(_alifInterpreter_get(), CACHED_KEYS(tp));
-			alifAtomic_storePtrRelease(&alifObject_managedDictPointer(_obj)->dict, (AlifDictObject*)dict);
+			alifAtomic_storePtrRelease(&_alifObject_managedDictPointer(_obj)->dict, (AlifDictObject*)dict);
 
 done:
 			ALIF_END_CRITICAL_SECTION();
@@ -3475,7 +3495,7 @@ AlifObject* alifObject_genericGetDict(AlifObject* _obj, void* _context) { // 720
 		return ALIF_XNEWREF(ensure_managedDict(_obj));
 	}
 	else {
-		AlifObject** dictptr = alifObject_computedDictPointer(_obj);
+		AlifObject** dictptr = _alifObject_computedDictPointer(_obj);
 		if (dictptr == nullptr) {
 			alifErr_setString(_alifExcAttributeError_,
 				"هذا الكائن لا يحتوي __فهرس__");

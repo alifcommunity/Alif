@@ -49,6 +49,7 @@
 #define ALIF_INTERPRETERSTATE_INIT(interpreter)						\
     {																\
 		.eval = {.recursionLimit = ALIF_DEFAULT_RECURSION_LIMIT},	\
+		/*.imports = IMPORTS_INIT,*/                                \
 		.qsbr = {													\
 			.wrSeq = QSBR_INITIAL,									\
 			.rdSeq = QSBR_INITIAL,									\
@@ -60,7 +61,6 @@
 			.nextVersionTag = _ALIF_TYPE_BASE_VERSION_TAG,			\
 		},															\
     }
-		//IMPORTS_INIT,
 
 
 
@@ -117,9 +117,11 @@
 //* alif //
 // هذا القسم خاص بالنصوص ذات الترميز الحرفي الثنائي
 // فقط "الاحرف العربية" والذي يحتاج الى عملية بحث عنه في القاموس
-// ولكن لا يمكن طباعته قبل تحويله من 16 الى 8
+// ولكن يجب تحويله من 16 الى 8 قبل طباعته
 // طول النص يساوي عدد احرف الكلمة
-// النوع يجب ان يكون 2 لأنه يتم البحث عن الاحرف ك 2 بايت لكل حرف بغض النظر عن النظام المستخدم
+// النوع يجب ان يكون 2 لأنه يتم البحث عن الاحرف ك 2 ثمانية "بايت" لكل حرف بغض النظر عن النظام المستخدم
+// هذا النظام يعطي كائن ألف مطابق لما ترجعه الدالة alifUStr_fromString("نص")
+// جرب AlifUStrObject* str = (AlifUStrObject*)alifUStr_fromString("نص")
 #define ALIFUSTR_USTR_BASE_INIT(_litr) \
     { \
         .objBase = ALIFOBJECT_HEAD_INIT(&_alifUStrType_), \
@@ -128,13 +130,15 @@
         .state = { \
             .kind = 2, \
             .compact = 1, \
-            .ascii = 1, \
+            .ascii = 0, \
             .staticallyAllocated = 1, \
         }, \
     }
 #define ALIFUSTROBJECT_INIT(_litr)								\
 	{															\
 		.ascii = ALIFUSTR_USTR_BASE_INIT(_litr),				\
+		.utf8Length = 0,										\
+		.utf8 = nullptr,										\
 		.data = u ## _litr										\
 	}
 #define INIT_USTR(_name, _litr) \
@@ -680,13 +684,17 @@
 
 #define ALIF_STR_LITERALS_INIT { \
 	INIT_USTR(_windowsConsoleIO, "طرفية_ويندوز"), \
+	INIT_USTR(_findAndLoad, "_اوجد_وحمل"), \
+	INIT_USTR(_initializing, "_تهيئة"), \
+	INIT_USTR(_handleFromList, "_تعامل_من_القائمة"), \
 	INIT_STR(AnonGenExpr, "<genexpr>"), \
-	INIT_STR(AnonLambda, "<خطية>"), \
-	INIT_STR(AnonListComp, "<مصفوفة_ضمنية>"), \
-	INIT_STR(AnonSetComp, "<مميزة_ضمنية>"), \
-	INIT_STR(AnonDictComp, "<فهرس_ضمني>"), \
+	INIT_USTR(AnonLambda, "<خطية>"), \
+	INIT_USTR(AnonListComp, "<مصفوفة_ضمنية>"), \
+	INIT_USTR(AnonSetComp, "<مميزة_ضمنية>"), \
+	INIT_USTR(AnonDictComp, "<فهرس_ضمني>"), \
 	INIT_USTR(AnonModule, "<وحدة>"), /* //* alif */ \
-	INIT_STR(AnonString, "<string>"), \
+	INIT_USTR(AnonString, "<نص>"), \
+	INIT_STR(Builtins, "الضمنيات"), \
     INIT_STR(DblPercent, "%%"), \
     INIT_STR(Defaults, ".defaults"), \
     INIT_STR(DotLocals, ".<locals>"), \
@@ -698,14 +706,18 @@
     INIT_STR(IsAtty, "isatty"),	\
     INIT_STR(KWDefaults, ".kwdefaults"),	\
     INIT_STR(TypeParams, ".type_params"),	\
-    INIT_STR(True, "صح"), /* //* alif */	\
-    INIT_STR(False, "خطأ"), /* //* alif */	\
+    INIT_USTR(True, "صح"), /* //* alif */	\
+    INIT_USTR(False, "خطأ"), /* //* alif */	\
     INIT_USTR(Flush, "مباشر"), /* //* alif */	\
-    INIT_STR(ListErr, "مؤشر المصفوفة خارج النطاق"), /* //* alif */	\
-    INIT_STR(lambda, "خطية"), /* //* alif */	\
+	INIT_USTR(Globals, "اسماء_عامة"), \
+	INIT_USTR(Locals, "اسماء_محلية"), \
+    INIT_USTR(ListErr, "مؤشر المصفوفة خارج النطاق"), /* //* alif */	\
+    INIT_USTR(lambda, "خطية"), /* //* alif */	\
     INIT_STR(Mode, "mode"), /* //* alif */	\
-    INIT_STR(Name, "name"), /* //* alif */	\
+    INIT_USTR(MaxSplit, "التكرار"), /* //* alif */	\
+    INIT_USTR(Name, "اسم"), /* //* alif */	\
     INIT_STR(Obj, "obj"), /* //* alif */	\
+    INIT_USTR(Object, "كائن"), /* //* alif */	\
 	INIT_USTR(Open, "افتح"), /* //* alif */	\
 	INIT_USTR(ReadLine, "اقرا_سطر"), /* //* alif */	\
 	INIT_USTR(Read, "اقرا"), /* //* alif */	\
@@ -714,71 +726,83 @@
 	INIT_STR(Raw, "raw"), /* //* alif */	\
 	INIT_USTR(End, "النهاية"), /* //* alif */	\
 	INIT_USTR(Sep, "الفاصل"), /* //* alif */	\
+	INIT_USTR(Sort, "رتب"), /* //* alif */	\
+	INIT_USTR(Stdout, "مخرجات"), /* //* alif */	\
 	INIT_USTR(TextIOWrapper, "غلاف_النص"), /* //* alif */	\
 	INIT_USTR(Write, "اكتب"), /* //* alif */	\
+	INIT_USTR(FromList, "من_مصفوفة"), /* //* alif */	\
+	INIT_USTR(Level, "مستوى"), /* //* alif */	\
     INIT_USTR(__abs__, "__مطلق__"), /* //* alif */	\
+    INIT_USTR(__all__, "__كل__"), /* //* alif */	\
     INIT_USTR(__add__, "__اجمع__"), /* //* alif */	\
+    INIT_USTR(__bytes__, "__ثمانيات__"), /* //* alif */	\
     INIT_USTR(__call__, "__استدعاء__"), /* //* alif */	\
     INIT_USTR(__format__, "__تنسيق__"), /* //* alif */	\
+    INIT_USTR(__fspath__, "__مسار_ملف_نظام__"), /* //* alif */	\
+    INIT_USTR(__getnewargs__, "__اجلب_وسيطات_جديدة__"), /* //* alif */	\
     INIT_USTR(__init__, "__تهيئة__"), /* //* alif */	\
     INIT_USTR(__import__, "__استورد__"), /* //* alif */	\
+    INIT_USTR(__loader__, "__محمل__"), /* //* alif */	\
     INIT_USTR(__mul__, "__اضرب__"), /* //* alif */	\
+    INIT_USTR(__module__, "__وحدة__"), /* //* alif */	\
+    INIT_USTR(__new__, "__جديد__"), /* //* alif */	\
     INIT_USTR(__neg__, "__سالب__"), /* //* alif */	\
+    INIT_USTR(__name__, "__اسم__"), /* //* alif */	\
     INIT_USTR(__pow__, "__اس__"), /* //* alif */	\
+    INIT_USTR(__package__, "__حزمة__"), /* //* alif */	\
+    INIT_USTR(__qualname__, "__اسم_مميز__"), /* //* alif */	\
     INIT_USTR(__rpow__, "__اس_ع__"), /* //* alif */	\
     INIT_USTR(__radd__, "__اجمع_ع__"), /* //* alif */	\
     INIT_USTR(__repr__, "__عرض__"), /* //* alif */	\
     INIT_USTR(__reversed__, "__معكوس__"), /* //* alif */	\
+    INIT_USTR(__round__, "__قرب__"), /* //* alif */	\
     INIT_USTR(__rmul__, "__اضرب_ع__"), /* //* alif */	\
     INIT_USTR(__rsub__, "__اطرح_ع__"), /* //* alif */	\
     INIT_USTR(__sub__, "__اطرح__"), /* //* alif */	\
-    INIT_STR(_io, "تبادل"), /* //* alif // Important! don't use STRUCT_FOR_USTR here because it's lead to wrong unicode in import.cpp alifImport_importModuleLevelObject() */	\
+    INIT_USTR(__main__, "__الرئيسية__"), /* //* alif */	\
+    INIT_USTR(__dict__, "__فهرس__"), /* //* alif */	\
+    INIT_USTR(__spec__, "__خصائص__"), /* //* alif */	\
+    INIT_USTR(__enter__, "__ادخل__"), /* //* alif */	\
+    INIT_USTR(__exit__, "__اخرج__"), /* //* alif */	\
+    INIT_USTR(__path__, "__مسار__"), /* //* alif */	\
+    INIT_USTR(Path, "مسار"), /* //* alif */	\
+    INIT_USTR(Parent, "الوالد"), /* //* alif */	\
+    INIT_USTR(_io, "تبادل"), /* //* alif */	\
+    INIT_USTR(nt, "واجهة_نظام_ويندوز"), /* //* alif */	\
+    INIT_USTR(posix, "واجهة_نظام_يونكس"), /* //* alif */	\
 }
 
 #define ALIF_STR_IDENTIFIERS_INIT { \
     INIT_ID(CANCELLED), \
     INIT_ID(AlifRepr), \
-    /*INIT_ID(__abs__),*/ \
     INIT_ID(__abstractMethods__), \
     INIT_ID(__annotate__), \
     INIT_ID(__bases__), \
     INIT_ID(__buildClass__), \
     INIT_ID(__builtins__), \
-    /*INIT_ID(__call__),*/ \
     INIT_ID(__class__), \
     INIT_ID(__classCell__), \
     INIT_ID(__classDict__), \
     INIT_ID(__classDictCell__), \
     INIT_ID(__classGetItem__), \
     INIT_ID(__complex__), \
-	INIT_ID(__dict__), \
 	INIT_ID(__dictOffset__), \
 	INIT_ID(__doc__), \
 	INIT_ID(__eq__), \
 	INIT_ID(__file__), \
 	INIT_ID(__firstLineno__), \
-	/*INIT_ID(__format__),*/ \
 	INIT_ID(__getAttr__), \
 	INIT_ID(__hash__), \
 	INIT_ID(__initSubclass__), \
 	INIT_ID(__instanceCheck__), \
 	INIT_ID(__IOBaseClosed), \
 	INIT_ID(__lengthHint__), \
-	INIT_ID(__loader__), \
-	INIT_ID(__main__), \
-	INIT_ID(__module__), \
 	INIT_ID(__mroEntries__), \
-    INIT_ID(__name__), \
-    INIT_ID(__new__), \
     INIT_ID(__notes__), \
     INIT_ID(__origClass__), \
-	INIT_ID(__path__), \
-	INIT_ID(__package__), \
 	INIT_ID(__prepare__), \
-	INIT_ID(__qualname__), \
 	INIT_ID(__setName__), \
 	INIT_ID(__slots__), \
-	INIT_ID(__spec__), \
 	INIT_ID(__staticAttributes__), \
 	INIT_ID(__subClassCheck__), \
 	INIT_ID(__typeParams__), \
@@ -787,30 +811,27 @@
 	INIT_ID(_blksize), \
 	INIT_ID(_deallocWarn), \
 	INIT_ID(_fieldTypes), \
-	INIT_ID(_findAndLoad), \
-	INIT_ID(_initializing), \
 	INIT_ID(_isTextEncoding), \
 	INIT_ID(_isAttyOpenOnly), \
 	INIT_ID(_WindowsConsoleIO), \
 	INIT_ID(Buffer), \
 	INIT_ID(Buffering), \
-	INIT_ID(buffersize), \
-	INIT_ID(Builtins), \
-	/*INIT_ID(Close),*/ \
+	INIT_ID(BufferSize), \
 	INIT_ID(Closed), \
 	INIT_ID(CloseFD), \
+	INIT_ID(Closure), \
 	INIT_ID(Code), \
+	INIT_ID(Count), \
 	INIT_ID(Decode), \
 	INIT_ID(Decoder), \
+	INIT_ID(DictComp), \
+	INIT_ID(Doc), \
 	INIT_ID(Encode), \
 	INIT_ID(Encoding), \
-	/*INIT_ID(End),*/ \
 	INIT_ID(Errors), \
-	/*INIT_ID(Excepthook),*/ \
 	INIT_ID(File), \
 	INIT_ID(Filename), \
 	INIT_ID(Fileno), \
-	/*INIT_ID(Flush),*/ \
 	INIT_ID(GenExpr), \
 	INIT_ID(GetState), \
 	INIT_ID(HasLocation), \
@@ -831,7 +852,6 @@
 	INIT_ID(NSequenceFields), \
 	INIT_ID(Opener), \
 	INIT_ID(Origin), \
-	INIT_ID(Path), \
 	INIT_ID(Peek), \
 	INIT_ID(PrintFileAndLine), \
 	INIT_ID(Readable), \
@@ -839,20 +859,22 @@
 	INIT_ID(Read1), \
 	INIT_ID(ReadAll), \
 	INIT_ID(ReadInto), \
-	/*INIT_ID(ReadLine),*/ \
-	/*INIT_ID(Replace),*/ \
 	INIT_ID(Reset), \
 	INIT_ID(Reverse), \
 	INIT_ID(Seekable), \
-	/*INIT_ID(Sep),*/ \
+	INIT_ID(SetComp), \
+	INIT_ID(Start), \
 	INIT_ID(Stderr), \
 	INIT_ID(Stdin), \
-	INIT_ID(Stdout), \
 	INIT_ID(strict), \
-	/*INIT_ID(TextIOWrapper),*/ \
+	INIT_ID(TBFrame), \
+	INIT_ID(TBLasti), \
+	INIT_ID(TBLineno), \
+	INIT_ID(TBNext), \
+	INIT_ID(Text), \
 	INIT_ID(Top), \
 	INIT_ID(Translate), \
-	/*INIT_ID(Write),*/ \
+	INIT_ID(WithData), \
 	INIT_ID(Writable), \
 	INIT_ID(WriteThrough), \
 }

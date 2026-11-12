@@ -12,7 +12,7 @@
 static AlifObject* tryComplex_specialMethod(AlifObject* _op) { // 328
 	AlifObject* f_{};
 
-	f_ = alifObject_lookupSpecial(_op, &ALIF_ID(__complex__));
+	f_ = _alifObject_lookupSpecial(_op, &ALIF_ID(__complex__));
 	if (f_) {
 		//AlifObject* res_ = _alifObject_callNoArgs(f_);
 		//ALIF_DECREF(f_);
@@ -92,4 +92,5 @@ AlifTypeObject _alifComplexType_ = { // 1211
 	.alloc = alifType_genericAlloc,
 
 	.free = alifMem_objFree,
+	.versionTag = _ALIF_TYPE_VERSION_COMPLEX,
 };

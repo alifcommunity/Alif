@@ -771,7 +771,7 @@ static AlifIntT library_toDict(AlifObject* _dict, const char* _key) { // 803
 #ifdef ALIF_ENABLE_SHARED
 	extern HMODULE _alifWinDLLhModule_;
 	if (_alifWinDLLhModule_) {
-		return winmodule_toDict(_dict, _key, _alifWinDLLhModule_);
+		return winModule_toDict(_dict, _key, _alifWinDLLhModule_);
 	}
 #endif
 #elif defined(WITH_NEXT_FRAMEWORK)
@@ -862,7 +862,7 @@ AlifStatus _alifConfig_initPathConfig(AlifConfig* _config, AlifIntT _computePath
 	#ifdef _WINDOWS
 		!decode_toDict(dict, "النظام", "ويندوز") or
 	#elif defined(__APPLE__)
-		!decode_toDict(dict, "النظام", "أبل") or
+		!decode_toDict(dict, "النظام", "ماك") or
 	#else
 		!decode_toDict(dict, "النظام", "يونكس") or
 	#endif

@@ -11,8 +11,8 @@
 #define ALIFTUPLE_ITEMS(_op) ALIF_RVALUE(ALIFTUPLE_CAST(_op)->item) // 21
 
 
-extern AlifObject* _alifTuple_fromArray(AlifObject* const*, AlifSizeT); // 23
-AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* , AlifSizeT); // 24
+ALIFAPI_FUNC(AlifObject*) _alifTuple_fromArray(AlifObject* const*, AlifSizeT); // 23
+ALIFAPI_FUNC(AlifObject*) _alifTuple_fromStackRefSteal(const AlifStackRef* , AlifSizeT); // 24
 
 
 class AlifTupleIterObject { // 27

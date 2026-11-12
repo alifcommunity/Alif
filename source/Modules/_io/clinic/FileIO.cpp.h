@@ -33,7 +33,7 @@ static AlifIntT _ioFileIO___init__Impl(FileIO*, AlifObject*,
 
 static AlifIntT _ioFileIO___init__(AlifObject* self,
 	AlifObject* args, AlifObject* kwargs) { // 60
-	AlifIntT return_value = -1;
+	AlifIntT returnValue = -1;
 #define NUM_KEYWORDS 4
 	static struct {
 		AlifGCHead thisNotUsed;
@@ -60,10 +60,11 @@ static AlifIntT _ioFileIO___init__(AlifObject* self,
 	AlifSizeT noptargs = nargs + (kwargs ? ALIFDICT_GET_SIZE(kwargs) : 0) - 1;
 	AlifObject* nameobj{};
 	const char* mode = "r";
-	int closefd = 1;
+	AlifIntT closefd = 1;
 	AlifObject* opener = ALIF_NONE;
 
-	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 1, 4, 0, argsbuf);
+	fastargs = _ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 4, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!fastargs) {
 		goto exit;
 	}
@@ -100,10 +101,10 @@ static AlifIntT _ioFileIO___init__(AlifObject* self,
 	}
 	opener = fastargs[3];
 skip_optional_pos:
-	return_value = _ioFileIO___init__Impl((FileIO*)self, nameobj, mode, closefd, opener);
+	returnValue = _ioFileIO___init__Impl((FileIO*)self, nameobj, mode, closefd, opener);
 
 exit:
-	return return_value;
+	return returnValue;
 }
 
 // 146
@@ -173,7 +174,8 @@ static AlifObject* _ioFileIO_readinto(FileIO* self, AlifTypeObject* cls,
 	AlifObject* argsbuf[1];
 	AlifBuffer buffer = { nullptr, nullptr };
 
-	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	args = _ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 1, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!args) {
 		goto exit;
 	}
@@ -215,7 +217,7 @@ static AlifObject* _ioFileIO_write(FileIO* self, AlifTypeObject* cls,
 	AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) {
 	AlifObject* return_value = nullptr;
 #if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
-#  define KWTUPLE (PyObject *)&_alifSingleton_(tupleEmpty)
+#  define KWTUPLE (AlifObject *)&ALIF_SINGLETON(tupleEmpty)
 #else
 #  define KWTUPLE nullptr
 #endif
@@ -230,7 +232,8 @@ static AlifObject* _ioFileIO_write(FileIO* self, AlifTypeObject* cls,
 	AlifObject* argsbuf[1];
 	AlifBuffer b = { nullptr, nullptr };
 
-	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	args = _ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 1, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!args) {
 		goto exit;
 	}

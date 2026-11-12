@@ -36,7 +36,8 @@ static AlifObject* _io_BufferedIOBase_read1(AlifObject* _self,
 	AlifObject* argsbuf[1];
 	AlifIntT size = -1;
 
-	_args = ALIFARG_UNPACKKEYWORDS(_args, _nargs, nullptr, _kwnames, &_parser, 0, 1, 0, argsbuf);
+	_args = _ALIFARG_UNPACKKEYWORDS(_args, _nargs, nullptr, _kwnames, &_parser,
+		/*minpos*/ 0, /*maxpos*/ 1, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!_args) {
 		goto exit;
 	}
@@ -269,7 +270,7 @@ static AlifIntT _ioBufferedReader___init__(AlifObject* self, AlifObject* args, A
 		AlifObject* item[NUM_KEYWORDS]{};
 	} _kwtuple = {
 		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
-		.item = { &ALIF_STR(Raw), &ALIF_ID(buffersize), },
+		.item = { &ALIF_STR(Raw), &ALIF_ID(BufferSize), },
 	};
 #undef NUM_KEYWORDS
 #define KWTUPLE (&_kwtuple.objBase.objBase)
@@ -277,7 +278,7 @@ static AlifIntT _ioBufferedReader___init__(AlifObject* self, AlifObject* args, A
 	static const char* const _keywords[] = { "raw", "bufferSize", nullptr };
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
-		.fname = "BufferedReader",
+		.fname = "قارئ_مخزن",
 		.kwTuple = KWTUPLE,
 	};
 #undef KWTUPLE
@@ -288,7 +289,8 @@ static AlifIntT _ioBufferedReader___init__(AlifObject* self, AlifObject* args, A
 	AlifObject* raw{};
 	AlifSizeT buffer_size = DEFAULT_BUFFER_SIZE;
 
-	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 1, 2, 0, argsbuf);
+	fastargs = _ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 2, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!fastargs) {
 		goto exit;
 	}
@@ -332,7 +334,7 @@ static AlifIntT _ioBufferedWriter___init__(AlifObject* _self,
 		AlifObject* item[NUM_KEYWORDS]{};
 	} _kwtuple = {
 		.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
-		.item = { &ALIF_STR(Raw), &ALIF_ID(bufferSize), },
+		.item = { &ALIF_STR(Raw), &ALIF_ID(BufferSize), },
 	};
 #undef NUM_KEYWORDS
 #define KWTUPLE (&_kwtuple.objBase.objBase)
@@ -355,7 +357,8 @@ static AlifIntT _ioBufferedWriter___init__(AlifObject* _self,
 	AlifObject* raw{};
 	AlifSizeT buffer_size = DEFAULT_BUFFER_SIZE;
 
-	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(_args)->item, nargs, _kwargs, nullptr, &_parser, 1, 2, 0, argsbuf);
+	fastargs = _ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(_args)->item, nargs, _kwargs, nullptr, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 2, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!fastargs) {
 		goto exit;
 	}
@@ -418,25 +421,25 @@ static AlifIntT _ioBufferedRandom___init__Impl(Buffered*, AlifObject*, AlifSizeT
 static AlifIntT _ioBufferedRandom___init__(AlifObject *self,
 	AlifObject *args, AlifObject *kwargs) { // 1186
 	AlifIntT returnValue = -1;
-#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
 
+#if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
 #define NUM_KEYWORDS 2
 	static struct {
-		AlifGCHead _thisIsNotUsed;
-		ALIFOBJECT_VAR_HEAD;
-		AlifObject *item[NUM_KEYWORDS];
+		AlifGCHead thisIsNotUsed{};
+		ALIFOBJECT_VAR_HEAD{};
+		AlifObject* item[NUM_KEYWORDS]{};
 	} _kwtuple = {
 			.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTupleType_, NUM_KEYWORDS),
-			.item = { &ALIF_STR(Raw), &ALIF_ID(bufferSize), },
+			.item = { &ALIF_STR(Raw), &ALIF_ID(BufferSize), },
 	};
 #undef NUM_KEYWORDS
-#define KWTUPLE (&_kwtuple.base.base)
+#define KWTUPLE (&_kwtuple.objBase.objBase)
 
 #else  // !ALIF_BUILD_CORE
 #  define KWTUPLE nullptr
 #endif  // !ALIF_BUILD_CORE
 
-	static const char * const _keywords[] = {"raw", "bufferSize", nullptr};
+	static const char * const _keywords[] = {"Raw", "BufferSize", nullptr};
 	static AlifArgParser _parser = {
 		.keywords = _keywords,
 		.fname = "عشوائي_مخزن",
@@ -450,7 +453,8 @@ static AlifIntT _ioBufferedRandom___init__(AlifObject *self,
 	AlifObject *raw;
 	AlifSizeT buffer_size = DEFAULT_BUFFER_SIZE;
 
-	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 1, 2, 0, argsbuf);
+	fastargs = _ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 2, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!fastargs) {
 		goto exit;
 	}

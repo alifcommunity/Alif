@@ -39,11 +39,11 @@
 
 
 
-void alifCriticalSection_resume(AlifThread*); // 89
+ALIFAPI_FUNC(void) _alifCriticalSection_resume(AlifThread*); // 89
 
-void alifCriticalSection_beginSlow(AlifCriticalSection*, AlifMutex*); // 92
-void alifCriticalSection2_beginSlow(AlifCriticalSection2*, AlifMutex*, AlifMutex*, AlifIntT); // 95
-void alifCriticalSection_suspendAll(AlifThread*); // 99
+ALIFAPI_FUNC(void) alifCriticalSection_beginSlow(AlifCriticalSection*, AlifMutex*); // 92
+ALIFAPI_FUNC(void) alifCriticalSection2_beginSlow(AlifCriticalSection2*, AlifMutex*, AlifMutex*, AlifIntT); // 95
+ALIFAPI_FUNC(void) alifCriticalSection_suspendAll(AlifThread*); // 99
 
 
 
@@ -79,7 +79,7 @@ static inline void _alifCriticalSection_pop(AlifCriticalSection* _c) { // 133
 	thread->criticalSection = prev;
 
 	if ((prev & ALIF_CRITICAL_SECTION_INACTIVE) != 0) {
-		alifCriticalSection_resume(thread);
+		_alifCriticalSection_resume(thread);
 	}
 }
 

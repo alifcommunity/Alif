@@ -5,7 +5,21 @@
 #include "AlifCore_Lock.h"
 
 
-// 17
+#define _ALIF_TYPE_VERSION_INT 1
+#define _ALIF_TYPE_VERSION_FLOAT 2
+#define _ALIF_TYPE_VERSION_LIST 3
+#define _ALIF_TYPE_VERSION_TUPLE 4
+#define _ALIF_TYPE_VERSION_STR 5
+#define _ALIF_TYPE_VERSION_SET 6
+#define _ALIF_TYPE_VERSION_FROZEN_SET 7
+#define _ALIF_TYPE_VERSION_DICT 8
+#define _ALIF_TYPE_VERSION_BYTEARRAY 9
+#define _ALIF_TYPE_VERSION_BYTES 10
+#define _ALIF_TYPE_VERSION_COMPLEX 11
+
+#define _ALIF_TYPE_VERSION_NEXT 16
+
+// 32
 #define _ALIF_TYPE_BASE_VERSION_TAG (2<<16)
 #define ALIF_MAX_GLOBAL_TYPE_VERSION_TAG (_ALIF_TYPE_BASE_VERSION_TAG - 1)
 
@@ -103,16 +117,16 @@ static inline void* _alifType_getModuleState(AlifTypeObject* _type) { // 191
 }
 
 
-AlifObject* alifType_getDict(AlifTypeObject*); // 207
+ALIFAPI_FUNC(AlifObject*) _alifType_getDict(AlifTypeObject*); // 207
 
 static inline AlifIntT alifType_isReady(AlifTypeObject* _type) { // 221
-	return alifType_getDict(_type) != nullptr;
+	return _alifType_getDict(_type) != nullptr;
 }
 
-extern AlifObject* alifType_getAttroImpl(AlifTypeObject*, AlifObject*, AlifIntT*); // 226
+extern AlifObject* _alifType_getAttroImpl(AlifTypeObject*, AlifObject*, AlifIntT*); // 226
 
-extern AlifObject* alifType_getAttro(AlifObject*, AlifObject*); // 228
+extern AlifObject* _alifType_getAttro(AlifObject*, AlifObject*); // 228
 
 
 
-void alifType_setVersion(AlifTypeObject*, AlifUIntT); // 255
+ALIFAPI_FUNC(void) _alifType_setVersion(AlifTypeObject*, AlifUIntT); // 269

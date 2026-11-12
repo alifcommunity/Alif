@@ -130,8 +130,8 @@ static inline AlifTypeObject* _alif_type(AlifObject* _ob) { // 250
 }
 #define ALIF_TYPE(_ob) _alif_type(ALIFOBJECT_CAST(_ob))
 
-extern AlifTypeObject _alifLongType_; // 261
-extern AlifTypeObject _alifBoolType_; // 262
+ALIFAPI_DATA(AlifTypeObject) _alifLongType_; // 261
+ALIFAPI_DATA(AlifTypeObject) _alifBoolType_; // 262
 
 static inline AlifSizeT alif_size(AlifObject* ob) { // 265
 	return  ALIFVAROBJECT_CAST(ob)->objSize;
@@ -205,30 +205,22 @@ public:
 };
 
 
-AlifObject* alifType_fromSpec(AlifTypeSpec*); // 375
-AlifObject* alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
+
+ALIFAPI_FUNC(AlifObject*) alifType_fromSpec(AlifTypeSpec*); // 375
+ALIFAPI_FUNC(AlifObject*) alifType_fromSpecWithBases(AlifTypeSpec*, AlifObject*); // 377
 
 
-AlifObject* alifType_fromModuleAndSpec(AlifObject*, AlifTypeSpec*, AlifObject*); // 383
+ALIFAPI_FUNC(AlifObject*) alifType_fromModuleAndSpec(AlifObject*, AlifTypeSpec*, AlifObject*); // 383
 
-AlifObject* alifType_getQualName(AlifTypeObject*); // 389
+ALIFAPI_FUNC(AlifObject*) alifType_getQualName(AlifTypeObject*); // 389
 
 
-// 360
-#define ALIF_XSETREF(_dst, _src) \
-    do { \
-        AlifObject **tmpDstPtr = ALIF_CAST(AlifObject**, &(_dst)); \
-        AlifObject *tmpOldDst = (*tmpDstPtr); \
-        AlifObject *tmpSrc = ALIFOBJECT_CAST(_src); \
-        memcpy(tmpDstPtr, &tmpSrc, sizeof(AlifObject*)); \
-        alif_xdecRef(tmpOldDst); \
-    } while (0)
+
+ALIFAPI_FUNC(AlifIntT) alifType_isSubType(AlifTypeObject*, AlifTypeObject*); // 406
 
 
 
 
-
-AlifIntT alifType_isSubType(AlifTypeObject*, AlifTypeObject*); // 396
 
 static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _type) { // 398
 	return ALIF_IS_TYPE(_ob, _type) or alifType_isSubType(ALIF_TYPE(_ob), _type);
@@ -238,39 +230,44 @@ static inline AlifIntT alifObject_typeCheck(AlifObject* _ob, AlifTypeObject* _ty
 
 
 
-extern AlifTypeObject _alifTypeType_; // 405
-extern AlifTypeObject _alifBaseObjectType_; // 406 /* built-in 'object' */
-extern AlifTypeObject _alifSuperType_; // 407 /* built-in 'super' */
+ALIFAPI_DATA(AlifTypeObject) _alifTypeType_; // 405
+ALIFAPI_DATA(AlifTypeObject) _alifBaseObjectType_; // 406 /* built-in 'object' */
+ALIFAPI_DATA(AlifTypeObject) _alifSuperType_; // 407 /* built-in 'super' */
 
-AlifIntT alifType_ready(AlifTypeObject*); // 411
-AlifObject* alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
-AlifObject* alifType_genericNew(AlifTypeObject*, AlifObject*, AlifObject*); // 423
-void alifType_modified(AlifTypeObject*); // 416
+ALIFAPI_FUNC(AlifIntT) alifType_ready(AlifTypeObject*); // 411
+ALIFAPI_FUNC(AlifObject*) alifType_genericAlloc(AlifTypeObject*, AlifSizeT); // 412
+ALIFAPI_FUNC(AlifObject*) alifType_genericNew(AlifTypeObject*, AlifObject*, AlifObject*); // 423
+ALIFAPI_FUNC(void) alifType_modified(AlifTypeObject*); // 416
 
-AlifObject* alifObject_repr(AlifObject*); // 419
-AlifObject* alifObject_str(AlifObject*); // 420
-AlifObject* alifObject_richCompare(AlifObject*, AlifObject*, AlifIntT); // 433
-AlifIntT alifObject_richCompareBool(AlifObject*, AlifObject*, AlifIntT); // 434
-AlifObject* alifObject_getAttrString(AlifObject*, const char*); // 425
-AlifIntT alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
-AlifObject* alifObject_getAttr(AlifObject*, AlifObject*); // 429
-AlifIntT alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**); // 431
-AlifIntT alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
-AlifIntT alifObject_hasAttrWithError(AlifObject*, AlifObject*); // 438
-AlifObject* alifObject_selfIter(AlifObject*); // 441
-AlifObject* alifObject_genericGetAttr(AlifObject*, AlifObject*); // 442
-AlifIntT alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 443
-AlifHashT alifObject_hash(AlifObject*); // 447
-AlifHashT alifObject_hashNotImplemented(AlifObject*); // 448
-AlifIntT alifObject_isTrue(AlifObject*); // 449
+ALIFAPI_FUNC(AlifObject*) alifObject_repr(AlifObject*); // 419
+ALIFAPI_FUNC(AlifObject*) alifObject_str(AlifObject*); // 420
+ALIFAPI_FUNC(AlifObject*) alifObject_richCompare(AlifObject*, AlifObject*, AlifIntT); // 433
+ALIFAPI_FUNC(AlifIntT) alifObject_richCompareBool(AlifObject*, AlifObject*, AlifIntT); // 434
+ALIFAPI_FUNC(AlifObject*) alifObject_getAttrString(AlifObject*, const char*); // 425
+ALIFAPI_FUNC(AlifIntT) alifObject_setAttrString(AlifObject*, const char*, AlifObject*); // 426
+ALIFAPI_FUNC(AlifObject*) alifObject_getAttr(AlifObject*, AlifObject*); // 429
+ALIFAPI_FUNC(AlifIntT) alifObject_getOptionalAttr(AlifObject*, AlifObject*, AlifObject**); // 431
+ALIFAPI_FUNC(AlifIntT) alifObject_setAttr(AlifObject*, AlifObject*, AlifObject*); // 434
+ALIFAPI_FUNC(AlifIntT) alifObject_hasAttrWithError(AlifObject*, AlifObject*); // 438
 
-AlifIntT alifCallable_check(AlifObject*); // 451
-void alifObject_clearWeakRefs(AlifObject*); // 452
+ALIFAPI_FUNC(AlifIntT) alifObject_delAttr(AlifObject*, AlifObject*); // 445
+
+ALIFAPI_FUNC(AlifIntT) alifObject_genericSetDict(AlifObject*, AlifObject*, void*); // 455
+
+ALIFAPI_FUNC(AlifHashT) alifObject_hash(AlifObject*); // 447
+ALIFAPI_FUNC(AlifHashT) alifObject_hashNotImplemented(AlifObject*); // 448
+ALIFAPI_FUNC(AlifIntT) alifObject_isTrue(AlifObject*); // 449
+
+ALIFAPI_FUNC(AlifObject*) alifObject_selfIter(AlifObject*); // 451
+ALIFAPI_FUNC(AlifObject*) alifObject_genericGetAttr(AlifObject*, AlifObject*); // 452
+ALIFAPI_FUNC(AlifIntT) alifObject_genericSetAttr(AlifObject*, AlifObject*, AlifObject*); // 453
+ALIFAPI_FUNC(AlifIntT) alifCallable_check(AlifObject*); // 461
+ALIFAPI_FUNC(void) alifObject_clearWeakRefs(AlifObject*); // 462
 
 
 
-AlifIntT alif_reprEnter(AlifObject*); // 462
-void alif_reprLeave(AlifObject*); // 463
+ALIFAPI_FUNC(AlifIntT) alif_reprEnter(AlifObject*); // 462
+ALIFAPI_FUNC(void) alif_reprLeave(AlifObject*); // 463
 
 
 
@@ -313,6 +310,8 @@ void alif_reprLeave(AlifObject*); // 463
 #define ALIF_TPFLAGS_DEFAULT  (ALIF_TPFLAGS_HAVE_STACKLESS_EXTENSION | 0)
 
 
+#define ALIF_TPFLAGS_HAVE_FINALIZE (1UL << 0)
+
 // 612
 #define ALIF_CONSTANT_NONE 0
 #define ALIF_CONSTANT_FALSE 1
@@ -325,19 +324,21 @@ void alif_reprLeave(AlifObject*); // 463
 #define ALIF_CONSTANT_EMPTY_BYTES 8
 #define ALIF_CONSTANT_EMPTY_TUPLE 9
 
-AlifObject* alif_getConstant(AlifUIntT); // 624
+ALIFAPI_FUNC(AlifObject*) alif_getConstant(AlifUIntT); // 624
 
 
 
-extern AlifObject _alifNoneClass_; // 623
+ALIFAPI_DATA(AlifObject) _alifNoneClass_; // 633
 
 #define ALIF_NONE (&_alifNoneClass_) // 628
 
 
 #define ALIF_ISNONE(_x) ALIF_IS((_x), ALIF_NONE) // 633
 
+/* Macro for returning ALIF_NONE from a function */
+#define ALIF_RETURN_NONE return ALIF_NONE
 
-extern AlifObject _alifNotImplementedClass_;  // 642
+ALIFAPI_DATA(AlifObject) _alifNotImplementedClass_;  // 642
 
 #define ALIF_NOTIMPLEMENTED (&_alifNotImplementedClass_) // 647
 
@@ -396,8 +397,8 @@ enum AlifSendResult { // 673
 
 
 
-void alif_newReference(AlifObject*); // 5
-void alif_newReferenceNoTotal(AlifObject*); // 6
+ALIFAPI_FUNC(void) _alif_newReference(AlifObject*); // 5
+ALIFAPI_FUNC(void) _alif_newReferenceNoTotal(AlifObject*); // 6
 
 
 class AlifNumberMethods { // 60
@@ -411,7 +412,6 @@ public:
 	UnaryFunc negative{};
 	UnaryFunc positive{};
 	UnaryFunc absolute{};
-	UnaryFunc sqrt{};
 	Inquiry bool_{};
 	UnaryFunc invert{};
 	BinaryFunc lshift{};
@@ -573,17 +573,19 @@ public:
 };
 
 
-const char* _alifType_name(AlifTypeObject*); // 280
-AlifObject* alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
-AlifIntT alifObject_print(AlifObject*, FILE*, AlifIntT); // 285
-void alifObject_callFinalizer(AlifObject*); // 291
-AlifIntT alifObject_callFinalizerFromDealloc(AlifObject*); // 292
+ALIFAPI_FUNC(const char*) _alifType_name(AlifTypeObject*); // 280
+ALIFAPI_FUNC(AlifObject*) _alifType_lookupRef(AlifTypeObject*, AlifObject*); // 281
+ALIFAPI_FUNC(AlifIntT) alifObject_print(AlifObject*, FILE*, AlifIntT); // 285
 
-AlifObject* alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT); // 298
+ALIFAPI_FUNC(AlifObject*)* _alifObject_getDictPtr(AlifObject*); // 291
+ALIFAPI_FUNC(void) alifObject_callFinalizer(AlifObject*); // 291
+ALIFAPI_FUNC(AlifIntT) alifObject_callFinalizerFromDealloc(AlifObject*); // 292
 
-AlifIntT alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
+ALIFAPI_FUNC(AlifObject*) _alifObject_genericGetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifIntT); // 298
 
-AlifObject* _alifObject_functionStr(AlifObject*); // 304
+ALIFAPI_FUNC(AlifIntT) _alifObject_genericSetAttrWithDict(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 301
+
+ALIFAPI_FUNC(AlifObject*) _alifObject_functionStr(AlifObject*); // 304
 
 
 
@@ -599,9 +601,18 @@ AlifObject* _alifObject_functionStr(AlifObject*); // 304
     } while (0)
 
 
+// 360
+#define ALIF_XSETREF(_dst, _src) \
+    do { \
+        AlifObject **tmpDstPtr = ALIF_CAST(AlifObject**, &(_dst)); \
+        AlifObject *tmpOldDst = (*tmpDstPtr); \
+        AlifObject *tmpSrc = ALIFOBJECT_CAST(_src); \
+        memcpy(tmpDstPtr, &tmpSrc, sizeof(AlifObject*)); \
+        alif_xdecRef(tmpOldDst); \
+    } while (0)
 
-void _alifTrashThread_depositObject(AlifThread*, AlifObject*); // 471
-void _alifTrashThread_destroyChain(AlifThread*); // 472
+ALIFAPI_FUNC(void) _alifTrashThread_depositObject(AlifThread*, AlifObject*); // 471
+ALIFAPI_FUNC(void) _alifTrashThread_destroyChain(AlifThread*); // 472
 
 
 #define ALIF_TRASHCAN_HEADROOM 50 // 480
@@ -626,7 +637,7 @@ do { \
 
 
 
-void* alifObject_getItemData(AlifObject*); // 499
+ALIFAPI_FUNC(void*) alifObject_getItemData(AlifObject*); // 500
 
 
 enum AlifRefTracerEvent_ { // 521
@@ -674,4 +685,4 @@ static inline AlifIntT alifType_check(AlifObject* _op) { // 768
 
 
 
-AlifObject* alifType_getModuleByDef(AlifTypeObject*, AlifModuleDef*); // 796
+ALIFAPI_FUNC(AlifObject*) alifType_getModuleByDef(AlifTypeObject*, AlifModuleDef*); // 796

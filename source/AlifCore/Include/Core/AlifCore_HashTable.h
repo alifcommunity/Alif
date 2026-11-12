@@ -58,17 +58,17 @@ public:
 };
 
 
-AlifUHashT _alifHashTable_hashPtr(const void*); // 79
+ALIFAPI_FUNC(AlifUHashT) _alifHashTable_hashPtr(const void*); // 79
 
-AlifIntT _alifHashTable_compareDirect(const void*, const void*); // 82
+ALIFAPI_FUNC(AlifIntT) _alifHashTable_compareDirect(const void*, const void*); // 82
 
-AlifHashTableT* _alifHashTable_newFull(AlifHashTableHashFunc,
+ALIFAPI_FUNC(AlifHashTableT*) _alifHashTable_newFull(AlifHashTableHashFunc,
 	AlifHashTableCompareFunc, AlifHashTableDestroyFunc,
 	AlifHashTableDestroyFunc, AlifHashTableAllocatorT*); // 86
 
-void _alifHashTable_destroy(AlifHashTableT*); // 93
+ALIFAPI_FUNC(void) _alifHashTable_destroy(AlifHashTableT*); // 93
 
-AlifIntT _alifHashTable_set(AlifHashTableT*, const void*, void*); // 114
+ALIFAPI_FUNC(AlifIntT) _alifHashTable_set(AlifHashTableT*, const void*, void*); // 114
 
 
 static inline AlifHashTableEntryT* _alifHashTable_getEntry(AlifHashTableT* _ht, const void* _key) { // 123
@@ -77,4 +77,4 @@ static inline AlifHashTableEntryT* _alifHashTable_getEntry(AlifHashTableT* _ht, 
 
 
 
-void* alifHashTable_get(AlifHashTableT*, const void*); // 134
+ALIFAPI_FUNC(void*) _alifHashTable_get(AlifHashTableT*, const void*); // 134

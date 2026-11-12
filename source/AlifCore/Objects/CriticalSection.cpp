@@ -72,7 +72,7 @@ void alifCriticalSection_suspendAll(AlifThread* _thread) { // 55
 
 
 
-void alifCriticalSection_resume(AlifThread* _thread) { // 79
+void _alifCriticalSection_resume(AlifThread* _thread) { // 79
 	uintptr_t p_ = _thread->criticalSection;
 	AlifCriticalSection* c_ = untag_criticalSection(p_);
 

@@ -49,3 +49,36 @@ skip_optional:
 exit:
 	return returnValue;
 }
+
+
+
+
+
+
+
+
+
+
+// 123
+#define _RANDOM_RANDOM_GETRANDBITS_METHODDEF    \
+    {"اجلب_بتات_عشوائي", (AlifCPPFunction)_random_randomGetRandBits, METHOD_O}
+
+static AlifObject*
+_random_randomGetRandBitsImpl(RandomObject*, AlifIntT);
+
+static AlifObject* _random_randomGetRandBits(RandomObject* self,
+	AlifObject* arg) { // 129
+	AlifObject* returnValue{};
+	AlifIntT k{};
+
+	k = alifLong_asInt(arg);
+	if (k == -1 and alifErr_occurred()) {
+		goto exit;
+	}
+	ALIF_BEGIN_CRITICAL_SECTION(self);
+	returnValue = _random_randomGetRandBitsImpl(self, k);
+	ALIF_END_CRITICAL_SECTION();
+
+exit:
+	return returnValue;
+}

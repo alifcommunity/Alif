@@ -269,8 +269,8 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 		return nullptr;
 	}
 
-	alifBytesWriter_init(_writer);
-	p_ = (char*)alifBytesWriter_alloc(_writer, _size * maxCharSize);
+	_alifBytesWriter_init(_writer);
+	p_ = (char*)_alifBytesWriter_alloc(_writer, _size * maxCharSize);
 	if (p_ == nullptr)
 		return nullptr;
 
@@ -368,7 +368,7 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 
 					if (newpos < startpos) {
 						_writer->overAllocate = 1;
-						p_ = (char*)alifBytesWriter_prepare(_writer, p_,
+						p_ = (char*)_alifBytesWriter_prepare(_writer, p_,
 							maxCharSize * (startpos - newpos));
 						if (p_ == nullptr)
 							goto error;
@@ -381,7 +381,7 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 					}
 
 					//if (ALIFBYTES_CHECK(rep)) {
-					//	p_ = alifBytesWriter_writeBytes(_writer, p_,
+					//	p_ = _alifBytesWriter_writeBytes(_writer, p_,
 					//		ALIFBYTES_AS_STRING(rep),
 					//		ALIFBYTES_GET_SIZE(rep));
 					//}
@@ -393,7 +393,7 @@ STRINGLIB(utf8Encoder)(AlifBytesWriter* _writer, AlifObject* _uStr,
 					//		goto error;
 					//	}
 
-					//	p_ = alifBytesWriter_writeBytes(_writer, p_,
+					//	p_ = _alifBytesWriter_writeBytes(_writer, p_,
 					//		ALIFUSTR_DATA(rep),
 					//		ALIFUSTR_GET_LENGTH(rep));
 					//}

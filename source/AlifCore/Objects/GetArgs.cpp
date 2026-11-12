@@ -179,7 +179,7 @@ static AlifIntT vGetArgs1_impl(AlifObject* _compatArgs,
 
 	if (max > STATIC_FREELIST_ENTRIES) {
 		freelist.entries = ((AlifUSizeT)max > ALIF_SIZET_MAX / sizeof(FreeListEntryT)) ? nullptr : \
-			(FreeListEntryT*)alifMem_dataAlloc(max * sizeof(FreeListEntryT)); //* alif
+			(FreeListEntryT*)alifMem_dataAlloc(max * sizeof(FreeListEntryT)); //* alif //* todo
 		if (freelist.entries == nullptr) {
 			//alifErr_noMemory();
 			return 0;
@@ -314,19 +314,19 @@ static const char* convert_tuple(AlifObject* _arg, const char** _pFormat,
 
 	if (!alifSequence_check(_arg) or ALIFBYTES_CHECK(_arg)) {
 		_levels[0] = 0;
-		//alifOS_snprintf(_msgbuf, _bufsize,
-		//	"must be %d-item sequence, not %.50s",
-		//	n,
-		//	_arg == ALIF_NONE ? "None" : ALIF_TYPE(_arg)->name);
+		alifOS_snprintf(_msgbuf, _bufsize,
+			"يجب أن يكون %d-عنصر تسلسل, وليس %.50s",
+			n,
+			_arg == ALIF_NONE ? "عدم" : ALIF_TYPE(_arg)->name);
 		return _msgbuf;
 	}
 
 	len = alifSequence_size(_arg);
 	if (len != n) {
 		_levels[0] = 0;
-		//alifOS_snprintf(_msgbuf, _bufsize,
-		//	"must be sequence of length %d, not %zd",
-		//	n, len);
+		alifOS_snprintf(_msgbuf, _bufsize,
+			"يجب أن يكون تسلسل بطول %d, وليس %zd",
+			n, len);
 		return _msgbuf;
 	}
 
@@ -398,12 +398,12 @@ static const char* convert_simple(AlifObject* _arg, const char** _pFormat, va_li
 			RETURN_ERR_OCCURRED;
 		if (iVal < 0) {
 			alifErr_setString(_alifExcOverflowError_,
-				"بايت العدد الصحيح الذي لا يملك إشارة أقل من الحد الأدنى");
+				"ثمانية العدد الصحيح الذي لا يملك إشارة أقل من الحد الأدنى");
 			RETURN_ERR_OCCURRED;
 		}
 		else if (iVal > UCHAR_MAX) {
 			alifErr_setString(_alifExcOverflowError_,
-				"بايت العدد الصحيح الذي لا يملك إشارة أكبر من الحد الأقصى");
+				"ثمانية العدد الصحيح الذي لا يملك إشارة أكبر من الحد الأقصى");
 			RETURN_ERR_OCCURRED;
 		}
 		else
@@ -973,7 +973,7 @@ static AlifSizeT convert_buffer(AlifObject* arg,
 	*errmsg = nullptr;
 	*p = nullptr;
 	if (pb != nullptr and pb->releaseBuffer != nullptr) {
-		*errmsg = "كائن بايت للقراءة-فقط";
+		*errmsg = "كائن ثمانيات للقراءة-فقط";
 		return -1;
 	}
 
@@ -987,7 +987,7 @@ static AlifSizeT convert_buffer(AlifObject* arg,
 
 static AlifIntT get_buffer(AlifObject* arg, AlifBuffer* view, const char** errmsg) { // 1259
 	if (alifObject_getBuffer(arg, view, ALIFBUF_SIMPLE) != 0) {
-		*errmsg = "كائن بايت";
+		*errmsg = "كائن ثمانيات";
 		return -1;
 	}
 	return 0;
@@ -1223,7 +1223,7 @@ static AlifIntT vGet_argsKeywords(AlifObject* args, AlifObject* kwargs,
 	if (skip) {
 		alifErr_format(_alifExcTypeError_,
 			"%.200s%s تحتاج %s %d معامل%s مكاني"
-			" (%zd given)",
+			" (%zd المعطى)",
 			(fname == nullptr) ? "دالة" : fname,
 			(fname == nullptr) ? "" : "()",
 			(ALIF_MIN(pos, min) < i) ? "على الأقل" : "تماماً",
@@ -1435,7 +1435,7 @@ static AlifObject* new_kwTuple(const char * const* _keywords,
 			return nullptr;
 		}
 		AlifInterpreter* interp = _alifInterpreter_get();
-		alifUStr_internImmortal(interp, &str);
+		_alifUStr_internImmortal(interp, &str);
 		ALIFTUPLE_SET_ITEM(kwtuple, i, str);
 	}
 	return kwtuple;
@@ -1469,7 +1469,7 @@ static AlifIntT _parser_init(void* _arg) { // 1944
 		AlifThread* saveThread = nullptr;
 		AlifThread* tempThread = nullptr;
 		if (!alif_isMainInterpreter(alifInterpreter_get())) {
-			tempThread = alifThreadState_new(alifInterpreter_main());
+			tempThread = _alifThreadState_new(_alifInterpreterState_main());
 			if (tempThread == nullptr) {
 				return -1;
 			}
@@ -1732,8 +1732,8 @@ static AlifIntT vGetArgsKeywordsFast_impl(AlifObject* const* args, AlifSizeT nar
 
 
 AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT nargs,
-	AlifObject* kwargs, AlifObject* kwnames, AlifArgParser* parser,
-	AlifIntT minpos, AlifIntT maxpos, AlifIntT minkw, AlifObject** buf) { // 2313
+	AlifObject* kwargs, AlifObject* kwnames, AlifArgParser* parser, AlifIntT minpos, AlifIntT maxpos,
+	AlifIntT minkw, AlifIntT varpos, AlifObject** buf) { // 2313
 	AlifObject* kwtuple{};
 	AlifObject* keyword{};
 	AlifIntT i{}, posonly{}, minposonly{}, maxargs{};
@@ -1774,11 +1774,11 @@ AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT na
 	else {
 		nkwargs = 0;
 	}
-	if (nkwargs == 0 and minkw == 0 and minpos <= nargs and nargs <= maxpos) {
+	if (nkwargs == 0 and minkw == 0 and minpos <= nargs and (varpos || nargs <= maxpos)) {
 		/* Fast path. */
 		return args;
 	}
-	if (nargs + nkwargs > maxargs) {
+	if (!varpos and nargs + nkwargs > maxargs) {
 		//alifErr_format(_alifExcTypeError_,
 		//	"%.200s%s takes at most %d %sargument%s (%zd given)",
 		//	(parser->fname == nullptr) ? "function" : parser->fname,
@@ -1789,7 +1789,7 @@ AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT na
 		//	nargs + nkwargs);
 		return nullptr;
 	}
-	if (nargs > maxpos) {
+	if (!varpos and nargs > maxpos) {
 		if (maxpos == 0) {
 			//alifErr_format(_alifExcTypeError_,
 			//	"%.200s%s takes no positional arguments",
@@ -1814,11 +1814,15 @@ AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT na
 		//	" (%zd given)",
 		//	(parser->fname == nullptr) ? "function" : parser->fname,
 		//	(parser->fname == nullptr) ? "" : "()",
-		//	minposonly < maxpos ? "at least" : "exactly",
+		//	(varpos or minposonly < maxpos) ? "at least" : "exactly",
 		//	minposonly,
 		//	minposonly == 1 ? "" : "s",
 		//	nargs);
 		return nullptr;
+	}
+
+	if (varpos) {
+		nargs = ALIF_MIN(maxpos, nargs);
 	}
 
 	/* copy tuple args */
@@ -1899,138 +1903,6 @@ AlifObject* const* _alifArg_unpackKeywords(AlifObject* const* args, AlifSizeT na
 }
 
 
-
-
-AlifObject* const* _alifArg_unpackKeywordsWithVarArg(AlifObject* const* _args,
-	AlifSizeT _nargs, AlifObject* _kwargs, AlifObject* _kwnames, AlifArgParser* _parser,
-	AlifIntT _minpos, AlifIntT _maxpos, AlifIntT _minkw,
-	AlifIntT _vararg, AlifObject** _buf) { // 2489
-	AlifObject* kwtuple{};
-	AlifObject* keyword{};
-	AlifSizeT varargssize = 0;
-	AlifIntT i{}, posonly{}, minposonly{}, maxargs{};
-	AlifIntT reqlimit = _minkw ? _maxpos + _minkw : _minpos;
-	AlifSizeT nkwargs{};
-	AlifObject* const* kwstack = nullptr;
-
-	if (_parser == nullptr) {
-		//ALIFERR_BADINTERNALCALL();
-		return nullptr;
-	}
-
-	if (_kwnames != nullptr and !ALIFTUPLE_CHECK(_kwnames)) {
-		//ALIFERR_BADINTERNALCALL();
-		return nullptr;
-	}
-
-	if (_args == nullptr and _nargs == 0) {
-		_args = _buf;
-	}
-
-	if (parser_init(_parser) < 0) {
-		return nullptr;
-	}
-
-	kwtuple = _parser->kwTuple;
-	posonly = _parser->pos;
-	minposonly = ALIF_MIN(posonly, _minpos);
-	maxargs = posonly + (AlifIntT)ALIFTUPLE_GET_SIZE(kwtuple);
-	if (_kwargs != nullptr) {
-		nkwargs = ALIFDICT_GET_SIZE(_kwargs);
-	}
-	else if (_kwnames != nullptr) {
-		nkwargs = ALIFTUPLE_GET_SIZE(_kwnames);
-		kwstack = _args + _nargs;
-	}
-	else {
-		nkwargs = 0;
-	}
-	if (_nargs < minposonly) {
-		//alifErr_format(_alifExcTypeError_,
-		//	"%.200s%s takes %s %d positional argument%s"
-		//	" (%zd given)",
-		//	(parser->fname == nullptr) ? "function" : parser->fname,
-		//	(parser->fname == nullptr) ? "" : "()",
-		//	minposonly < maxpos ? "at least" : "exactly",
-		//	minposonly,
-		//	minposonly == 1 ? "" : "s",
-		//	nargs);
-		return nullptr;
-	}
-
-	/* create varargs tuple */
-	varargssize = _nargs - _maxpos;
-	if (varargssize < 0) {
-		varargssize = 0;
-	}
-	_buf[_vararg] = alifTuple_new(varargssize);
-	if (!_buf[_vararg]) {
-		return nullptr;
-	}
-
-	/* copy tuple args */
-	for (i = 0; i < _nargs; i++) {
-		if (i >= _vararg) {
-			ALIFTUPLE_SET_ITEM(_buf[_vararg], i - _vararg, ALIF_NEWREF(_args[i]));
-			continue;
-		}
-		else {
-			_buf[i] = _args[i];
-		}
-	}
-
-	/* copy keyword args using kwtuple to drive process */
-	for (i = ALIF_MAX((AlifIntT)_nargs, posonly) - ALIF_SAFE_DOWNCAST(varargssize, AlifSizeT, AlifIntT); i < maxargs; i++) {
-		AlifObject* currentArg{};
-		if (nkwargs) {
-			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - posonly);
-			if (_kwargs != nullptr) {
-				if (alifDict_getItemRef(_kwargs, keyword, &currentArg) < 0) {
-					goto exit;
-				}
-			}
-			else {
-				currentArg = find_keyword(_kwnames, kwstack, keyword);
-			}
-		}
-		else {
-			currentArg = nullptr;
-		}
-
-		if (i < _vararg) {
-			_buf[i] = currentArg;
-		}
-		else {
-			_buf[i + 1] = currentArg;
-		}
-
-		if (currentArg) {
-			ALIF_DECREF(currentArg);
-			--nkwargs;
-		}
-		else if (i < _minpos or (_maxpos <= i and i < reqlimit)) {
-			/* Less arguments than required */
-			keyword = ALIFTUPLE_GET_ITEM(kwtuple, i - posonly);
-			//alifErr_format(_alifExcTypeError_, "%.200s%s missing required "
-			//	"argument '%U' (pos %d)",
-			//	(parser->fname == nullptr) ? "function" : parser->fname,
-			//	(parser->fname == nullptr) ? "" : "()",
-			//	keyword, i + 1);
-			goto exit;
-		}
-	}
-
-	if (nkwargs > 0) {
-		//errorUnexpected_keywordArg(kwargs, kwnames, kwtuple, parser->fname);
-		goto exit;
-	}
-
-	return _buf;
-
-exit:
-	ALIF_XDECREF(_buf[_vararg]);
-	return nullptr;
-}
 
 
 static const char* skip_item(const char** p_format,
@@ -2245,7 +2117,22 @@ AlifIntT alifArg_unpackTuple(AlifObject* args,
 	return retval;
 }
 
+AlifIntT _alifArg_unpackStack(AlifObject* const* _args,
+	AlifSizeT _nargs, const char* _name,
+	AlifSizeT _min, AlifSizeT _max, ...) { // 2714
+	AlifIntT retval{};
+	va_list vargs{};
 
+	va_start(vargs, _max);
+	retval = unpack_stack(_args, _nargs, _name, _min, _max, vargs);
+	va_end(vargs);
+	return retval;
+}
+
+// 2728
+//#undef _ALIFARG_NOKEYWORDS
+//#undef _ALIFARG_NOKWNAMES
+//#undef _ALIFARG_NOPOSITIONAL
 
 AlifIntT _alifArg_noKeywords(const char* funcname, AlifObject* kwargs) { // 2885
 	if (kwargs == nullptr) {

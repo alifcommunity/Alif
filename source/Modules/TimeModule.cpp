@@ -481,7 +481,7 @@ static AlifModuleDef _timeModule_ = {
 
 
 
-AlifObject* alifInit_time(void) {
+ALIFMODINIT_FUNC alifInit_time(void) {
 	return alifModuleDef_init(&_timeModule_);
 }
 

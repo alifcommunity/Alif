@@ -4,13 +4,13 @@
 typedef class AlifCriticalSection AlifCriticalSection; // 70
 typedef class AlifCriticalSection2 AlifCriticalSection2; // 71
 
-void alifCriticalSection_begin(AlifCriticalSection*, AlifObject*); // 73
+ALIFAPI_FUNC(void) alifCriticalSection_begin(AlifCriticalSection*, AlifObject*); // 73
 
-void alifCriticalSection_end(AlifCriticalSection*); // 76
+ALIFAPI_FUNC(void) alifCriticalSection_end(AlifCriticalSection*); // 76
 
-//void alifCriticalSection2_begin(AlifCriticalSection2*, AlifObject*, AlifObject*); // 79
+//ALIFAPI_FUNC(void) alifCriticalSection2_begin(AlifCriticalSection2*, AlifObject*, AlifObject*); // 79
 
-//void alifCriticalSection2_end(AlifCriticalSection2*); // 82
+//ALIFAPI_FUNC(void) alifCriticalSection2_end(AlifCriticalSection2*); // 82
 
 
 

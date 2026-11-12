@@ -46,7 +46,7 @@ static Bucket buckets[NUM_BUCKETS] = { // 48
 };
 
 
-void alifSemaphore_init(AlifSemaphore* _sema) { // 53
+void _alifSemaphore_init(AlifSemaphore* _sema) { // 53
 #if defined(_WINDOWS)
 	_sema->platformSem = CreateSemaphore(
 		nullptr,	//  attributes
@@ -76,7 +76,7 @@ void alifSemaphore_init(AlifSemaphore* _sema) { // 53
 #endif
 }
 
-void alifSemaphore_destroy(AlifSemaphore* _sema) { // 81
+void _alifSemaphore_destroy(AlifSemaphore* _sema) { // 81
 #if defined(_WINDOWS)
 	CloseHandle(_sema->platformSem);
 #elif defined(ALIF_USE_SEMAPHORES)
@@ -212,13 +212,12 @@ static inline void alifRawMutex_lock(AlifRawMutex* m) { // 111
 	alifRawMutex_lockSlow(m);
 }
 
-AlifIntT alifSemaphore_wait(AlifSemaphore* _sema,
+AlifIntT _alifSemaphore_wait(AlifSemaphore* _sema,
 	AlifTimeT _timeout, AlifIntT _detach) { // 198
 	AlifThread* thread = nullptr;
 	if (_detach) {
 		thread = _alifThread_get();
-		if (thread and alifAtomic_loadIntRelaxed(&thread->state) ==
-			ALIF_THREAD_ATTACHED) {
+		if (thread and _alifThreadState_isAttached(thread)) {
 			// Only detach if we are attached
 			alifEval_releaseThread(thread);
 		}
@@ -233,7 +232,7 @@ AlifIntT alifSemaphore_wait(AlifSemaphore* _sema,
 	return res;
 }
 
-void alifSemaphore_wakeup(AlifSemaphore* _sema) { // 220
+void _alifSemaphore_wakeup(AlifSemaphore* _sema) { // 220
 #if defined(_WINDOWS)
 	if (!ReleaseSemaphore(_sema->platformSem, 1, nullptr)) {
 		//alif_fatalError("ParkingLot: ReleaseSemaphore failed");
@@ -300,7 +299,7 @@ static AlifIntT atomic_memcmp(const void* _addr,
 }
 
 
-AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT size,
+AlifIntT _alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT size,
 	AlifTimeT timeout_ns, void* park_arg, AlifIntT detach) { // 295
 	WaitEntry wait = {
 		.parkArg = park_arg,
@@ -315,11 +314,11 @@ AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT 
 		alifRawMutex_unlock(&bucket->mutex);
 		return Alif_Park_Again;
 	}
-	alifSemaphore_init(&wait.sema);
+	_alifSemaphore_init(&wait.sema);
 	enqueue(bucket, addr, &wait);
 	alifRawMutex_unlock(&bucket->mutex);
 
-	AlifIntT res = alifSemaphore_wait(&wait.sema, timeout_ns, detach);
+	AlifIntT res = _alifSemaphore_wait(&wait.sema, timeout_ns, detach);
 	if (res == Alif_Park_Ok) {
 		goto done;
 	}
@@ -329,7 +328,7 @@ AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT 
 	if (wait.isUnparking) {
 		alifRawMutex_unlock(&bucket->mutex);
 		do {
-			res = alifSemaphore_wait(&wait.sema, -1, detach);
+			res = _alifSemaphore_wait(&wait.sema, -1, detach);
 		}
 		while (res != Alif_Park_Ok);
 		goto done;
@@ -341,14 +340,14 @@ AlifIntT alifParkingLot_park(const void* addr, const void* expected, AlifUSizeT 
 	alifRawMutex_unlock(&bucket->mutex);
 
 done:
-	alifSemaphore_destroy(&wait.sema);
+	_alifSemaphore_destroy(&wait.sema);
 	return res;
 
 }
 
 
 
-void alifParkingLot_unpark(const void* addr, AlifUnparkFnT* fn, void* arg) { // 344
+void _alifParkingLot_unpark(const void* addr, AlifUnparkFnT* fn, void* arg) { // 344
 	Bucket* bucket = &buckets[((uintptr_t)addr) % NUM_BUCKETS];
 
 	alifRawMutex_lock(&bucket->mutex);
@@ -363,11 +362,11 @@ void alifParkingLot_unpark(const void* addr, AlifUnparkFnT* fn, void* arg) { // 
 	alifRawMutex_unlock(&bucket->mutex);
 
 	if (waiter) {
-		alifSemaphore_wakeup(&waiter->sema);
+		_alifSemaphore_wakeup(&waiter->sema);
 	}
 }
 
-void alifParkingLot_unparkAll(const void* _addr) { // 367
+void _alifParkingLot_unparkAll(const void* _addr) { // 367
 	LListNode head = LLIST_INIT(head);
 	Bucket* bucket = &buckets[((uintptr_t)_addr) % NUM_BUCKETS];
 
@@ -379,6 +378,6 @@ void alifParkingLot_unparkAll(const void* _addr) { // 367
 	LLIST_FOR_EACH_SAFE(node, &head) {
 		WaitEntry* waiter = LLIST_DATA(node, WaitEntry, node);
 		llist_remove(node);
-		alifSemaphore_wakeup(&waiter->sema);
+		_alifSemaphore_wakeup(&waiter->sema);
 	}
 }

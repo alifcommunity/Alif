@@ -29,7 +29,7 @@
 
 
 
-wchar_t* alif_decodeLocale(const char*, AlifUSizeT*); // 44
+ALIFAPI_FUNC(wchar_t*) alif_decodeLocale(const char*, AlifUSizeT*); // 44
 
 
 
@@ -44,4 +44,4 @@ wchar_t* alif_decodeLocale(const char*, AlifUSizeT*); // 44
 
 
 
-FILE* alif_fOpenObj(AlifObject*, const char*);
+ALIFAPI_FUNC(FILE*) _alif_fOpenObj(AlifObject*, const char*);

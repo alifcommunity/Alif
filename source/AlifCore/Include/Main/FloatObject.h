@@ -2,7 +2,7 @@
 
 
 
-extern AlifTypeObject _alifFloatType_; // 14
+ALIFAPI_DATA(AlifTypeObject) _alifFloatType_; // 14
 
 // 16
 #define ALIFFLOAT_CHECK(_op) ALIFOBJECT_TYPECHECK(_op, &_alifFloatType_)
@@ -10,16 +10,18 @@ extern AlifTypeObject _alifFloatType_; // 14
 
 
 
-AlifObject* alifFloat_fromString(AlifObject*); // 36
+ALIFAPI_FUNC(AlifObject*) alifFloat_fromString(AlifObject*); // 36
 
-AlifObject* alifFloat_fromDouble(double); // 39
-
-
+ALIFAPI_FUNC(AlifObject*) alifFloat_fromDouble(double); // 39
 
 
 
 
-double alifFloat_asDouble(AlifObject*); // 43
+
+
+ALIFAPI_FUNC(double) alifFloat_asDouble(AlifObject*); // 43
+
+
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 class AlifFloatObject { // 5
@@ -36,9 +38,9 @@ static inline double _alifFloat_asDouble(AlifObject* _op) { // 15
 }
 #define ALIFFLOAT_AS_DOUBLE(_op) _alifFloat_asDouble(ALIFOBJECT_CAST(_op))
 
-AlifIntT alifFloat_pack8(double, char*, AlifIntT); // 23
+ALIFAPI_FUNC(AlifIntT) alifFloat_pack8(double, char*, AlifIntT); // 23
 
-double alifFloat_unpack8(const char*, AlifIntT); // 27
+ALIFAPI_FUNC(double) alifFloat_unpack8(const char*, AlifIntT); // 27
 
 
 

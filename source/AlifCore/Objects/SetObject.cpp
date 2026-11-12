@@ -449,7 +449,7 @@ static AlifObject* set_popImpl(AlifSetObject* so) { // 660
 	AlifObject* key{};
 
 	if (so->used == 0) {
-		//alifErr_setString(_alifExcKeyError_, "pop from an empty set");
+		alifErr_setString(_alifExcKeyError_, "محاولة السحب من مميزة فارغة");
 		return nullptr;
 	}
 	while (entry->key == nullptr or entry->key == DUMMY) {
@@ -463,6 +463,42 @@ static AlifObject* set_popImpl(AlifSetObject* so) { // 660
 	alifAtomic_storeSizeRelaxed(&so->used, so->used - 1);
 	so->finger = entry - so->table + 1;
 	return key;
+}
+
+
+
+static AlifUHashT _shuffle_bits(AlifUHashT h) { // 708
+	return ((h ^ 89869747UL) ^ (h << 16)) * 3644798167UL;
+}
+
+static AlifHashT frozenSet_hashImpl(AlifObject* _self) { // 724
+	AlifSetObject* so = ALIFSET_CAST(_self);
+	AlifUHashT hash = 0;
+	SetEntry* entry{};
+
+	for (entry = so->table; entry <= &so->table[so->mask]; entry++)
+		hash ^= _shuffle_bits(entry->hash);
+
+	/* Remove the effect of an odd number of NULL entries */
+	if ((so->mask + 1 - so->fill) & 1)
+		hash ^= _shuffle_bits(0);
+
+	/* Remove the effect of an odd number of dummy entries */
+	if ((so->fill - so->used) & 1)
+		hash ^= _shuffle_bits(-1);
+
+	/* Factor in the number of active entries */
+	hash ^= ((AlifUHashT)ALIFSET_GET_SIZE(_self) + 1) * 1927868237UL;
+
+	/* Disperse patterns arising in nested frozensets */
+	hash ^= (hash >> 11) ^ (hash >> 25);
+	hash = hash * 69069U + 907133923UL;
+
+	/* -1 is reserved as an error code */
+	if (hash == (AlifUHashT)-1)
+		hash = 590923713UL;
+
+	return (AlifHashT)hash;
 }
 
 
@@ -764,6 +800,34 @@ static AlifObject* set_addImpl(AlifSetObject* _so, AlifObject* _key) { // 2154
 }
 
 
+static AlifIntT set_containsLockHeld(AlifSetObject* _so,
+	AlifObject* _key) { // 2169
+	AlifIntT rv{};
+
+	rv = set_containsKey(_so, _key);
+	if (rv < 0) {
+		if (!ALIFSET_CHECK(_key) || !alifErr_exceptionMatches(_alifExcTypeError_))
+			return -1;
+		alifErr_clear();
+		AlifHashT hash{};
+		ALIF_BEGIN_CRITICAL_SECTION(_key);
+		hash = frozenSet_hashImpl(_key);
+		ALIF_END_CRITICAL_SECTION();
+		rv = set_containsEntry(_so, _key, hash);
+	}
+	return rv;
+}
+
+AlifIntT _alifSet_contains(AlifSetObject* _so, AlifObject* _key) { // 2188
+	AlifIntT rv{};
+	ALIF_BEGIN_CRITICAL_SECTION(_so);
+	rv = set_containsLockHeld(_so, _key);
+	ALIF_END_CRITICAL_SECTION();
+	return rv;
+}
+
+
+
 
 static AlifObject* set_vectorCall(AlifObject *type, AlifObject * const*args,
 	AlifUSizeT nargsf, AlifObject *kwnames) { // 2375
@@ -846,6 +910,7 @@ AlifTypeObject _alifSetType_ = { // 2473
 	.alloc = alifType_genericAlloc,
 	.new_ = set_new,
 	.free = alifObject_gcDel,
+	.versionTag = _ALIF_TYPE_VERSION_SET,
 	.vectorCall = set_vectorCall,
 };
 
@@ -930,7 +995,7 @@ AlifIntT alifSet_add(AlifObject* _anySet, AlifObject* _key) { // 2658
 	return rv_;
 }
 
-AlifIntT alifSet_nextEntry(AlifObject* _set,
+AlifIntT _alifSet_nextEntry(AlifObject* _set,
 	AlifSizeT* _pos, AlifObject** _key, AlifHashT* _hash) { // 2674
 	SetEntry* entry{};
 

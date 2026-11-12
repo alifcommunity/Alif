@@ -42,6 +42,7 @@ public:
 		};
 	};
 	uint64_t operand{};  // A cache entry
+	uint64_t operand1{};
 };
 
 

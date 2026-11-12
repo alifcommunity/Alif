@@ -100,7 +100,7 @@ typedef AlifUSizeT AlifUHashT;
 
 // 323 
 #if defined(__GNUC__) \
-    && ((__GNUC__ >= 5) or (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))
+    and ((__GNUC__ >= 5) or (__GNUC__ == 4) and (__GNUC_MINOR__ >= 3))
 #define ALIF_HOT_FUNCTION __attribute__((hot))
 #else
 #define ALIF_HOT_FUNCTION
@@ -116,6 +116,8 @@ typedef AlifUSizeT AlifUHashT;
 #endif
 
 
+#include "Exports.h" // 377
+
 
 #if defined(__GNUC__) or defined(__clang__) or defined(__INTEL_COMPILER)
 #  define ALIF_NO_INLINE __attribute__ ((noinline))
@@ -125,6 +127,17 @@ typedef AlifUSizeT AlifUHashT;
 #  define ALIF_NO_INLINE
 #endif
 
+
+
+/*
+* Hide GCC attributes from compilers that don't support them.
+*/
+#if (!defined(__GNUC__) or __GNUC__ < 2 or \
+     (__GNUC__ == 2 and __GNUC_MINOR__ < 7) )
+#define ALIF_GCC_ATTRIBUTE(x)
+#else
+#define ALIF_GCC_ATTRIBUTE(x) __attribute__(x)
+#endif
 
 
 

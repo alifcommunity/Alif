@@ -10,3 +10,4 @@ DerivedData
 *.eddx
 *.xopp
 *.DS_Store
+/linuxBuild/build

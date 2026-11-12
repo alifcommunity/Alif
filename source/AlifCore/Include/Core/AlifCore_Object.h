@@ -10,6 +10,17 @@
 
 #define ALIF_REF_DEFERRED (ALIF_SIZET_MAX / 8) // 28
 
+
+#define _ALIFREFTRACERTRACK(_obj, _operation) \
+    do { \
+        RefTracerRuntimeState* tracer = &_alifRuntime_.refTracer; \
+        if (tracer->tracerFunc != nullptr) { \
+            void *data = tracer->tracerData; \
+            tracer->tracerFunc((_obj), (_operation), data); \
+        } \
+    } while(0)
+
+
 static inline void _alif_refcntAdd(AlifObject* _op, AlifSizeT _n) { // 132 
 	if (ALIF_ISIMMORTAL(_op)) {
 		return;
@@ -40,8 +51,8 @@ static inline AlifIntT _alifObject_isUniquelyReferenced(AlifObject* ob) { // 144
 		alifAtomic_loadSizeRelaxed(&ob->refShared) == 0);
 }
 
-void alif_setImmortal(AlifObject*); // 162
-void alif_setImmortalUntracked(AlifObject*); // 163 
+ALIFAPI_FUNC(void) _alif_setImmortal(AlifObject*); // 162
+ALIFAPI_FUNC(void) _alif_setImmortalUntracked(AlifObject*); // 163 
 
 
 static inline void _alif_setMortal(AlifObject* _op, AlifSizeT _refCnt) { // 167
@@ -143,7 +154,7 @@ static inline void _alif_decRefCode(AlifCodeObject* _co) { // 381
 static inline void _alifObject_init(AlifObject* _op, AlifTypeObject* _typeObj) { // 370
 	ALIF_SET_TYPE(_op, _typeObj);
 	_alif_incRefType(_typeObj);
-	alif_newReference(_op);
+	_alif_newReference(_op);
 }
 
 static inline void _alifObject_initVar(AlifVarObject* _op,
@@ -321,12 +332,12 @@ union AlifManagedDictPointer{ // 785
 	AlifDictObject* dict{};
 };
 
-static inline AlifManagedDictPointer* alifObject_managedDictPointer(AlifObject* obj) { // 790
+static inline AlifManagedDictPointer* _alifObject_managedDictPointer(AlifObject* obj) { // 790
 	return (AlifManagedDictPointer*)((char*)obj + MANAGED_DICT_OFFSET);
 }
 
-static inline AlifDictObject* alifObject_getManagedDict(AlifObject* _obj) { // 797
-	AlifManagedDictPointer* dorv = alifObject_managedDictPointer(_obj);
+static inline AlifDictObject* _alifObject_getManagedDict(AlifObject* _obj) { // 797
+	AlifManagedDictPointer* dorv = _alifObject_managedDictPointer(_obj);
 	return (AlifDictObject*)alifAtomic_loadPtrAcquire(&dorv->dict);
 }
 
@@ -337,12 +348,13 @@ static inline AlifDictValues* alifObject_inlineValues(AlifObject* _obj) { // 803
 }
 
 
-extern AlifObject** alifObject_computedDictPointer(AlifObject*); // 813
+extern AlifObject** _alifObject_computedDictPointer(AlifObject*); // 860
 
 
-AlifObject* alifObject_lookupSpecial(AlifObject*, AlifObject*); // 817
+ALIFAPI_FUNC(AlifObject*) _alifObject_lookupSpecial(AlifObject*, AlifObject*); // 860
+ALIFAPI_FUNC(AlifObject*) _alifObject_lookupSpecialMethod(AlifObject*, AlifObject*, AlifObject**); // 861
 
-AlifIntT _alifObject_getMethod(AlifObject*, AlifObject*, AlifObject**); // 822
+ALIFAPI_FUNC(AlifIntT) _alifObject_getMethod(AlifObject*, AlifObject*, AlifObject**); // 822
 extern AlifObject* _alifObject_nextNotImplemented(AlifObject*); // 823
 
 
@@ -353,11 +365,11 @@ extern AlifObject* _alifObject_nextNotImplemented(AlifObject*); // 823
 #define ALIFCPPFUNCTIONWITHKEYWORDS_TRAMPOLINECALL(_meth, _self, _args, _kw) \
     (_meth)((_self), (_args), (_kw)) // 846
 
-extern AlifTypeObject _alifNoneType_; // 851
+ALIFAPI_DATA(AlifTypeObject) _alifNoneType_; // 894
 
 
-extern AlifIntT _alifSwappedOp_[]; // 856
+ALIFAPI_DATA(AlifIntT) _alifSwappedOp_[]; // 899
 
 
 
-extern void _alif_getConstantInit(void); // 880
+extern void _alif_getConstantInit(void); // 901

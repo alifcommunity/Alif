@@ -12,14 +12,14 @@
 
 
 AlifFrameObject* _alifFrame_makeAndSetFrameObject(AlifInterpreterFrame* _frame) { // 21
-	//AlifObject* exc = alifErr_getRaisedException();
+	AlifObject* exc = alifErr_getRaisedException();
 
 	AlifFrameObject* f = _alifFrame_newNoTrack(_alifFrame_getCode(_frame));
 	if (f == nullptr) {
-		//ALIF_XDECREF(exc);
+		ALIF_XDECREF(exc);
 		return nullptr;
 	}
-	//alifErr_setRaisedException(exc);
+	alifErr_setRaisedException(exc);
 	f->frame = _frame;
 	_frame->frameObj = f;
 	return f;
@@ -37,7 +37,7 @@ static void take_ownership(AlifFrameObject* _f, AlifInterpreterFrame* _frame) { 
 	_frame->owner = FrameOwner::FRAME_OWNED_BY_FRAME_OBJECT;
 	if (_alifFrame_isIncomplete(_frame)) {
 		AlifCodeObject* code = _alifFrame_getCode(_frame);
-		_frame->instrPtr = ALIFCODE_CODE(code) + code->firstTraceable + 1;
+		_frame->instrPtr = _alifFrame_getBytecode(_frame) + code->firstTraceable + 1;
 	}
 
 	AlifInterpreterFrame* prev = _alifFrame_getFirstComplete(_frame->previous);

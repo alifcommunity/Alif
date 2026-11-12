@@ -91,7 +91,7 @@ static AlifIntT alifMain_exitErrPrint(void) { // 112
 }
 
 static AlifIntT alifMain_runFileObj(AlifObject* _pn, AlifObject* _fn, AlifIntT _skipFirstLine) { // 365
-	FILE* fp_ = alif_fOpenObj(_fn, "rb");
+	FILE* fp_ = _alif_fOpenObj(_fn, "rb");
 
 	if (fp_ == nullptr) {
 		alifErr_clear();
@@ -176,7 +176,7 @@ static AlifIntT alifMain_sysPathAddPath0(AlifInterpreter* interp, AlifObject* pa
 	AlifObject* sysPath{};
 	AlifObject* sysdict = interp->sysDict;
 	if (sysdict != nullptr) {
-		sysPath = alifDict_getItemWithError(sysdict, &ALIF_ID(Path));
+		sysPath = alifDict_getItemWithError(sysdict, &ALIF_STR(Path));
 		if (sysPath == nullptr and alifErr_occurred()) {
 			return -1;
 		}
@@ -243,7 +243,7 @@ static AlifIntT alifMain_runStartup(AlifConfig* _config, AlifIntT* _exitcode) { 
 		//	goto error;
 		//}
 
-	fp = alif_fOpenObj(startup, "r");
+	fp = _alif_fOpenObj(startup, "r");
 	if (fp == nullptr) {
 		AlifIntT save_errno = errno;
 		alifErr_clear();
@@ -317,7 +317,7 @@ static AlifIntT alifMain_runStdin(AlifConfig* _config) { // 542
 static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 	AlifObject* mainImporterPath = nullptr;
 	AlifInterpreter* interp = _alifInterpreter_get();
-	AlifConfig* config = (AlifConfig*)alifInterpreter_getConfig(interp);
+	AlifConfig* config = (AlifConfig*)_alifInterpreterState_getConfig(interp);
 
 	AlifObject* path0{}; //* alif
 
@@ -368,7 +368,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 
 	alifMain_header(config);
 
-	alifInterpreter_setRunningMain(interp);
+	_alifInterpreter_setRunningMain(interp);
 
 	if (config->runCommand) {
 		*_exitcode = alifMain_runCommand(config->runCommand);
@@ -377,7 +377,7 @@ static void alifMain_runAlif(AlifIntT* _exitcode) { // 614
 		//*_exitcode = alifMain_runModule(config->runModule, 1);
 	}
 	else if (mainImporterPath != nullptr) {
-		//*_exitcode = alifMain_runModule(L"__main__", 0);
+		//*_exitcode = alifMain_runModule(L"__الرئيسية__", 0);
 	}
 	else if (config->runFilename != nullptr) {
 		*_exitcode = alifMain_runFile(config);

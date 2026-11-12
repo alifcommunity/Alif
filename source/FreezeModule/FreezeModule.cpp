@@ -102,12 +102,12 @@ static const char* read_text(const char* inpath) {
 }
 
 static AlifObject* compile_andMarshal(const char* name, const char* text) {
-	char* filename = (char*)malloc(strlen(name) + 10);
+	char* filename = (char*)malloc(strlen(name) + 12);
 	if (filename == nullptr) {
 		//return alifErr_noMemory();
 		return nullptr;
 	}
-	sprintf(filename, "<جرد %s>", name);
+	sprintf(filename, "<مصرف %s>", name); // مُصَرَّف
 	AlifObject* code = alif_compileStringExFlags(text, filename,
 		ALIF_FILE_INPUT, nullptr, 0);
 	free(filename);

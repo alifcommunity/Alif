@@ -14,21 +14,21 @@ enum AlifTimeRoundT { // 67
 
 
 
-AlifObject* _alifLong_fromTimeT(time_t); // 96
+ALIFAPI_FUNC(AlifObject*) _alifLong_fromTimeT(time_t); // 96
 
 
-time_t _alifLong_asTimeT(AlifObject*); // 100
+ALIFAPI_FUNC(time_t) _alifLong_asTimeT(AlifObject*); // 100
 
-AlifIntT _alifTime_objectToTimeT(AlifObject*, time_t*, AlifTimeRoundT); // 104
-
-
-AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
+ALIFAPI_FUNC(AlifIntT) _alifTime_objectToTimeT(AlifObject*, time_t*, AlifTimeRoundT); // 104
 
 
-AlifIntT _alifTime_fromSecondsObject(AlifTimeT*, AlifObject*, AlifTimeRoundT); // 157
+extern AlifTimeT _alifTime_fromMicrosecondsClamp(AlifTimeT); // 147
 
 
-AlifTimeT _alifTime_asMilliseconds(AlifTimeT, AlifTimeRoundT); // 170
+ALIFAPI_FUNC(AlifIntT) _alifTime_fromSecondsObject(AlifTimeT*, AlifObject*, AlifTimeRoundT); // 157
+
+
+ALIFAPI_FUNC(AlifTimeT) _alifTime_asMilliseconds(AlifTimeT, AlifTimeRoundT); // 170
 
 
 #ifdef _WINDOWS
@@ -36,17 +36,17 @@ extern AlifTimeT _alifTime_as100Nanoseconds(AlifTimeT, AlifTimeRoundT); // 180
 #endif
 
 
-AlifIntT _alifTime_asTimEval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
+ALIFAPI_FUNC(AlifIntT) _alifTime_asTimEval(AlifTimeT, struct timeval*, AlifTimeRoundT); // 199
 
 
 #if defined(HAVE_CLOCK_GETTIME) or defined(HAVE_KQUEUE)
 
-AlifIntT _alifTime_asTimeSpec(AlifTimeT, struct timespec*); // 232
+ALIFAPI_FUNC(AlifIntT) _alifTime_asTimeSpec(AlifTimeT, struct timespec*); // 232
 
-void _alifTime_asTimeSpecClamp(AlifTimeT, timespec*); // 237
+ALIFAPI_FUNC(void) _alifTime_asTimeSpecClamp(AlifTimeT, timespec*); // 237
 #endif
 
-extern AlifTimeT _alifTime_add(AlifTimeT, AlifTimeT);
+extern AlifTimeT _alifTime_add(AlifTimeT, AlifTimeT); // 242
 
 class AlifClockInfoT { // 245
 public:
@@ -58,11 +58,11 @@ public:
 
 
 
-AlifIntT _alifTime_localtime(time_t, struct tm*); // 276
+ALIFAPI_FUNC(AlifIntT) _alifTime_localtime(time_t, struct tm*); // 276
 
 
 
-AlifTimeT alifDeadline_get(AlifTimeT); // 305
+ALIFAPI_FUNC(AlifTimeT) _alifDeadline_get(AlifTimeT); // 305
 
 
 class AlifTimeFraction { // 310

@@ -13,7 +13,7 @@
 
 
 
-AlifIntT alifEval_makePendingCalls(AlifThread*); // 37
+ALIFAPI_FUNC(AlifIntT) _alifEval_makePendingCalls(AlifThread*); // 37
 
 
 #define ALIF_DEFAULT_RECURSION_LIMIT 1000 // 40
@@ -40,7 +40,7 @@ static inline AlifObject* alifEval_evalFrame(AlifThread* _tstate,
 
 
 
-extern AlifObject* alifEval_vector(AlifThread*, AlifFunctionObject*,
+extern AlifObject* _alifEval_vector(AlifThread*, AlifFunctionObject*,
 	AlifObject*, AlifObject* const*, AlifUSizeT, AlifObject*); // 125
 
 
@@ -62,6 +62,16 @@ static inline AlifIntT alifEval_isGILEnabled(AlifThread* _thread) { // 145
 }
 
 
+static inline AlifCodeUnit* _alifEval_getExecutableCode(AlifThread* _thread,
+	AlifCodeObject* _co) { // 179
+	AlifCodeUnit* bc = _alifCode_getTLBCFast(_thread, _co);
+	if (bc != nullptr) {
+		return bc;
+	}
+	return _alifCode_getTLBC(_co);
+}
+
+
 #ifdef USE_STACKCHECK // 187
 static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) {
 	return (_thread->cppRecursionRemaining-- < 0
@@ -73,13 +83,13 @@ static inline AlifIntT alif_makeRecCheck(AlifThread* _thread) {
 }
 #endif
 
-AlifIntT alif_checkRecursiveCall(AlifThread*, const char*); // 202
+ALIFAPI_FUNC(AlifIntT) _alif_checkRecursiveCall(AlifThread*, const char*); // 202
 
 AlifIntT _alif_checkRecursiveCallAlif(AlifThread*); // 206
 
 static inline AlifIntT _alif_enterRecursiveCallThread(AlifThread* _thread,
 	const char* where) { // 209
-	return (alif_makeRecCheck(_thread) and alif_checkRecursiveCall(_thread, where));
+	return (alif_makeRecCheck(_thread) and _alif_checkRecursiveCall(_thread, where));
 }
 
 static inline AlifIntT _alif_enterRecursiveCall(const char* _where) { // 219
@@ -98,27 +108,40 @@ static inline void _alif_leaveRecursiveCall(void) { // 228
 
 
 
-AlifObject* _alif_makeCoro(AlifFunctionObject*); // 235
+ALIFAPI_FUNC(AlifObject*) _alif_makeCoro(AlifFunctionObject*); // 244
 
 
-AlifIntT _alifEval_checkExceptStarTypeValid(AlifThread*, AlifObject*); // 256
-AlifIntT _alifEval_checkExceptTypeValid(AlifThread*, AlifObject*); // 257
-AlifIntT _alifEval_exceptionGroupMatch(AlifObject*, AlifObject*, AlifObject**, AlifObject**); // 258
-
-AlifObject* _alifEval_importFrom(AlifThread*, AlifObject*, AlifObject*); // 262
-AlifObject* _alifEval_importName(AlifThread*, AlifInterpreterFrame*, AlifObject*, AlifObject*, AlifObject*); // 263
-AlifIntT _alifEval_unpackIterableStackRef(AlifThread*, AlifStackRef, AlifIntT, AlifIntT, AlifStackRef*); // 267
-void _alifEval_frameClearAndPop(AlifThread* _thread, AlifInterpreterFrame*); // 268
-AlifObject** _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifObject**); // 269
+extern AlifObject* _alifEval_getFrameLocals(void); // 250
 
 
-void _alifObjectArray_free(AlifObject**, AlifObject**); // 271
+class AlifSpecialMethod { // 257
+public:
+	AlifObject* name{};
+	const char* error{};
+};
 
-void _alifEval_loadGlobalStackRef(AlifObject*, AlifObject*, AlifObject*, AlifStackRef*); // 274
+ALIFAPI_DATA(const AlifSpecialMethod) _alifSpecialMethods_[]; // 262
 
-AlifObject* _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
 
-AlifIntT _alifCheck_argsIterable(AlifThread*, AlifObject*, AlifObject*); // 279
+ALIFAPI_FUNC(AlifIntT) _alifEval_checkExceptStarTypeValid(AlifThread*, AlifObject*); // 265
+ALIFAPI_FUNC(AlifIntT) _alifEval_checkExceptTypeValid(AlifThread*, AlifObject*); // 267
+ALIFAPI_FUNC(AlifIntT) _alifEval_exceptionGroupMatch(AlifObject*, AlifObject*, AlifObject**, AlifObject**); // 258
+
+ALIFAPI_FUNC(AlifObject*) _alifEval_importFrom(AlifThread*, AlifObject*, AlifObject*); // 262
+ALIFAPI_FUNC(AlifObject*) _alifEval_importName(AlifThread*, AlifInterpreterFrame*, AlifObject*, AlifObject*, AlifObject*); // 263
+ALIFAPI_FUNC(AlifIntT) _alifEval_unpackIterableStackRef(AlifThread*, AlifStackRef, AlifIntT, AlifIntT, AlifStackRef*); // 267
+ALIFAPI_FUNC(void) _alifEval_frameClearAndPop(AlifThread* _thread, AlifInterpreterFrame*); // 268
+ALIFAPI_FUNC(void) _alifEval_formatExcCheckArg(AlifThread*, AlifObject*, const char*, AlifObject*); // 269
+ALIFAPI_FUNC(AlifObject**) _alifObjectArray_fromStackRefArray(AlifStackRef*, AlifSizeT, AlifObject**); // 269
+
+
+ALIFAPI_FUNC(void) _alifObjectArray_free(AlifObject**, AlifObject**); // 271
+
+ALIFAPI_FUNC(void) _alifEval_loadGlobalStackRef(AlifObject*, AlifObject*, AlifObject*, AlifStackRef*); // 274
+
+ALIFAPI_FUNC(AlifObject*) _alifEval_loadName(AlifThread*, AlifInterpreterFrame*, AlifObject*); // 276
+
+ALIFAPI_FUNC(AlifIntT) _alifCheck_argsIterable(AlifThread*, AlifObject*, AlifObject*); // 279
 
 // 282
 #define ALIF_GIL_DROP_REQUEST_BIT (1U << 0)
@@ -150,3 +173,7 @@ static inline AlifIntT alifEval_breakerBitIsSet(AlifThread* _thread, uintptr_t _
 
 void alifSet_evalBreakerBitAll(AlifInterpreter*, uintptr_t); // 312
 void alifUnset_evalBreakerBitAll(AlifInterpreter*, uintptr_t); // 313
+
+
+
+ALIFAPI_FUNC(AlifObject*) _alifFloat_fromDoubleConsumeInputs(AlifStackRef, AlifStackRef, double); // 328

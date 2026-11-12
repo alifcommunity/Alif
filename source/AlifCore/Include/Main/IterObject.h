@@ -2,6 +2,6 @@
 
 
 
-extern AlifTypeObject _alifSeqIterType_; // 8
+ALIFAPI_DATA(AlifTypeObject) _alifSeqIterType_; // 8
 
-AlifObject* alifSeqIter_new(AlifObject*); // 13
+ALIFAPI_FUNC(AlifObject*) alifSeqIter_new(AlifObject*); // 13

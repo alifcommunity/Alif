@@ -43,4 +43,4 @@ public:
 
 
 
-extern const IntrinsicFunc1Info _alifIntrinsicsUnaryFunctions_[];
+ALIFAPI_DATA(const IntrinsicFunc1Info) _alifIntrinsicsUnaryFunctions_[];

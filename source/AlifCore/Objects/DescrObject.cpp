@@ -3,6 +3,7 @@
 #include "AlifCore_Abstract.h"
 #include "AlifCore_Call.h"
 #include "AlifCore_Eval.h"
+#include "AlifCore_DescrObject.h"
 #include "AlifCore_ModSupport.h"
 #include "AlifCore_Object.h"
 #include "AlifCore_State.h"
@@ -137,7 +138,7 @@ static AlifObject* getset_get(AlifObject* self, AlifObject* obj, AlifObject* typ
 		return DESCR_GET_TRAMPOLINE_CALL(
 			descr->getSet->get, obj, descr->getSet->closure);
 	alifErr_format(_alifExcAttributeError_,
-		"الخاصية '%V' للكائن '%.100s' غير قابلة للقراءة",
+		"الصفة '%V' للكائن '%.100s' غير قابلة للقراءة",
 		descr_name((AlifDescrObject*)descr), "?",
 		ALIFDESCR_TYPE(descr)->name);
 	return nullptr;
@@ -178,7 +179,7 @@ static AlifIntT getset_set(AlifObject* self, AlifObject* obj, AlifObject* value)
 			descr->getSet->closure);
 	}
 	alifErr_format(_alifExcAttributeError_,
-		"الخاصية '%V' للكائن '%.100s' غير قابلة للكتابة",
+		"الصفة '%V' للكائن '%.100s' غير قابلة للكتابة",
 		descr_name((AlifDescrObject*)descr), "?",
 		ALIFDESCR_TYPE(descr)->name);
 	return -1;
@@ -263,7 +264,7 @@ static AlifObject* method_vectorCallVarArgsKeywords(AlifObject* func,
 	AlifObject* result = nullptr;
 	AlifObject* kwdict = nullptr;
 	if (kwnames != nullptr and ALIFTUPLE_GET_SIZE(kwnames) > 0) {
-		kwdict = alifStack_asDict(args + nargs, kwnames);
+		kwdict = _alifStack_asDict(args + nargs, kwnames);
 		if (kwdict == nullptr) {
 			goto exit;
 		}
@@ -396,7 +397,7 @@ static AlifObject* method_vectorCallO(AlifObject* _func, AlifObject* const* _arg
 
 AlifTypeObject _alifMethodDescrType_ = { // 716
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "معرف_صفة",
+	.name = "معرف_وظيفة",
 	.basicSize = sizeof(AlifMethodDescrObject),
 	//.dealloc = descr_dealloc,
 	.vectorCallOffset = offsetof(AlifMethodDescrObject, vectorCall),
@@ -411,7 +412,7 @@ AlifTypeObject _alifMethodDescrType_ = { // 716
 
 AlifTypeObject _alifClassMethodDescrType_ = { // 756
 	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
-	.name = "معرف_صفة_صنف",
+	.name = "معرف_وظيفة_صنف",
 	.basicSize = sizeof(AlifMethodDescrObject),
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
@@ -572,3 +573,233 @@ AlifObject* alifDescr_newWrapper(AlifTypeObject* type,
 AlifIntT alifDescr_isData(AlifObject* _ob) { // 1028
 	return ALIF_TYPE(_ob)->descrSet != nullptr;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static AlifObject* property_copy(AlifObject*, AlifObject*, AlifObject*, AlifObject*); // 1556
+
+
+static AlifMemberDef _propertyMembers_[] = { // 1559
+	{"fget", ALIF_T_OBJECT, offsetof(PropertyObject, propGet), ALIF_READONLY},
+	{"fset", ALIF_T_OBJECT, offsetof(PropertyObject, propSet), ALIF_READONLY},
+	{"fdel", ALIF_T_OBJECT, offsetof(PropertyObject, propDel), ALIF_READONLY},
+	{"__doc__",  ALIF_T_OBJECT, offsetof(PropertyObject, propDoc), 0},
+	{0}
+};
+
+
+
+static AlifObject* property_getter(AlifObject* _self,
+	AlifObject* _getter) { // 1571
+	return property_copy(_self, _getter, nullptr, nullptr);
+}
+
+
+static AlifMethodDef _propertyMethods_[] = { // 1622
+	{"getter", property_getter, METHOD_O},
+	//{"setter", property_setter, METHOD_O},
+	//{"deleter", property_deleter, METHOD_O},
+	//{"__set_name__", property_setName, METHOD_VARARGS},
+	{0}
+};
+
+
+
+static AlifIntT property_name(PropertyObject* _prop, AlifObject** _name) { // 1645
+	if (_prop->propName != nullptr) {
+		*_name = ALIF_NEWREF(_prop->propName);
+		return 1;
+	}
+	if (_prop->propGet == nullptr) {
+		*_name = nullptr;
+		return 0;
+	}
+	return alifObject_getOptionalAttr(_prop->propGet, &ALIF_STR(__name__), _name);
+}
+
+static AlifObject* property_descrGet(AlifObject* _self,
+	AlifObject* _obj, AlifObject* _type) { // 1659
+	if (_obj == nullptr or _obj == ALIF_NONE) {
+		return ALIF_NEWREF(_self);
+	}
+
+	PropertyObject* gs = (PropertyObject*)_self;
+	if (gs->propGet == nullptr) {
+		AlifObject* propname{};
+		if (property_name(gs, &propname) < 0) {
+			return nullptr;
+		}
+		AlifObject* qualname = alifType_getQualName(ALIF_TYPE(_obj));
+		if (propname != nullptr and qualname != nullptr) {
+			alifErr_format(_alifExcAttributeError_,
+				"الخاصية %R من الكائن %R لا تملك (جالب)",
+				propname,
+				qualname);
+		}
+		else if (qualname != nullptr) {
+			alifErr_format(_alifExcAttributeError_,
+				"خاصية الكائن %R لا تملك (جالب)",
+				qualname);
+		}
+		else {
+			alifErr_setString(_alifExcAttributeError_,
+				"الخاصية لا تملك (جالب)");
+		}
+		ALIF_XDECREF(propname);
+		ALIF_XDECREF(qualname);
+		return nullptr;
+	}
+
+	return alifObject_callOneArg(gs->propGet, _obj);
+}
+
+
+
+static AlifObject* property_copy(AlifObject* _old,
+	AlifObject* _get, AlifObject* _set, AlifObject* _del) { // 1761
+	PropertyObject* pold = (PropertyObject*)_old;
+	AlifObject* new_{}, * type{}, * doc{};
+
+	type = alifObject_type(_old);
+	if (type == nullptr)
+		return nullptr;
+
+	if (_get == nullptr or _get == ALIF_NONE) {
+		_get = pold->propGet ? pold->propGet : ALIF_NONE;
+	}
+	if (_set == nullptr or _set == ALIF_NONE) {
+		_set = pold->propSet ? pold->propSet : ALIF_NONE;
+	}
+	if (_del == nullptr or _del == ALIF_NONE) {
+		_del = pold->propDel ? pold->propDel : ALIF_NONE;
+	}
+	if (pold->getterDoc and _get != ALIF_NONE) {
+		/* make _init use __doc__ from getter */
+		doc = ALIF_NONE;
+	}
+	else {
+		doc = pold->propDoc ? pold->propDoc : ALIF_NONE;
+	}
+
+	new_ = alifObject_callFunctionObjArgs(type, _get, _set, _del, doc, nullptr);
+	ALIF_DECREF(type);
+	if (new_ == nullptr)
+		return nullptr;
+
+	if (alifObject_typeCheck((new_), &_alifPropertyType_)) {
+		ALIF_XSETREF(((PropertyObject*)new_)->propName, ALIF_XNEWREF(pold->propName));
+	}
+	return new_;
+}
+
+
+static AlifIntT property_initImpl(PropertyObject* self, AlifObject* fget,
+	AlifObject* fset, AlifObject* fdel, AlifObject* doc) { // 1835
+	if (fget == ALIF_NONE)
+		fget = nullptr;
+	if (fset == ALIF_NONE)
+		fset = nullptr;
+	if (fdel == ALIF_NONE)
+		fdel = nullptr;
+
+	ALIF_XSETREF(self->propGet, ALIF_XNEWREF(fget));
+	ALIF_XSETREF(self->propSet, ALIF_XNEWREF(fset));
+	ALIF_XSETREF(self->propDel, ALIF_XNEWREF(fdel));
+	ALIF_XSETREF(self->propDoc, nullptr);
+	ALIF_XSETREF(self->propName, nullptr);
+
+	self->getterDoc = 0;
+	AlifObject* propDoc = nullptr;
+
+	if (doc != nullptr and doc != ALIF_NONE) {
+		propDoc = ALIF_XNEWREF(doc);
+	}
+	/* if no docstring given and the getter has one, use that one */
+	else if (fget != nullptr) {
+		int rc = alifObject_getOptionalAttr(fget, &ALIF_ID(__doc__), &propDoc);
+		if (rc < 0) {
+			return rc;
+		}
+		if (propDoc == ALIF_NONE) {
+			propDoc = nullptr;
+			ALIF_DECREF(ALIF_NONE);
+		}
+		if (propDoc != nullptr) {
+			self->getterDoc = 1;
+		}
+	}
+
+	if (ALIF_IS_TYPE(self, &_alifPropertyType_)) {
+		ALIF_XSETREF(self->propDoc, propDoc);
+	}
+	else {
+
+		if (propDoc == nullptr) {
+			propDoc = ALIF_NEWREF(ALIF_NONE);
+		}
+		AlifIntT err = alifObject_setAttr(
+			(AlifObject*)self, &ALIF_ID(__doc__), propDoc);
+		ALIF_DECREF(propDoc);
+		if (err < 0) {
+			if (!self->getterDoc and
+				alifErr_exceptionMatches(_alifExcAttributeError_)) {
+				alifErr_clear();
+				return 0;
+			}
+			else {
+				return -1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+
+#include "clinic/DescrObject.cpp.h" // 1993
+
+
+
+AlifTypeObject _alifPropertyType_ = { // 2038
+	.objBase = ALIFVAROBJECT_HEAD_INIT(&_alifTypeType_, 0),
+	.name = "خاصية",
+	.basicSize = sizeof(PropertyObject),
+	/* methods */
+	//.dealloc = property_dealloc,
+	.getAttro = alifObject_genericGetAttr,
+	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC |
+	ALIF_TPFLAGS_BASETYPE,
+	//.traverse = property_traverse,
+	//.clear = property_clear,
+	.methods = _propertyMethods_,
+	.members = _propertyMembers_,
+	//.getSet = property_getSetList,
+	.descrGet = property_descrGet,
+	//.descrSet = property_descrSet,
+	.init = property_init,
+	.alloc = alifType_genericAlloc,
+	.new_ = alifType_genericNew,
+	.free = alifObject_gcDel,
+};
+
+
+
+
+
+
+
+
+
+

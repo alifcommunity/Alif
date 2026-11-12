@@ -83,6 +83,9 @@ static AlifObject* _io_openImpl(AlifObject* _module, AlifObject* _file, const ch
 		case 't':
 			text = 1;
 			break;
+		case 171: // 'ث' ثنائي
+			binary = 1;
+			break;
 		case 'b':
 			binary = 1;
 			break;
@@ -152,7 +155,7 @@ invalid_mode:
 	{
 		AlifObject* RawIOClass = (AlifObject*)state->alifFileIOType;
 	#ifdef HAVE_WINDOWS_CONSOLE_IO
-		const AlifConfig* config = alif_getConfig();
+		const AlifConfig* config = _alif_getConfig();
 		if (!config->legacyWindowsStdio and _alifIO_getConsoleType(pathOrFD) != '\0') {
 			RawIOClass = (AlifObject*)state->alifWindowsConsoleIOType;
 			_encoding = "utf-8";
@@ -284,6 +287,13 @@ error:
 
 
 
+static AlifObject* _io_openCodeImpl(AlifObject* _module,
+	AlifObject* _path) { // 512
+	return alifFile_openCodeObject(_path);
+}
+
+
+
 
 static AlifIntT ioModule_traverse(AlifObject* mod, VisitProc visit, void* arg) { // 564
 	AlifIOState* state = get_ioState(mod);
@@ -321,7 +331,7 @@ static AlifIntT ioModule_traverse(AlifObject* mod, VisitProc visit, void* arg) {
 static AlifMethodDef _moduleMethods_[] = { // 630
 	_IO_OPEN_METHODDEF,
 	//_IO_TEXT_ENCODING_METHODDEF
-	//_IO_OPEN_CODE_METHODDEF
+	_IO_OPEN_CODE_METHODDEF
 	{nullptr, nullptr}
 };
 
@@ -344,7 +354,7 @@ static AlifIntT iomodule_exec(AlifObject* m) { // 650
 	AlifIOState* state = get_ioState(m);
 
 	/* DEFAULT_BUFFER_SIZE */
-	if (ALIFMODULE_ADDINTMACRO(m, DEFAULT_BUFFER_SIZE) < 0)
+	if (ALIFMODULE_ADDINTMACRO(m, DEFAULT_BUFFER_SIZE, DEFAULT_BUFFER_SIZE) < 0)
 		return -1;
 
 	state->unsupportedOperation = alifObject_callFunction(
@@ -425,6 +435,6 @@ AlifModuleDef _alifIOModule_ = { // 724
 	.traverse = ioModule_traverse,
 };
 
-AlifObject* alifInit__io(void) { // 736
+ALIFMODINIT_FUNC alifInit__io(void) { // 736
 	return alifModuleDef_init(&_alifIOModule_);
 }

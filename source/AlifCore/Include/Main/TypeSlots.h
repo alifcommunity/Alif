@@ -8,6 +8,8 @@
 #define ALIF_TP_BASE 48
 #define ALIF_TP_BASES 49
 
+#define ALIF_TP_DEALLOC 52
+
 
 #define ALIF_TP_DOC 56
 
@@ -17,7 +19,7 @@
 
 #define ALIF_TP_METHODS 64
 #define ALIF_TP_NEW 65
-
+#define ALIF_TP_REPR 66
 
 
 

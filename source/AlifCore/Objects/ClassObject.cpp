@@ -26,7 +26,7 @@ static AlifObject* method_vectorCall(AlifObject* method, AlifObject* const* args
 		nargs += 1;
 		AlifObject* tmp = newargs[0];
 		newargs[0] = self;
-		result = alifObject_vectorCallThread(tstate, func, newargs,
+		result = _alifObject_vectorCallThread(tstate, func, newargs,
 			nargs, kwnames);
 		newargs[0] = tmp;
 	}
@@ -34,7 +34,7 @@ static AlifObject* method_vectorCall(AlifObject* method, AlifObject* const* args
 		AlifSizeT nkwargs = (kwnames == nullptr) ? 0 : ALIFTUPLE_GET_SIZE(kwnames);
 		AlifSizeT totalargs = nargs + nkwargs;
 		if (totalargs == 0) {
-			return alifObject_vectorCallThread(tstate, func, &self, 1, nullptr);
+			return _alifObject_vectorCallThread(tstate, func, &self, 1, nullptr);
 		}
 
 		AlifObject* newargs_stack[ALIF_FASTCALL_SMALL_STACK];
@@ -51,7 +51,7 @@ static AlifObject* method_vectorCall(AlifObject* method, AlifObject* const* args
 		}
 		newargs[0] = self;
 		memcpy(newargs + 1, args, totalargs * sizeof(AlifObject*));
-		result = alifObject_vectorCallThread(tstate, func,
+		result = _alifObject_vectorCallThread(tstate, func,
 			newargs, nargs + 1, kwnames);
 		if (newargs != newargs_stack) {
 			alifMem_dataFree(newargs);

@@ -393,7 +393,7 @@ static AlifObject* do_mkValue(const char** _pFormat, va_list* _pVa) { // 272
 					AlifUSizeT m = strlen(str);
 					if (m > ALIF_SIZET_MAX) {
 						alifErr_setString(_alifExcOverflowError_,
-							"النص طويل جداً ولا يتسع في نوع بايتات ألف");
+							"النص طويل جداً ولا يتسع في نوع ثمانيات ألف");
 						return nullptr;
 					}
 					n = (AlifSizeT)m;
@@ -529,9 +529,9 @@ AlifObject** _alif_vaBuildStack(AlifObject** _smallStack, AlifSizeT _smallStackL
 AlifIntT alifModule_addObjectRef(AlifObject* _mod,
 	const char* _name, AlifObject* _value) { // 581
 	if (!ALIFMODULE_CHECK(_mod)) {
-		//alifErr_setString(_alifExcTypeError_,
-		//	"alifModule_addObjectRef() first argument "
-		//	"must be a module");
+		alifErr_setString(_alifExcTypeError_,
+			"alifModule_addObjectRef() الوسيط الأول "
+			"يجب أن يكون وحدة");
 		return -1;
 	}
 	if (!_value) {

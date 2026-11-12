@@ -50,17 +50,20 @@
 #define SUCCESS 0
 #define ERROR -1
 
-#define RETURN_IF_ERROR(_x)  \
-    if ((_x) == -1) {        \
-        return ERROR;       \
-    }
+#define RETURN_IF_ERROR(_x)    \
+    do {                       \
+		if ((_x) == -1) {      \
+			return ERROR;      \
+		}                      \
+    } while (0)
 
-#define RETURN_IF_ERROR_IN_SCOPE(_c, _call) { \
-    if (_call < 0) { \
-        _alifCompiler_exitScope(_c); \
-        return ERROR; \
-    } \
-}
+#define RETURN_IF_ERROR_IN_SCOPE(_c, _call)  \
+    do {                                     \
+		if (_call < 0) {                     \
+			_alifCompiler_exitScope(_c);     \
+			return ERROR;                    \
+		}                                    \
+    } while (0)
 
 class AlifCompiler;
 
@@ -200,7 +203,7 @@ static AlifIntT codegen_slice(AlifCompiler*, ExprTy);
 static bool areAllItems_const(ASDLExprSeq*, AlifSizeT, AlifSizeT);
 
 
-
+static AlifIntT codegen_with(AlifCompiler*, StmtTy, AlifIntT);
 
 
 static AlifIntT codegen_callSimpleKwHelper(AlifCompiler*, Location,
@@ -261,7 +264,7 @@ static AlifIntT codegen_addOpI(InstrSequence* seq,
     RETURN_IF_ERROR(codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc))
 
 #define ADDOP_I_IN_SCOPE(_c, _loc, _op, _o) \
-    RETURN_IF_ERROR_IN_SCOPE(_c, codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc));
+    RETURN_IF_ERROR_IN_SCOPE(_c, codegen_addOpI(INSTR_SEQUENCE(_c), _op, _o, _loc))
 
 static AlifIntT codegen_addOpNoArg(InstrSequence* _seq,
 	AlifIntT _opcode, Location _loc) {
@@ -303,17 +306,18 @@ static AlifIntT codegen_addOpLoadConst(AlifCompiler* _c,
     RETURN_IF_ERROR_IN_SCOPE((_c), codegen_addOpLoadConst((_c), (_loc), (_o)))
 
 
-#define ADDOP_LOAD_CONST_NEW(_c, _loc, _o) { \
-    AlifObject *__new_const = _o; \
-    if (__new_const == nullptr) { \
-        return ERROR; \
-    } \
-    if (codegen_addOpLoadConst(_c, _loc, __new_const) < 0) { \
-        ALIF_DECREF(__new_const); \
-        return ERROR; \
-    } \
-    ALIF_DECREF(__new_const); \
-}
+#define ADDOP_LOAD_CONST_NEW(_c, _loc, _o)                          \
+    do {                                                            \
+		AlifObject* __newConst = _o;                                \
+		if (__newConst == nullptr) {                                \
+			return ERROR;                                           \
+		}                                                           \
+		if (codegen_addOpLoadConst(_c, _loc, __newConst) < 0) {     \
+			ALIF_DECREF(__newConst);                                \
+			return ERROR;                                           \
+		}                                                           \
+		ALIF_DECREF(__newConst);                                    \
+    } while (0)
 
 static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
 	AlifIntT _opcode, AlifObject* _dict, AlifObject* _o) {
@@ -325,18 +329,20 @@ static AlifIntT codegen_addOpO(AlifCompiler* _c, Location _loc,
 
 
 
-#define ADDOP_N(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o); \
-    ALIF_DECREF(_o); \
-    RETURN_IF_ERROR(ret); \
-}
+#define ADDOP_N(_c, _loc, _op, _o, _type)                                       \
+    do {                                                                        \
+		AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o);  \
+		ALIF_DECREF(_o);                                                        \
+		RETURN_IF_ERROR(ret);                                                   \
+    } while (0)
 
 
-#define ADDOP_N_IN_SCOPE(_c, _loc, _op, _o, _type) { \
-    AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o); \
-    ALIF_DECREF(_o); \
-    RETURN_IF_ERROR_IN_SCOPE(_c, ret); \
-}
+#define ADDOP_N_IN_SCOPE(_c, _loc, _op, _o, _type)                              \
+    do {                                                                        \
+		AlifIntT ret = codegen_addOpO(_c, _loc, _op, METADATA(_c)->_type, _o);  \
+		ALIF_DECREF(_o);                                                        \
+		RETURN_IF_ERROR_IN_SCOPE(_c, ret);                                      \
+    } while (0)
 
 
 #define LOAD_METHOD -1
@@ -431,14 +437,14 @@ static AlifIntT codegen_addOpJ(InstrSequence* _seq, Location _loc,
 #define VISIT_IN_SCOPE(_c, _type, _v) \
     RETURN_IF_ERROR_IN_SCOPE(_c, codegen_visit ## _type(_c, _v))
 
-#define VISIT_SEQ(_c, _type, _sequ) { \
-    AlifIntT i_{}; \
-    ASDL ## _type ## Seq *_seq = (_sequ); /* avoid variable capture */ \
-    for (i_ = 0; i_ < ASDL_SEQ_LEN(_seq); i_++) { \
-        _type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(_seq, i_); \
-        RETURN_IF_ERROR(codegen_visit ## _type(_c, elt)); \
-    } \
-}
+#define VISIT_SEQ(_c, _type, _sequ)                                             \
+    do {                                                                        \
+		ASDL ## _type ## Seq *_seq = (_sequ); /* avoid variable capture */      \
+		for (AlifIntT i_ = 0; i_ < ASDL_SEQ_LEN(_seq); i_++) {                  \
+			_type ## Ty elt = (_type ## Ty)ASDL_SEQ_GET(_seq, i_);              \
+			RETURN_IF_ERROR(codegen_visit ## _type(_c, elt));                   \
+		}                                                                       \
+    } while (0)
 
 
 
@@ -662,9 +668,6 @@ static AlifIntT codegen_setupAnnotationsScope(AlifCompiler* _c, Location _loc,
 		codegen_enterScope(_c, _name, ScopeType_::Compiler_Scope_Annotations,
 			_key, _loc.lineNo, nullptr, &umd));
 
-	// Insert None into consts to prevent an annotation
-	// appearing to be a docstring
-	_alifCompiler_addConst(_c, ALIF_NONE);
 	// if .format != 1: raise NotImplementedError
 	ALIF_DECLARE_STR(format, ".format");
 	ADDOP_I(_c, _loc, LOAD_FAST, 0);
@@ -755,7 +758,8 @@ AlifIntT _alifCodegen_expression(AlifCompiler* _c, ExprTy _e) {
 
 AlifIntT _alifCodegen_body(AlifCompiler* _c,
 	Location _loc, ASDLStmtSeq* _stmts, bool _isInteractive) {
-	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and SYMTABLE_ENTRY(_c)->annotationsUsed) {
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
+	//if ((FUTURE_FEATURES(_c) & CO_FUTURE_ANNOTATIONS) and ste->annotationsUsed) 
 	//	ADDOP(_c, _loc, SETUP_ANNOTATIONS);
 	//}
 	if (!ASDL_SEQ_LEN(_stmts)) {
@@ -763,8 +767,8 @@ AlifIntT _alifCodegen_body(AlifCompiler* _c,
 	}
 	AlifSizeT firstInstr = 0;
 	//if (!_isInteractive) {
-	//	AlifObject* docString = alifAST_getDocString(_stmts);
-	//	if (docString) {
+	//  if (ste->hasDocstring) {
+	//		AlifObject* docString = alifAST_getDocString(_stmts);
 	//		firstInstr = 1;
 	//		/* set docstring */
 	//		AlifObject* cleanDoc = alifCompile_cleanDoc(docString);
@@ -775,7 +779,7 @@ AlifIntT _alifCodegen_body(AlifCompiler* _c,
 	//		Location loc = LOC(st->V.expression.val);
 	//		ADDOP_LOAD_CONST(_c, loc, cleanDoc);
 	//		ALIF_DECREF(cleanDoc);
-	//		RETURN_IF_ERROR(compiler_nameOp(_c, NO_LOCATION, &ALIF_ID(__doc__), ExprContext_::Store));
+	//		RETURN_IF_ERROR(codegen_nameOp(_c, NO_LOCATION, &ALIF_ID(__doc__), ExprContext_::Store));
 	//		}
 	//	}
 
@@ -853,23 +857,30 @@ static AlifIntT codegen_makeClosure(AlifCompiler* _c, Location _loc,
 
 
 
+static AlifIntT codegen_decorators(AlifCompiler* _c, ASDLExprSeq* _decos) {
+	if (!_decos) {
+		return SUCCESS;
+	}
+
+	for (AlifSizeT i = 0; i < ASDL_SEQ_LEN(_decos); i++) {
+		VISIT(_c, Expr, (ExprTy)ASDL_SEQ_GET(_decos, i));
+	}
+	return SUCCESS;
+}
 
 
 
+static AlifIntT codegen_applyDecorators(AlifCompiler* _c, ASDLExprSeq* decos) {
+	if (!decos) {
+		return SUCCESS;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+	for (AlifSizeT i = ASDL_SEQ_LEN(decos) - 1; i > -1; i--) {
+		Location loc = LOC((ExprTy)ASDL_SEQ_GET(decos, i));
+		ADDOP_I(_c, loc, CALL, 0);
+	}
+	return SUCCESS;
+}
 
 
 
@@ -1229,9 +1240,10 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 	RETURN_IF_ERROR(
 		codegen_enterScope(_c, name, scopeType, (void*)_s, _firstLineNo, nullptr, &umd));
 
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
 	AlifSizeT firstInstr = 0;
-	AlifObject* docstring = alifAST_getDocString(body);
-	if (docstring) {
+	if (ste->hasDocstring) {
+		AlifObject* docstring = alifAST_getDocString(body);
 		firstInstr = 1;
 		/* add docstring */
 		//docstring = _alifCompile_cleanDoc(docstring);
@@ -1246,7 +1258,6 @@ static AlifIntT codegen_functionBody(AlifCompiler* _c, StmtTy _s,
 
 	NEW_JUMP_TARGET_LABEL(_c, start);
 	USE_LABEL(_c, start);
-	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
 	bool addStopIterationHandler = ste->coroutine or ste->generator;
 	if (addStopIterationHandler) {
 		RETURN_IF_ERROR(
@@ -1281,7 +1292,7 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 	ArgumentsTy args{};
 	ExprTy returns{};
 	Identifier name{};
-	//ASDLExprSeq* decos{};
+	ASDLExprSeq* decos{};
 	ASDLTypeParamSeq* typeParams{};
 	AlifSizeT funcflags{};
 	AlifIntT firstlineno{};
@@ -1289,24 +1300,24 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 	if (_isAsync) {
 		args = _s->V.asyncFunctionDef.args;
 		//returns = _s->V.asyncFunctionDef.returns;
-		//decos = _s->V.asyncFunctionDef.decoratorList;
+		decos = _s->V.asyncFunctionDef.decoratorList;
 		name = _s->V.asyncFunctionDef.name;
 		typeParams = _s->V.asyncFunctionDef.typeParams;
 	}
 	else {
 		args = _s->V.functionDef.args;
 		returns = _s->V.functionDef.returns;
-		//decos = _s->V.functionDef.decoratorList;
+		decos = _s->V.functionDef.decoratorList;
 		name = _s->V.functionDef.name;
 		typeParams = _s->V.functionDef.typeParams;
 	}
 
-	//RETURN_IF_ERROR(codegen_decorators(_c, decos));
+	RETURN_IF_ERROR(codegen_decorators(_c, decos));
 
 	firstlineno = _s->lineNo;
-	//if (ASDL_SEQ_LEN(decos)) {
-	//	firstlineno = ((ExprTy)ASDL_SEQ_GET(decos, 0))->lineNo;
-	//}
+	if (ASDL_SEQ_LEN(decos)) {
+		firstlineno = ((ExprTy)ASDL_SEQ_GET(decos, 0))->lineNo;
+	}
 
 	Location loc = LOC(_s);
 
@@ -1383,7 +1394,7 @@ static AlifIntT codegen_function(AlifCompiler* _c, StmtTy _s, AlifIntT _isAsync)
 		}
 	}
 
-	//RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
+	RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
 	return codegen_nameOp(_c, loc, name, ExprContext_::Store);
 }
 
@@ -1411,12 +1422,12 @@ static AlifIntT codegen_classBody(AlifCompiler* _c,
 			(void*)_s, _firstLineNo, _s->V.classDef.name, nullptr));
 
 	Location loc = LOCATION(_firstLineNo, _firstLineNo, 0, 0);
-	/* load (global) __name__ ... */
-	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__name__), ExprContext_::Load));
-	/* ... and store it as __module__ */
-	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__module__), ExprContext_::Store));
+	/* load (global) __اسم__ ... */
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(__name__), ExprContext_::Load));
+	/* ... and store it as __وحدة__ */
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(__module__), ExprContext_::Store));
 	ADDOP_LOAD_CONST(_c, loc, QUALNAME(_c));
-	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__qualname__), ExprContext_::Store));
+	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(__qualname__), ExprContext_::Store));
 	ADDOP_LOAD_CONST_NEW(_c, loc, alifLong_fromLong(METADATA(_c)->firstLineno));
 	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_ID(__firstLineno__), ExprContext_::Store));
 	ASDLTypeParamSeq* typeParams = _s->V.classDef.typeParams;
@@ -1507,31 +1518,32 @@ static AlifIntT codegen_classBody(AlifCompiler* _c,
 
 
 static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) {
-	//ASDLExprSeq* decos = _s->V.classDef.decoratorList;
+	ASDLExprSeq* decos = _s->V.classDef.decoratorList;
 
-	//RETURN_IF_ERROR(codegen_decorators(_c, decos));
+	RETURN_IF_ERROR(codegen_decorators(_c, decos));
 
 	AlifIntT firstlineno = _s->lineNo;
-	//if (ASDL_SEQ_LEN(decos)) {
-	//	firstlineno = ((ExprTy)ASDL_SEQ_GET(decos, 0))->lineNo;
-	//}
+	if (ASDL_SEQ_LEN(decos)) {
+		firstlineno = ((ExprTy)ASDL_SEQ_GET(decos, 0))->lineNo;
+	}
 	Location loc = LOC(_s);
 
 	ASDLTypeParamSeq* typeParams = _s->V.classDef.typeParams;
 	AlifIntT isGeneric = ASDL_SEQ_LEN(typeParams) > 0;
-	//if (isGeneric) {
-	//	AlifObject* type_params_name = alifUStr_fromFormat("<generic parameters of %U>",
-	//		_s->V.classDef.name);
-	//	if (!type_params_name) {
-	//		return ERROR;
-	//	}
-	//	AlifIntT ret = codegen_enterScope(_c, type_params_name, COMPILER_SCOPE_ANNOTATIONS,
-	//		(void*)typeParams, firstlineno, _s->V.classDef.name, nullptr);
-	//	ALIF_DECREF(type_params_name);
-	//	RETURN_IF_ERROR(ret);
-	//	RETURN_IF_ERROR_IN_SCOPE(_c, codegen_typeParams(_c, typeParams));
-	//	RETURN_IF_ERROR_IN_SCOPE(_c, compiler_nameOp(_c, loc, &ALIF_STR(typeParams), ExprContext_::Store));
-	//}
+	if (isGeneric) {
+		AlifObject* type_params_name = alifUStr_fromFormat("<generic parameters of %U>",
+			_s->V.classDef.name);
+		if (!type_params_name) {
+			return ERROR;
+		}
+		AlifIntT ret = codegen_enterScope(_c, type_params_name,
+			ScopeType_::Compiler_Scope_Annotations,
+			(void*)typeParams, firstlineno, _s->V.classDef.name, nullptr);
+		ALIF_DECREF(type_params_name);
+		RETURN_IF_ERROR(ret);
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_typeParams(_c, typeParams));
+		RETURN_IF_ERROR_IN_SCOPE(_c, codegen_nameOp(_c, loc, &ALIF_STR(TypeParams), ExprContext_::Store));
+	}
 
 	AlifIntT ret = codegen_classBody(_c, _s, firstlineno);
 	if (isGeneric) {
@@ -1572,7 +1584,7 @@ static AlifIntT codegen_class(AlifCompiler* _c, StmtTy _s) {
 	}
 
 	/* 6. apply decorators */
-	//RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
+	RETURN_IF_ERROR(codegen_applyDecorators(_c, decos));
 
 	/* 7. store into <name> */
 	RETURN_IF_ERROR(codegen_nameOp(_c, loc, _s->V.classDef.name, ExprContext_::Store));
@@ -1590,8 +1602,6 @@ static AlifIntT codegen_typeAliasBody(AlifCompiler* _c, StmtTy _s) {
 	RETURN_IF_ERROR(
 		codegen_setupAnnotationsScope(_c, LOC(_s), _s, name));
 
-
-	RETURN_IF_ERROR(_alifCompiler_addConst(_c, ALIF_NONE));
 	VISIT_IN_SCOPE(_c, Expr, _s->V.typeAlias.val);
 	ADDOP_IN_SCOPE(_c, loc, RETURN_VALUE);
 	AlifCodeObject *co = _alifCompiler_optimizeAndAssemble(_c, 0);
@@ -1886,8 +1896,6 @@ static AlifIntT codegen_lambda(AlifCompiler* _c, ExprTy _e) {
 		codegen_enterScope(_c, &ALIF_STR(AnonLambda), ScopeType_::Compiler_Scope_Lambda,
 			(void *)_e, _e->lineNo, nullptr, &umd));
 
-	RETURN_IF_ERROR(_alifCompiler_addConst(_c, ALIF_NONE));
-
 	VISIT_IN_SCOPE(_c, Expr, _e->V.lambda.body);
 	if (SYMTABLE_ENTRY(_c)->generator) {
 		co = _alifCompiler_optimizeAndAssemble(_c, 0);
@@ -1980,7 +1988,7 @@ static AlifIntT codegen_for(AlifCompiler* _c, StmtTy _s) {
 
 	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_For_Loop, start);
 
-	//VISIT_SEQ(_c, Stmt, _s->V.for_.else_);
+	VISIT_SEQ(_c, Stmt, _s->V.for_.then);
 
 	USE_LABEL(_c, end);
 	return SUCCESS;
@@ -2050,9 +2058,9 @@ static AlifIntT codegen_while(AlifCompiler* _c, StmtTy _s) {
 	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_While_Loop, loop);
 
 	USE_LABEL(_c, anchor);
-	//if (_s->V.while_.else_) {
-	//	VISIT_SEQ(_c, Stmt, _s->V.while_.else_);
-	//}
+	if (_s->V.while_.then) {
+		VISIT_SEQ(_c, Stmt, _s->V.while_.then);
+	}
 
 	USE_LABEL(_c, end);
 	return SUCCESS;
@@ -2064,7 +2072,7 @@ static AlifIntT codegen_return(AlifCompiler* _c, StmtTy _s) {
 	AlifIntT preserve_tos = ((_s->V.return_.val != nullptr) and
 		(_s->V.return_.val->type != ExprK_::ConstantK));
 
-	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
 	if (!alifST_isFunctionLike(ste)) {
 		//return _alifCompiler_error(_c, loc, "'return' outside function");
 	}
@@ -2860,8 +2868,8 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 	case StmtK_::ReturnK:
 		return codegen_return(_c, _s);
 	case StmtK_::DeleteK:
-		VISIT_SEQ(_c, Expr, _s->V.delete_.targets)
-			break;
+		VISIT_SEQ(_c, Expr, _s->V.delete_.targets);
+		break;
 	case StmtK_::AssignK:
 	{
 		AlifSizeT n = ASDL_SEQ_LEN(_s->V.assign.targets);
@@ -2886,20 +2894,20 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 	}
 	//case StmtK_::MatchK:
 	//	return codegen_match(_c, _s);
-	//case StmtK_::RaiseK:
-	//{
-	//	AlifSizeT n = 0;
-	//	if (_s->v.Raise.exc) {
-	//		VISIT(_c, expr, _s->v.Raise.exc);
-	//		n++;
-	//		if (_s->v.Raise.cause) {
-	//			VISIT(_c, expr, _s->v.Raise.cause);
-	//			n++;
-	//		}
-	//	}
-	//	ADDOP_I(_c, LOC(_s), RAISE_VARARGS, (AlifIntT)n);
-	//	break;
-	//}
+	case StmtK_::RaiseK:
+	{
+		AlifSizeT n = 0;
+		if (_s->V.raise.exc) {
+			VISIT(_c, Expr, _s->V.raise.exc);
+			n++;
+			if (_s->V.raise.cause) {
+				VISIT(_c, Expr, _s->V.raise.cause);
+				n++;
+			}
+		}
+		ADDOP_I(_c, LOC(_s), RAISE_VARARGS, (AlifIntT)n);
+		break;
+	}
 	case StmtK_::TryK:
 		return codegen_try(_c, _s);
 	case StmtK_::TryStarK:
@@ -2930,14 +2938,14 @@ static AlifIntT codegen_visitStmt(AlifCompiler* _c, StmtTy _s) {
 	{
 		return codegen_continue(_c, LOC(_s));
 	}
-	//case StmtK_::WithK:
-	//	return codegen_with(_c, _s, 0);
-	//case StmtK_::AsyncFunctionDefK:
-	//	return codegen_function(_c, _s, 1);
+	case StmtK_::WithK:
+		return codegen_with(_c, _s, 0);
+	case StmtK_::AsyncFunctionDefK:
+		return codegen_function(_c, _s, 1);
 	//case StmtK_::AsyncWithK:
-	//	return codegen_async_with(_c, _s, 0);
+	//	return codegen_asyncWith(_c, _s, 0);
 	//case StmtK_::AsyncForK:
-	//	return codegen_async_for(_c, _s);
+	//	return codegen_asyncFor(_c, _s);
 	}
 
 	return SUCCESS;
@@ -2951,8 +2959,6 @@ static AlifIntT unaryop(UnaryOp_ _op) {
 		return UNARY_INVERT;
 	case UnaryOp_::USub:
 		return UNARY_NEGATIVE;
-	case UnaryOp_::Sqrt: //* alif
-		return UNARY_SQRT;
 	default:
 		alifErr_format(_alifExcSystemError_,
 			"عملية احادية %d يجب أن لا يكون مسموح بها", _op);
@@ -3016,7 +3022,7 @@ static AlifIntT addop_binary(AlifCompiler* _c, Location _loc,
 
 
 static AlifIntT codegen_addOpYield(AlifCompiler* _c, Location _loc) {
-	SymTableEntry* ste = SYMTABLE_ENTRY(_c);
+	AlifSTEntryObject* ste = SYMTABLE_ENTRY(_c);
 	if (ste->generator and ste->coroutine) {
 		ADDOP_I(_c, _loc, CALL_INTRINSIC_1, INTRINSIC_ASYNC_GEN_WRAP);
 	}
@@ -3627,7 +3633,7 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 	if (e->type != ExprK_::CallK or
 		e->V.call.func->type != ExprK_::NameK or
 		!alifUStr_equalToUTF8(e->V.call.func->V.name.name, "اصل") or
-		alifUStr_equalToASCIIString(_attr->V.attribute.attr, "__class__") or
+		_alifUStr_equalToASCIIString(_attr->V.attribute.attr, "__class__") or
 		ASDL_SEQ_LEN(e->V.call.keywords) != 0) {
 		return 0;
 	}
@@ -3676,8 +3682,6 @@ static AlifIntT canOptimize_superCall(AlifCompiler* _c, ExprTy _attr) { // 4617
 }
 
 
-
-
 static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) {
 	Location loc = LOC(_e);
 
@@ -3705,6 +3709,7 @@ static AlifIntT loadArgs_forSuper(AlifCompiler* _c, ExprTy _e) {
 
 	return SUCCESS;
 }
+
 
 
 
@@ -3776,10 +3781,10 @@ static AlifIntT maybeOptimize_methodCall(AlifCompiler* _c, ExprTy _e) {
 	/* Alright, we can optimize the code. */
 	Location loc = LOC(meth);
 
-	//ret = canOptimize_superCall(_c, meth);
+	ret = canOptimize_superCall(_c, meth);
 	RETURN_IF_ERROR(ret);
 	if (ret) {
-		//RETURN_IF_ERROR(loadArgs_forSuper(_c, meth->V.attribute.val));
+		RETURN_IF_ERROR(loadArgs_forSuper(_c, meth->V.attribute.val));
 		AlifIntT opcode = ASDL_SEQ_LEN(meth->V.attribute.val->V.call.args) ?
 			LOAD_SUPER_METHOD : LOAD_ZERO_SUPER_METHOD;
 		ADDOP_NAME(_c, loc, opcode, meth->V.attribute.attr, names);
@@ -4346,10 +4351,10 @@ static AlifIntT codegen_asyncComprehensionGenerator(AlifCompiler* _c, Location _
 
 
 static AlifIntT codegen_pushInlinedComprehensionLocals(AlifCompiler* _c, Location _loc,
-	SymTableEntry* _comp, AlifCompilerInlinedComprehensionState* _state) {
+	AlifSTEntryObject* _comp, AlifCompilerInlinedComprehensionState* _state) {
 	AlifIntT inClassBlock = (SYMTABLE_ENTRY(_c)->type == BlockType_::Class_Block)
 		and !_alifCompiler_isInInlinedComp(_c);
-	SymTableEntry* outer = SYMTABLE_ENTRY(_c);
+	AlifSTEntryObject* outer = SYMTABLE_ENTRY(_c);
 	AlifObject* k{}, * v{};
 	AlifSizeT pos = 0;
 	while (alifDict_next(_comp->symbols, &pos, &k, &v)) {
@@ -4414,7 +4419,7 @@ static AlifIntT codegen_pushInlinedComprehensionLocals(AlifCompiler* _c, Locatio
 
 
 static AlifIntT pushInlined_comprehensionState(AlifCompiler* _c, Location _loc,
-	SymTableEntry* _comp, AlifCompilerInlinedComprehensionState* _state) {
+	AlifSTEntryObject* _comp, AlifCompilerInlinedComprehensionState* _state) {
 	RETURN_IF_ERROR(
 		_alifCompiler_tweakInlinedComprehensionScopes(_c, _loc, _comp, _state));
 	RETURN_IF_ERROR(
@@ -4505,7 +4510,7 @@ static AlifIntT codegen_comprehension(AlifCompiler* _c, ExprTy _e, AlifIntT _typ
 	AlifCompilerInlinedComprehensionState inline_state =
 	{ nullptr, nullptr, nullptr, NO_LABEL };
 	ComprehensionTy outermost{};
-	SymTableEntry* entry = _alifSymtable_lookup(SYMTABLE(_c), (void*)_e);
+	AlifSTEntryObject* entry = _alifSymtable_lookup(SYMTABLE(_c), (void*)_e);
 	if (entry == nullptr) {
 		goto error;
 	}
@@ -4663,9 +4668,28 @@ static AlifIntT codegen_visitKeyword(AlifCompiler* _c, KeywordTy _k) {
 	return SUCCESS;
 }
 
+static AlifIntT codegen_withExceptFinish(AlifCompiler* _c, JumpTargetLabel _cleanup) {
+	NEW_JUMP_TARGET_LABEL(_c, suppress);
+	ADDOP(_c, _noLocation_, TO_BOOL);
+	ADDOP_JUMP(_c, _noLocation_, POP_JUMP_IF_TRUE, suppress);
+	ADDOP_I(_c, _noLocation_, RERAISE, 2);
 
+	USE_LABEL(_c, suppress);
+	ADDOP(_c, _noLocation_, POP_TOP); /* exc_value */
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	ADDOP(_c, _noLocation_, POP_EXCEPT);
+	ADDOP(_c, _noLocation_, POP_TOP);
+	ADDOP(_c, _noLocation_, POP_TOP);
+	ADDOP(_c, _noLocation_, POP_TOP);
+	NEW_JUMP_TARGET_LABEL(_c, exit);
+	ADDOP_JUMP(_c, _noLocation_, JUMP_NO_INTERRUPT, exit);
 
+	USE_LABEL(_c, _cleanup);
+	POP_EXCEPT_AND_RERAISE(_c, _noLocation_);
 
+	USE_LABEL(_c, exit);
+	return SUCCESS;
+}
 
 
 
@@ -4797,83 +4821,71 @@ static AlifIntT codegen_visitKeyword(AlifCompiler* _c, KeywordTy _k) {
 
 
 
+static AlifIntT codegen_with(AlifCompiler* _c, StmtTy _s, AlifIntT _pos) {
+	WithItemTy item = ASDL_SEQ_GET(_s->V.with_.items, _pos);
 
+	NEW_JUMP_TARGET_LABEL(_c, block);
+	NEW_JUMP_TARGET_LABEL(_c, final);
+	NEW_JUMP_TARGET_LABEL(_c, exit);
+	NEW_JUMP_TARGET_LABEL(_c, cleanup);
 
+	/* Evaluate EXPR */
+	VISIT(_c, Expr, item->contextExpr);
+	/* Will push bound __exit__ */
+	Location loc = LOC(item->contextExpr);
+	ADDOP_I(_c, loc, COPY, 1);
+	ADDOP_I(_c, loc, LOAD_SPECIAL, SPECIAL___EXIT__);
+	ADDOP_I(_c, loc, SWAP, 2);
+	ADDOP_I(_c, loc, SWAP, 3);
+	ADDOP_I(_c, loc, LOAD_SPECIAL, SPECIAL___ENTER__);
+	ADDOP_I(_c, loc, CALL, 0);
+	ADDOP_JUMP(_c, loc, SETUP_WITH, final);
 
+	/* SETUP_WITH pushes a finally block. */
+	USE_LABEL(_c, block);
+	RETURN_IF_ERROR(_alifCompiler_pushFBlock(_c, loc,
+		AlifCompileFBlockType::Compiler_FBlock_With, block, final, _s));
 
+	if (item->optionalVars) {
+		VISIT(_c, Expr, item->optionalVars);
+	}
+	else {
+		/* Discard result from context.__ادخل__() */
+		ADDOP(_c, loc, POP_TOP);
+	}
 
+	_pos++;
+	if (_pos == ASDL_SEQ_LEN(_s->V.with_.items)) {
+		/* BLOCK code */
+		VISIT_SEQ(_c, Stmt, _s->V.with_.body);
+	}
+	else {
+		RETURN_IF_ERROR(codegen_with(_c, _s, _pos));
+	}
 
+	ADDOP(_c, _noLocation_, POP_BLOCK);
+	_alifCompiler_popFBlock(_c, AlifCompileFBlockType::Compiler_FBlock_With, block);
 
+	/* End of body; start the cleanup. */
 
+	/* For successful outcome:
+	* استدعي __اخرج__(عدم, عدم, عدم)
+	*/
+	RETURN_IF_ERROR(codegen_callExitWithNones(_c, loc));
+	ADDOP(_c, loc, POP_TOP);
+	ADDOP_JUMP(_c, loc, JUMP, exit);
 
+	/* For exceptional outcome: */
+	USE_LABEL(_c, final);
 
+	ADDOP_JUMP(_c, loc, SETUP_CLEANUP, cleanup);
+	ADDOP(_c, loc, PUSH_EXC_INFO);
+	ADDOP(_c, loc, WITH_EXCEPT_START);
+	RETURN_IF_ERROR(codegen_withExceptFinish(_c, cleanup));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	USE_LABEL(_c, exit);
+	return SUCCESS;
+}
 
 
 
@@ -4923,7 +4935,7 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 		return codegen_dictComp(_c, _e);
 	case ExprK_::YieldK:
 		if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-			return _alifCompiler_error(_c, loc, "'ولد' خارج الدالة");
+			return _alifCompiler_error(_c, loc, "'انتج' خارج الدالة");
 		}
 		if (_e->V.yield.val) {
 			VISIT(_c, Expr, _e->V.yield.val);
@@ -4935,10 +4947,10 @@ static AlifIntT codegen_visitExpr(AlifCompiler* _c, ExprTy _e) {
 		break;
 	case ExprK_::YieldFromK:
 		if (!alifST_isFunctionLike(SYMTABLE_ENTRY(_c))) {
-			return _alifCompiler_error(_c, loc, "'ولد من' خارج الدالة");
+			return _alifCompiler_error(_c, loc, "'انتج من' خارج الدالة");
 		}
 		if (SCOPE_TYPE(_c) == ScopeType_::Compiler_Scope_Async_Function) {
-			return _alifCompiler_error(_c, loc, "'ولد من' داخل دالة متزامنة");
+			return _alifCompiler_error(_c, loc, "'انتج من' داخل دالة متزامنة");
 		}
 		VISIT(_c, Expr, _e->V.yieldFrom.val);
 		ADDOP(_c, loc, GET_YIELD_FROM_ITER);

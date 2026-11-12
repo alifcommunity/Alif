@@ -68,7 +68,7 @@ ExprTy alifParserEngine_joinNamesWithDot(AlifParser* _p,
 	if (!str_) return nullptr;
 
 	AlifInterpreter* interp = _alifInterpreter_get();
-	alifUStr_internImmortal(interp, &str_);
+	_alifUStr_internImmortal(interp, &str_);
 	if (alifASTMem_listAddAlifObj(_p->astMem, str_) < 0) {
 		ALIF_DECREF(str_);
 		return nullptr;
@@ -519,6 +519,44 @@ static AlifIntT seqNumber_ofStarExprs(ASDLSeq* _seq) { // 777
 	return n_;
 }
 
+
+StmtTy alifParserEngine_functionDefDecorators(AlifParser* _p,
+	ASDLExprSeq* _decorators, StmtTy _functionDef) { // 722
+	if (_functionDef->type == AsyncFunctionDefK) {
+		return alifAST_asyncFunctionDef(
+			_functionDef->V.asyncFunctionDef.name,
+			_functionDef->V.asyncFunctionDef.args,
+			_functionDef->V.asyncFunctionDef.body, _decorators,
+			_functionDef->V.asyncFunctionDef.returns,
+			//_functionDef->V.asyncFunctionDef.typeComment,
+			//_functionDef->V.asyncFunctionDef.typeParams,
+			_functionDef->lineNo, _functionDef->colOffset,
+			_functionDef->endLineNo, _functionDef->endColOffset, _p->astMem);
+	}
+	
+	return alifAST_functionDef(
+		_functionDef->V.functionDef.name,
+		_functionDef->V.functionDef.args,
+		_functionDef->V.functionDef.body, _decorators,
+		_functionDef->V.functionDef.returns,
+		//_functionDef->V.functionDef.typeComment,
+		//_functionDef->V.functionDef.typeParams,
+		_functionDef->lineNo, _functionDef->colOffset,
+		_functionDef->endLineNo, _functionDef->endColOffset, _p->astMem);
+}
+
+StmtTy alifParserEngine_classDefDecorators(AlifParser* _p,
+	ASDLExprSeq* _decorators, StmtTy _classDef) { // 750
+	return alifAST_classDef(
+		_classDef->V.classDef.name,
+		_classDef->V.classDef.bases, _classDef->V.classDef.keywords,
+		_classDef->V.classDef.body, _decorators,
+		//_classDef->V.classDef.typeParams,
+		_classDef->lineNo, _classDef->colOffset, _classDef->endLineNo,
+		_classDef->endColOffset, _p->astMem);
+}
+
+
 KeywordOrStar* alifParserEngine_keywordOrStarred(AlifParser* _p,
 	void* _element, AlifIntT _isKeyword) { // 764
 
@@ -724,7 +762,7 @@ const char* _alifParserEngine_getExprName(ExprTy _e) { // 1028
 		return "تعبير توليدي";
 	case YieldK:
 	case YieldFromK:
-		return "تعبير ولد";
+		return "تعبير انتج";
 	case AwaitK:
 		return "تعبير انتظر";
 	case ListCompK:

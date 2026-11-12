@@ -8,6 +8,7 @@
 #include "AlifCore_FreeList.h"
 #include "AlifCore_Import.h"
 #include "AlifCore_PathConfig.h"
+#include "AlifCore_Errors.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_LifeCycle.h"
 #include "AlifCore_Memory.h"
@@ -23,7 +24,7 @@
 #endif
 
 
-//#define PUTS(_fd, _str) (void)_alifWrite_noRaise(_fd, _str, (AlifIntT)strlen(_str))
+#define PUTS(_fd, _str) (void)_alif_writeNoRaise(_fd, _str, (AlifIntT)strlen(_str))
 
 
 static AlifStatus init_setBuiltinsOpen(void); // 72
@@ -246,7 +247,7 @@ static AlifStatus alifCore_initRuntime(AlifRuntime* _runtime, const AlifConfig* 
 	AlifStatus status = alifConfig_write(_config, _runtime);
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	status = alifImport_init();
+	status = _alifImport_init();
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	status = alifInterpreter_enable(_runtime);
@@ -316,7 +317,7 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _runtime,
 	AlifStatus status{};
 	AlifInterpreter* interpreter{};
 
-	status = alifInterpreter_new(nullptr, &interpreter);
+	status = _alifInterpreterState_new(nullptr, &interpreter);
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	interpreter->ready = 1;
@@ -346,7 +347,7 @@ static AlifStatus alifCore_createInterpreter(AlifRuntime* _runtime,
 		return ALIFSTATUS_NO_MEMORY();
 	}
 
-	AlifThread* thread = alifThreadState_new(interpreter);
+	AlifThread* thread = _alifThreadState_new(interpreter);
 
 	if (thread == nullptr) {
 		return ALIFSTATUS_ERR("can't make first thread");
@@ -449,7 +450,7 @@ static AlifStatus alifCore_builtinsInit(AlifThread* _thread) { // 785
 	if (biMod == nullptr) goto error;
 
 	modules = _alifImport_getModules(interp);
-	if (_alifImport_fixupBuiltin(_thread, biMod, "builtins", modules) < 0) {
+	if (_alifImport_fixupBuiltin(_thread, biMod, "الضمنيات", modules) < 0) {
 		goto error;
 	}
 
@@ -511,13 +512,13 @@ static AlifStatus alifCore_interpreterInit(AlifThread* _thread) { // 843
 	status = alifCore_builtinsInit(_thread);
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
-	config = &interpreter->config;
+	config = _alifInterpreterState_getConfig(interpreter);
 
 	status = _alifImport_initCore(_thread, sysMod, config->installImportLib);
 	if (ALIFSTATUS_EXCEPTION(status)) goto done;
 
 done:
-	//ALIF_XDECREF(sysmod);
+	ALIF_XDECREF(sysMod);
 	return status;
 
 }
@@ -661,7 +662,7 @@ static AlifStatus initInterpreter_main(AlifThread* _thread) { // 1156
 	AlifStatus status{};
 	AlifIntT isMainInterpreter = alif_isMainInterpreter(_thread->interpreter);
 	AlifInterpreter* interpreter = _thread->interpreter;
-	const AlifConfig* config = alifInterpreter_getConfig(interpreter);
+	const AlifConfig* config = _alifInterpreterState_getConfig(interpreter);
 
 	if (!config->installImportLib) {
 		if (isMainInterpreter) {
@@ -677,8 +678,8 @@ static AlifStatus initInterpreter_main(AlifThread* _thread) { // 1156
 		return ALIFSTATUS_ERR("failed to update the Alif config");
 	}
 
-	//status = alifImport_initExternal(_thread);
-	//if (ALIFSTATUS_EXCEPTION(status)) return status;
+	status = _alifImport_initExternal(_thread);
+	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
 	status = _alifUnicode_initEncodings(_thread);
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
@@ -688,8 +689,8 @@ static AlifStatus initInterpreter_main(AlifThread* _thread) { // 1156
 			//return ALIFSTATUS_ERR("can't initialize signals");
 		}
 
-		//if (config_->tracemalloc) {
-		//	if (alifTraceMalloc_start(config_->tracemalloc) < 0) {
+		//if (config->tracemalloc) {
+		//	if (alifTraceMalloc_start(config->tracemalloc) < 0) {
 		//		return ALIFSTATUS_ERR("can't start tracemalloc");
 		//	}
 		//}
@@ -744,7 +745,7 @@ AlifStatus alif_initFromConfig(const AlifConfig* _config) { // 1383
 	status = alifInit_core(runtime, _config, &thread); //* here
 	if (ALIFSTATUS_EXCEPTION(status)) return status;
 
-	_config = alifInterpreter_getConfig(thread->interpreter);
+	_config = _alifInterpreterState_getConfig(thread->interpreter);
 
 	if (_config->initMain) {
 		status = alifInit_main(thread);
@@ -907,7 +908,7 @@ static AlifStatus init_setBuiltinsOpen(void) { // 2709
 	AlifObject* bimod = nullptr;
 	AlifStatus res = ALIFSTATUS_OK();
 
-	if (!(bimod = alifImport_importModule("builtins"))) {
+	if (!(bimod = alifImport_importModule("الضمنيات"))) {
 		goto error;
 	}
 
@@ -933,13 +934,13 @@ done:
 
 
 
-static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
+static AlifStatus init_sysStreams(AlifThread* _thread) { // 2772
 	AlifObject* iomod = nullptr;
 	AlifObject* std = nullptr;
 	AlifIntT fd{};
 	AlifObject* encodingAttr{};
 	AlifStatus res = ALIFSTATUS_OK();
-	const AlifConfig* config = alifInterpreter_getConfig(_thread->interpreter);
+	const AlifConfig* config = _alifInterpreterState_getConfig(_thread->interpreter);
 
 #ifndef _WINDOWS
 	class AlifStatStruct sb;
@@ -964,18 +965,18 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	_alifSys_setAttr(&ALIF_ID(Stdin), std);
 	ALIF_DECREF(std);
 
-	///* Set sys.stdout */
+	/* Set النظام.مخرجات */
 	fd = fileno(stdout);
 	std = create_stdio(config, iomod, fd, 1, "<stdout>",
 		config->stdioEncoding,
 		config->stdioErrors);
 	if (std == nullptr)
 		goto error;
-	alifSys_setObject("__stdout__", std);
-	_alifSys_setAttr(&ALIF_ID(Stdout), std);
+	alifSys_setObject("__مخرجات__", std);
+	_alifSys_setAttr(&ALIF_STR(Stdout), std);
 	ALIF_DECREF(std);
 
-	///* Set sys.stderr, replaces the preliminary stderr */
+	/* Set sys.stderr, replaces the preliminary stderr */
 	fd = fileno(stderr);
 	std = create_stdio(config, iomod, fd, 1, "<stderr>",
 		config->stdioEncoding,
@@ -992,7 +993,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 		}
 		ALIF_DECREF(encodingAttr);
 	}
-	//_alifErr_clear(_thread);  /* Not a fatal error if codec isn't available */
+	_alifErr_clear(_thread);  /* Not a fatal error if codec isn't available */
 
 	if (alifSys_setObject("__stderr__", std) < 0) {
 		ALIF_DECREF(std);
@@ -1007,7 +1008,7 @@ static AlifStatus init_sysStreams(AlifThread* _thread) { // 2742
 	goto done;
 
 error:
-	// res = ALIFSTATUS_ERR("can't initialize sys standard streams");
+	 res = ALIFSTATUS_ERR("can't initialize sys standard streams");
 
 done:
 	ALIF_XDECREF(iomod);
@@ -1067,18 +1068,18 @@ static void ALIF_NO_RETURN fatal_error(AlifIntT _fd, AlifIntT _header,
 	reEntrant = 1;
 
 	if (_header) {
-		//PUTS(_fd, "Fatal Alif error: ");
-		//if (_prefix) {
-		//	PUTS(_fd, _prefix);
-		//	PUTS(_fd, ": ");
-		//}
-		//if (_msg) {
-		//	PUTS(_fd, _msg);
-		//}
-		//else {
-		//	PUTS(_fd, "<message not set>");
-		//}
-		//PUTS(_fd, "\n");
+		PUTS(_fd, "Fatal Alif error: ");
+		if (_prefix) {
+			PUTS(_fd, _prefix);
+			PUTS(_fd, ": ");
+		}
+		if (_msg) {
+			PUTS(_fd, _msg);
+		}
+		else {
+			PUTS(_fd, "<message not set>");
+		}
+		PUTS(_fd, "\n");
 	}
 
 	//AlifRuntime* runtime = &_alifRuntime_;
@@ -1119,11 +1120,40 @@ static void ALIF_NO_RETURN fatal_error(AlifIntT _fd, AlifIntT _header,
 	fatalError_exit(_status);
 }
 
+#undef ALIF_FATALERROR
+
+
 void ALIF_NO_RETURN alif_fatalError(const char* _msg) { // 3252
 	fatal_error(fileno(stderr), 1, nullptr, _msg, -1);
 }
 
 
+void ALIF_NO_RETURN _alif_fatalErrorFormat(const char* func,
+	const char* format, ...) { // 3295
+	static int reentrant = 0;
+	if (reentrant) {
+		fatalError_exit(-1);
+	}
+	reentrant = 1;
+
+	FILE* stream = stderr;
+	const int fd = fileno(stream);
+	PUTS(fd, "Fatal Alif error: ");
+	if (func) {
+		PUTS(fd, func);
+		PUTS(fd, ": ");
+	}
+
+	va_list vargs;
+	va_start(vargs, format);
+	vfprintf(stream, format, vargs);
+	va_end(vargs);
+
+	fputs("\n", stream);
+	fflush(stream);
+
+	fatal_error(fd, 0, nullptr, nullptr, -1);
+}
 
 
 void ALIF_NO_RETURN alif_exitStatusException(AlifStatus _status) { // 3306

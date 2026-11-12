@@ -36,8 +36,14 @@ AlifObject* alifFloat_fromDouble(double _fVal) { // 123
 	return (AlifObject*)op_;
 }
 
+AlifObject* _alifFloat_fromDoubleConsumeInputs(AlifStackRef _left,
+	AlifStackRef _right, double _value) { // 139
+	ALIFSTACKREF_CLOSE(_left);
+	ALIFSTACKREF_CLOSE(_right);
+	return alifFloat_fromDouble(_value);
+}
 
-static AlifObject* float_fromStringInner(const char* s, AlifSizeT len, void* obj) { // 137
+static AlifObject* float_fromStringInner(const char* s, AlifSizeT len, void* obj) { // 172
 	double x{};
 	const char* end{};
 	const char* last = s + len;
@@ -566,29 +572,6 @@ static AlifObject* float_abs(AlifFloatObject* _v) { // 827
 	return alifFloat_fromDouble(fabs(_v->val));
 }
 
-static AlifObject* float_sqrt(AlifObject* _v) { //* alif
-	AlifFloatObject* a_{}, * res{};
-
-	a_ = (AlifFloatObject*)ALIF_NEWREF(_v);
-
-	if (a_->val < 0) {
-		return nullptr;
-	}
-
-	double val = alifFloat_asDouble((AlifObject*)a_);
-
-	double sqrtVal = sqrt(val);
-
-	res = (AlifFloatObject*)alifMem_objAlloc(sizeof(AlifFloatObject) + sizeof(double));
-	if (res == nullptr) return nullptr;
-
-	alifObject_init((AlifObject*)res, &_alifFloatType_);
-	res->val = sqrtVal;
-
-	ALIF_DECREF(a_);
-	return (AlifObject*)res;
-}
-
 static AlifIntT float_bool(AlifFloatObject* _v) { // 833
 	return _v->val != 0.0;
 }
@@ -600,6 +583,105 @@ static AlifObject* float___trunc__Impl(AlifObject* _self) { // 872
 }
 
 
+// 943
+#if _ALIF_SHORT_FLOAT_REPR == 1
+/* version of double_round that uses the correctly-rounded string<->double
+conversions from alif/doubleToAscii.cpp */
+
+static AlifObject* double_round(double x, AlifIntT ndigits) { // 947
+
+	double rounded{};
+	AlifSizeT buflen{}, mybuflen = 100;
+	char* buf{}, * buf_end{}, shortbuf[100]{}, * mybuf = shortbuf;
+	int decpt{}, sign{};
+	AlifObject* result = nullptr;
+	_ALIF_SET_53BIT_PRECISION_HEADER;
+
+	/* round to a decimal string */
+	_ALIF_SET_53BIT_PRECISION_START;
+	buf = _alif_dgDoubletoASCII(x, 3, ndigits, &decpt, &sign, &buf_end);
+	_ALIF_SET_53BIT_PRECISION_END;
+	if (buf == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	/* Get new buffer if shortbuf is too small.  Space needed <= buf_end -
+	buf + 8: (1 extra for '0', 1 for sign, 5 for exp, 1 for '\0').  */
+	buflen = buf_end - buf;
+	if (buflen + 8 > mybuflen) {
+		mybuflen = buflen + 8;
+		mybuf = (char*)alifMem_dataAlloc(mybuflen);
+		if (mybuf == nullptr) {
+			//alifErr_noMemory();
+			goto exit;
+		}
+	}
+	/* copy buf to mybuf, adding exponent, sign and leading 0 */
+	alifOS_snprintf(mybuf, mybuflen, "%s0%se%d", (sign ? "-" : ""),
+		buf, decpt - (int)buflen);
+
+	/* and convert the resulting string back to a double */
+	errno = 0;
+	_ALIF_SET_53BIT_PRECISION_START;
+	rounded = _alif_dgStrToDouble(mybuf, nullptr);
+	_ALIF_SET_53BIT_PRECISION_END;
+	if (errno == ERANGE && fabs(rounded) >= 1.)
+		alifErr_setString(_alifExcOverflowError_,
+			"القيمة المقربة كبيرة جدا ولا يمكن عرضها");
+	else
+		result = alifFloat_fromDouble(rounded);
+
+	/* done computing value;  now clean up */
+	if (mybuf != shortbuf)
+		alifMem_dataFree(mybuf);
+exit:
+	_alif_dgFreeDoubleToASCII(buf);
+	return result;
+}
+
+#else  // _ALIF_SHORT_FLOAT_REPR == 0
+
+#endif // 1050
+
+
+
+
+static AlifObject* float___round__Impl(AlifObject* _self,
+	AlifObject* _oNDigits) { // 1065
+	double x{}, rounded{};
+	AlifSizeT ndigits;
+
+	x = alifFloat_asDouble(_self);
+	if (_oNDigits == ALIF_NONE) {
+		rounded = round(x);
+		if (fabs(x - rounded) == 0.5)
+			rounded = 2.0 * round(x / 2.0);
+		return alifLong_fromDouble(rounded);
+	}
+
+	ndigits = alifNumber_asSizeT(_oNDigits, nullptr);
+	if (ndigits == -1 and alifErr_occurred())
+		return nullptr;
+
+	/* nans and infinities round to themselves */
+	if (!isfinite(x))
+		return alifFloat_fromDouble(x);
+
+#define NDIGITS_MAX ((int)((DBL_MANT_DIG-DBL_MIN_EXP) * 0.30103))
+#define NDIGITS_MIN (-(int)((DBL_MAX_EXP + 1) * 0.30103))
+	if (ndigits > NDIGITS_MAX)
+		/* return x */
+		return alifFloat_fromDouble(x);
+	else if (ndigits < NDIGITS_MIN)
+		/* return 0.0, but with sign of x */
+		return alifFloat_fromDouble(0.0 * x);
+	else
+		/* finite x, and ndigits is not unreasonably large */
+		return double_round(x, (int)ndigits);
+#undef NDIGITS_MAX
+#undef NDIGITS_MIN
+}
 
 static AlifObject* float_float(AlifObject* _v) { // 1079
 	if (ALIFFLOAT_CHECKEXACT(_v)) {
@@ -693,7 +775,7 @@ static AlifMethodDef _floatMethods_[] = { // 1781
 	//FLOAT___TRUNC___METHODDEF
 	//FLOAT___FLOOR___METHODDEF
 	//FLOAT___CEIL___METHODDEF
-	//FLOAT___ROUND___METHODDEF
+	FLOAT___ROUND___METHODDEF
 	//FLOAT_AS_INTEGER_RATIO_METHODDEF
 	//FLOAT_FROMHEX_METHODDEF
 	//FLOAT_HEX_METHODDEF
@@ -715,7 +797,6 @@ static AlifNumberMethods _floatAsNumber_ = { // 1811
 	.negative = (UnaryFunc)float_neg,
 	.positive = float_float,
 	.absolute = (UnaryFunc)float_abs,
-	.sqrt = (UnaryFunc)float_sqrt,
 	.bool_ = (Inquiry)float_bool,
 	.invert = 0,
 	.lshift = 0,
@@ -756,6 +837,7 @@ AlifTypeObject _alifFloatType_ = { // 1847
 		_ALIF_TPFLAGS_MATCH_SELF,
 	.richCompare = float_richCompare,
 	.methods = _floatMethods_,
+	.versionTag = _ALIF_TYPE_VERSION_FLOAT,
 	.vectorCall = (VectorCallFunc)float_vectorCall,
 };
 

@@ -51,7 +51,7 @@ static inline AlifIntT alifObjectGC_isTracked(AlifObject* _op) { // 82
 }
 #define ALIFOBJECT_GC_IS_TRACKED(_op) alifObjectGC_isTracked(ALIF_CAST(AlifObject*, _op))
 
-static inline AlifIntT alifObject_gcMayBeTracked(AlifObject* _obj) { // 94
+static inline AlifIntT _alifObject_gcMayBeTracked(AlifObject* _obj) { // 94
 	if (!alifObject_isGC(_obj)) {
 		return 0;
 	}
@@ -149,3 +149,6 @@ extern void alifGC_initState(GCRuntimeState*); // 364
 
 
 extern void alif_scheduleGC(AlifThread*); // 381
+
+
+//extern void _alifGC_visitObjectsWorldStopped(AlifInterpreter*, GCVisitObjectsT, void*);

@@ -20,7 +20,7 @@ static AlifIntT tok_readlineRaw(TokenState* _tokState) { // 55
 		AlifIntT nChars = (AlifIntT)(_tokState->end - _tokState->inp);
 		AlifUSizeT lineSize{};
 
-		char* line = alifUniversal_newLineFGetsWithSize(_tokState->inp, nChars, _tokState->fp, nullptr, &lineSize);
+		char* line = _alifUniversal_newLineFGetsWithSize(_tokState->inp, nChars, _tokState->fp, nullptr, &lineSize);
 		if (line == nullptr) {
 			return 1;
 		}

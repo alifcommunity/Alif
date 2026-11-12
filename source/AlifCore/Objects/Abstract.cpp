@@ -84,7 +84,7 @@ AlifSizeT alifObject_lengthHint(AlifObject* _o,
 			return res;
 		}
 	}
-	hint = alifObject_lookupSpecial(_o, &ALIF_ID(__lengthHint__));
+	hint = _alifObject_lookupSpecial(_o, &ALIF_ID(__lengthHint__));
 	if (hint == nullptr) {
 		if (alifErr_occurred()) {
 			return -1;
@@ -159,7 +159,7 @@ AlifObject* alifObject_getItem(AlifObject* _o, AlifObject* _key) { // 150
 			return nullptr;
 		}
 		if (meth and meth != ALIF_NONE) {
-			//result = alifObject_callOneArg(meth, _key);
+			result = alifObject_callOneArg(meth, _key);
 			ALIF_DECREF(meth);
 			return result;
 		}
@@ -184,9 +184,9 @@ AlifIntT alifMapping_getOptionalItem(AlifObject* _obj,
 	if (*_result) {
 		return 1;
 	}
-	//if (!alifErr_exceptionMatches(_alifExcKeyError_)) {
-	//	return -1;
-	//}
+	if (!alifErr_exceptionMatches(_alifExcKeyError_)) {
+		return -1;
+	}
 	alifErr_clear();
 	return 0;
 }
@@ -274,7 +274,7 @@ AlifIntT alifObject_getBuffer(AlifObject* obj, AlifBuffer* view, AlifIntT flags)
 
 	if (pb == nullptr or pb->getBuffer == nullptr) {
 		alifErr_format(_alifExcTypeError_,
-			"من المفترض كائن من نوع بايت, وليس '%.100s'",
+			"من المفترض كائن من نوع ثمانيات, وليس '%.100s'",
 			ALIF_TYPE(obj)->name);
 		return -1;
 	}
@@ -439,7 +439,7 @@ AlifObject* alifObject_format(AlifObject* _obj, AlifObject* _formatSpec) { // 83
 	}
 
 	/* Find the (unbound!) __تنسيق__ method */
-	meth = alifObject_lookupSpecial(_obj, &ALIF_STR(__format__));
+	meth = _alifObject_lookupSpecial(_obj, &ALIF_STR(__format__));
 	if (meth == nullptr) {
 		AlifThread* thread = _alifThread_get();
 		if (!_alifErr_occurred(thread)) {
@@ -669,7 +669,8 @@ AlifObject* alifNumber_add(AlifObject* _v, AlifObject* _w) { // 1124
 	return binOp_typeError(_v, _w, "+");
 }
 
-static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc, AlifObject* _seq, AlifObject* _n) { // 1143
+static AlifObject* sequence_repeat(SizeArgFunc _repeatFunc,
+	AlifObject* _seq, AlifObject* _n) { // 1143
 	AlifSizeT count{};
 	if (_alifIndex_check(_n)) {
 		count = alifNumber_asSizeT(_n, _alifExcOverflowError_);
@@ -735,11 +736,11 @@ static AlifObject* binary_iop1(AlifObject* _v, AlifObject* _w,
 #define BINARY_IOP1(_v, _w, _iopSlot, _opSlot) binary_iop1(_v, _w, _iopSlot, _opSlot) // 1241
 
 static AlifObject* binary_iop(AlifObject* _v, AlifObject* _w,
-	const AlifIntT _iopSlot, const AlifIntT _opSlot) { // 1246
+	const AlifIntT _iopSlot, const AlifIntT _opSlot, const char* _opName) { // 1246
 	AlifObject* result = BINARY_IOP1(_v, _w, _iopSlot, _opSlot);
 	if (result == ALIF_NOTIMPLEMENTED) {
 		ALIF_DECREF(result);
-		//return binOp_typeError(_v, _w, opName);
+		return binOp_typeError(_v, _w, _opName);
 	}
 	return result;
 }
@@ -762,20 +763,20 @@ static AlifObject* ternary_iOp(AlifObject* _v, AlifObject* _w,
 }
 
 // 1276
-#define INPLACE_BINOP(_func, _iop, _op) \
+#define INPLACE_BINOP(_func, _iop, _op, _opName) \
     AlifObject * _func(AlifObject *_v, AlifObject *_w) { \
-        return binary_iop(_v, _w, NB_SLOT(_iop), NB_SLOT(_op)); \
+        return binary_iop(_v, _w, NB_SLOT(_iop), NB_SLOT(_op), _opName); \
     }
 
-INPLACE_BINOP(alifNumber_inPlaceOr, inplaceOr, or_)
-INPLACE_BINOP(alifNumber_inPlaceXor, inplaceXor, xor_)
-INPLACE_BINOP(alifNumber_inPlaceAnd, inplaceAnd, and_)
-INPLACE_BINOP(alifNumber_inPlaceLshift, inplaceLshift, lshift)
-INPLACE_BINOP(alifNumber_inPlaceRshift, inplaceRshift, rshift)
-INPLACE_BINOP(alifNumber_inPlaceSubtract, inplaceSubtract, subtract)
-INPLACE_BINOP(alifNumber_inPlaceFloorDivide, inplaceFloorDivide, floorDivide)
-INPLACE_BINOP(alifNumber_inPlaceTrueDivide, inplaceTrueDivide, trueDivide)
-INPLACE_BINOP(alifNumber_inPlaceRemainder, inplaceRemainder, remainder) // 1291
+INPLACE_BINOP(alifNumber_inPlaceOr, inplaceOr, or_, "|=")
+INPLACE_BINOP(alifNumber_inPlaceXor, inplaceXor, xor_, "*|=")
+INPLACE_BINOP(alifNumber_inPlaceAnd, inplaceAnd, and_, "&=")
+INPLACE_BINOP(alifNumber_inPlaceLshift, inplaceLshift, lshift, "<<=")
+INPLACE_BINOP(alifNumber_inPlaceRshift, inplaceRshift, rshift, ">>=")
+INPLACE_BINOP(alifNumber_inPlaceSubtract, inplaceSubtract, subtract, "-=")
+INPLACE_BINOP(alifNumber_inPlaceFloorDivide, inplaceFloorDivide, floorDivide, "/*=")
+INPLACE_BINOP(alifNumber_inPlaceTrueDivide, inplaceTrueDivide, trueDivide, "/=")
+INPLACE_BINOP(alifNumber_inPlaceRemainder, inplaceRemainder, remainder, "//=") // 1291
 
 
 AlifObject* alifNumber_inPlaceAdd(AlifObject* _v, AlifObject* _w) { // 1293
@@ -849,8 +850,10 @@ UNARY_FUNC(alifNumber_negative, negative, __neg__, "إشارة -")
 UNARY_FUNC(alifNumber_positive, positive, __pos__, "إشارة +")
 UNARY_FUNC(alifNumber_invert, invert, __invert__, "إشارة ~")
 UNARY_FUNC(alifNumber_absolute, absolute, __abs__, "مطلق()")
-UNARY_FUNC(alifNumber_sqrt, sqrt, __sqrt__, "جذر()") //* alif
 
+AlifIntT alifIndex_check(AlifObject* _obj) { // 1384
+	return _alifIndex_check(_obj);
+}
 
 AlifObject* _alifNumber_index(AlifObject* _item) { // 1397
 	if (_item == nullptr) {
@@ -992,6 +995,22 @@ AlifObject* alifNumber_float(AlifObject* _o) { // 1588
 		return alifFloat_fromDouble(ALIFFLOAT_AS_DOUBLE(_o));
 	}
 	return alifFloat_fromString(_o);
+}
+
+
+AlifObject* alifNumber_toBase(AlifObject* _n,
+	AlifIntT _base, AlifIntT _isAscii) { // 1649 //* alif
+	if (!(_base == 2 or _base == 8 or _base == 10 or _base == 16)) {
+		alifErr_setString(_alifExcSystemError_,
+			"alifNumber_toBase: يجب أن يكون 2, 8, 10, 16");
+		return nullptr;
+	}
+	AlifObject* index = _alifNumber_index(_n);
+	if (!index)
+		return nullptr;
+	AlifObject* res = _alifLong_format(index, _base, _isAscii);
+	ALIF_DECREF(index);
+	return res;
 }
 
 
@@ -1165,7 +1184,7 @@ AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 				goto Fail;
 			}
 			n = (AlifSizeT)newn;
-			if (alifTuple_resize(&result, n) != 0) {
+			if (_alifTuple_resize(&result, n) != 0) {
 				ALIF_DECREF(item);
 				goto Fail;
 			}
@@ -1174,7 +1193,7 @@ AlifObject* alifSequence_tuple(AlifObject* v) { // 1992
 	}
 
 	/* Cut tuple back if guess was too large. */
-	if (j < n and alifTuple_resize(&result, j) != 0)
+	if (j < n and _alifTuple_resize(&result, j) != 0)
 		goto Fail;
 
 	ALIF_DECREF(it);
@@ -1603,7 +1622,7 @@ static AlifIntT objectRecursive_isInstance(AlifThread *_thread, AlifObject *_ins
 		return r;
 	}
 
-	AlifObject *checker = alifObject_lookupSpecial(_cls, &ALIF_ID(__instanceCheck__));
+	AlifObject *checker = _alifObject_lookupSpecial(_cls, &ALIF_ID(__instanceCheck__));
 	if (checker != nullptr) {
 		if (_alif_enterRecursiveCallThread(_thread, " في __instancecheck__")) {
 			ALIF_DECREF(checker);
@@ -1689,7 +1708,7 @@ static AlifIntT object_isSubclass(AlifThread* _thread,
 		return r;
 	}
 
-	checker = alifObject_lookupSpecial(_cls, &ALIF_ID(__subClassCheck__));
+	checker = _alifObject_lookupSpecial(_cls, &ALIF_ID(__subClassCheck__));
 	if (checker != nullptr) {
 		AlifIntT ok = -1;
 		if (_alif_enterRecursiveCallThread(_thread, " in __subClassCheck__")) {

@@ -1,6 +1,6 @@
 #pragma once
 
-extern AlifTypeObject _alifListType_; // 20
+ALIFAPI_DATA(AlifTypeObject) _alifListType_; // 20
 
 
 // 24
@@ -10,21 +10,21 @@ extern AlifTypeObject _alifListType_; // 20
 
 
 
-AlifObject* alifList_new(AlifSizeT); // 28
-AlifSizeT alifList_size(AlifObject*); // 29
+ALIFAPI_FUNC(AlifObject*) alifList_new(AlifSizeT); // 28
+ALIFAPI_FUNC(AlifSizeT) alifList_size(AlifObject*); // 29
 
-AlifObject* alifList_getItem(AlifObject*, AlifSizeT); // 31
+ALIFAPI_FUNC(AlifObject*) alifList_getItem(AlifObject*, AlifSizeT); // 31
 
-AlifObject* alifList_getItemRef(AlifObject*, AlifSizeT); // 33
+ALIFAPI_FUNC(AlifObject*) alifList_getItemRef(AlifObject*, AlifSizeT); // 33
 
-AlifIntT alifList_setItem(AlifObject*, AlifSizeT, AlifObject*); // 35
-AlifIntT alifList_insert(AlifObject*, AlifSizeT, AlifObject*); // 36
-AlifIntT alifList_append(AlifObject*, AlifObject*); // 37
+ALIFAPI_FUNC(AlifIntT) alifList_setItem(AlifObject*, AlifSizeT, AlifObject*); // 35
+ALIFAPI_FUNC(AlifIntT) alifList_insert(AlifObject*, AlifSizeT, AlifObject*); // 36
+ALIFAPI_FUNC(AlifIntT) alifList_append(AlifObject*, AlifObject*); // 37
 
-AlifIntT alifList_setSlice(AlifObject* , AlifSizeT , AlifSizeT , AlifObject*); // 40
-AlifIntT alifList_sort(AlifObject*); // 42
-AlifIntT alifList_reverse(AlifObject*); // 43
-AlifObject* alifList_asTuple(AlifObject*); // 44
+ALIFAPI_FUNC(AlifIntT) alifList_setSlice(AlifObject* , AlifSizeT , AlifSizeT , AlifObject*); // 40
+ALIFAPI_FUNC(AlifIntT) alifList_sort(AlifObject*); // 42
+ALIFAPI_FUNC(AlifIntT) alifList_reverse(AlifObject*); // 43
+ALIFAPI_FUNC(AlifObject*) alifList_asTuple(AlifObject*); // 44
 
 /* -------------------------------------------------------------------------------------- */
 

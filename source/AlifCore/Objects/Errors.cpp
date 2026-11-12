@@ -226,6 +226,17 @@ void alifErr_setObject(AlifObject* _exception, AlifObject* _value) { // 246
 	_alifErr_setObject(thread, _exception, _value);
 }
 
+void _alifErr_setKeyError(AlifObject* _arg) { // 257
+	AlifThread* thread = _alifThread_get();
+	AlifObject* exc = alifObject_callOneArg(_alifExcKeyError_, _arg);
+	if (!exc) {
+		/* caller will expect error to be set anyway */
+		return;
+	}
+
+	_alifErr_setObject(thread, (AlifObject*)ALIF_TYPE(exc), exc);
+	ALIF_DECREF(exc);
+}
 
 void _alifErr_setString(AlifThread* _thread, AlifObject* _exception,
 	const char* _string) { // 285
@@ -358,8 +369,23 @@ void _alifErr_chainExceptions1(AlifObject* _exc) { // 686
 
 
 
+void _alifErr_chainStackItem(void) { // 710
+	AlifThread* tstate = _alifThread_get();
 
-AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject* _exc, AlifObject* _fileNameObject) { // 783
+	AlifErrStackItem* exc_info = tstate->excInfo;
+	if (exc_info->excValue == nullptr or exc_info->excValue == ALIF_NONE) {
+		return;
+	}
+
+	AlifObject* exc = _alifErr_getRaisedException(tstate);
+
+	_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(exc), exc);
+	ALIF_DECREF(exc);
+}
+
+
+AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject* _exc,
+	AlifObject* _fileNameObject) { // 783
 	return alifErr_setFromErrnoWithFilenameObjects(_exc, _fileNameObject, nullptr);
 }
 
@@ -518,7 +544,7 @@ AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
 		v = alifObject_call(exc, args, nullptr);
 		ALIF_DECREF(args);
 		if (v != nullptr) {
-			//_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(v), v);
+			_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(v), v);
 			ALIF_DECREF(v);
 		}
 	}
@@ -528,8 +554,75 @@ AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
 
 #endif /* _WINDOWS */ // 1046
 
+static AlifObject* _alifErr_setImportErrorSubclassWithNameFrom(
+	AlifObject* exception, AlifObject* msg,
+	AlifObject* name, AlifObject* path, AlifObject* from_name) { // 1049
+	AlifThread* tstate = _alifThread_get();
+	AlifIntT issubclass{};
+	AlifObject* kwargs{}, * error{};
+
+	issubclass = alifObject_isSubclass(exception, _alifExcImportError_);
+	if (issubclass < 0) {
+		return nullptr;
+	}
+	else if (!issubclass) {
+		_alifErr_setString(tstate, _alifExcTypeError_,
+			"تجاوز الاصناف الفرعية ل خطأ_استيراد");
+		return nullptr;
+	}
+
+	if (msg == nullptr) {
+		_alifErr_setString(tstate, _alifExcTypeError_,
+			"يتوقع وجود رسالة خطأ");
+		return nullptr;
+	}
+
+	if (name == nullptr) {
+		name = ALIF_NONE;
+	}
+	if (path == nullptr) {
+		path = ALIF_NONE;
+	}
+	if (from_name == nullptr) {
+		from_name = ALIF_NONE;
+	}
 
 
+	kwargs = alifDict_new();
+	if (kwargs == nullptr) {
+		return nullptr;
+	}
+	if (alifDict_setItemString(kwargs, "اسم", name) < 0) {
+		goto done;
+	}
+	if (alifDict_setItemString(kwargs, "مسار", path) < 0) {
+		goto done;
+	}
+	if (alifDict_setItemString(kwargs, "اسم_من", from_name) < 0) {
+		goto done;
+	}
+
+	error = alifObject_vectorCallDict(exception, &msg, 1, kwargs);
+	if (error != nullptr) {
+		_alifErr_setObject(tstate, (AlifObject*)ALIF_TYPE(error), error);
+		ALIF_DECREF(error);
+	}
+
+done:
+	ALIF_DECREF(kwargs);
+	return nullptr;
+}
+
+AlifObject* alifErr_setImportErrorSubclass(AlifObject* _exception, AlifObject* _msg,
+	AlifObject* _name, AlifObject* _path) { // 1111
+	return _alifErr_setImportErrorSubclassWithNameFrom(_exception, _msg, _name, _path, nullptr);
+}
+
+
+AlifObject* alifErr_setImportError(AlifObject* _msg,
+	AlifObject* _name, AlifObject* _path) { // 1124
+	return alifErr_setImportErrorSubclass(_alifExcImportError_, _msg, _name, _path);
+}
 
 
 static AlifObject* _alifErr_formatV(AlifThread* _thread, AlifObject* _exception,
@@ -593,7 +686,7 @@ AlifObject* alifErr_newException(const char* _name, AlifObject* _base,
 			goto failure;
 	}
 
-	AlifIntT r; r = alifDict_contains(_dict, &ALIF_ID(__module__));
+	AlifIntT r; r = alifDict_contains(_dict, &ALIF_STR(__module__));
 	if (r < 0) {
 		goto failure;
 	}
@@ -602,7 +695,7 @@ AlifObject* alifErr_newException(const char* _name, AlifObject* _base,
 			(AlifSizeT)(dot-_name));
 		if (moduleName == nullptr)
 			goto failure;
-		if (alifDict_setItem(_dict, &ALIF_ID(__module__), moduleName) != 0)
+		if (alifDict_setItem(_dict, &ALIF_STR(__module__), moduleName) != 0)
 			goto failure;
 	}
 	if (ALIFTUPLE_CHECK(_base)) {
@@ -620,6 +713,129 @@ failure:
 	ALIF_XDECREF(myDict);
 	ALIF_XDECREF(moduleName);
 	return result;
+}
+
+
+
+
+
+
+
+
+
+static void alifErr_syntaxLocationObjectEx(AlifObject* _filename,
+	AlifIntT _lineno, AlifIntT _colOffset, AlifIntT _endLineno, AlifIntT _endColOffset) { // 1721
+	AlifThread* thread = _alifThread_get();
+
+	/* add attributes for the line number and filename for the error */
+	AlifObject *exc = _alifErr_getRaisedException(thread);
+	/* XXX check that it is, indeed, a syntax error. It might not
+	* be, though. */
+	AlifObject *tmp = alifLong_fromLong(_lineno);
+	if (tmp == nullptr) {
+		_alifErr_clear(thread);
+	}
+	else {
+		if (alifObject_setAttr(exc, &ALIF_ID(Lineno), tmp)) {
+			_alifErr_clear(thread);
+		}
+		ALIF_DECREF(tmp);
+	}
+	tmp = nullptr;
+	if (_colOffset >= 0) {
+		tmp = alifLong_fromLong(_colOffset);
+		if (tmp == nullptr) {
+			_alifErr_clear(thread);
+		}
+	}
+	if (alifObject_setAttr(exc, &ALIF_ID(Offset), tmp ? tmp : ALIF_NONE)) {
+		_alifErr_clear(thread);
+	}
+	ALIF_XDECREF(tmp);
+
+	tmp = nullptr;
+	if (_endLineno >= 0) {
+		tmp = alifLong_fromLong(_endLineno);
+		if (tmp == nullptr) {
+			_alifErr_clear(thread);
+		}
+	}
+	if (alifObject_setAttr(exc, &ALIF_ID(EndLineno), tmp ? tmp : ALIF_NONE)) {
+		_alifErr_clear(thread);
+	}
+	ALIF_XDECREF(tmp);
+
+	tmp = nullptr;
+	if (_endColOffset >= 0) {
+		tmp = alifLong_fromLong(_endColOffset);
+		if (tmp == nullptr) {
+			_alifErr_clear(thread);
+		}
+	}
+	if (alifObject_setAttr(exc, &ALIF_ID(EndOffset), tmp ? tmp : ALIF_NONE)) {
+		_alifErr_clear(thread);
+	}
+	ALIF_XDECREF(tmp);
+
+	tmp = nullptr;
+	if (_filename != nullptr) {
+		if (alifObject_setAttr(exc, &ALIF_ID(Filename), _filename)) {
+			_alifErr_clear(thread);
+		}
+
+		tmp = alifErr_programTextObject(_filename, _lineno);
+		if (tmp) {
+			if (alifObject_setAttr(exc, &ALIF_ID(Text), tmp)) {
+				_alifErr_clear(thread);
+			}
+			ALIF_DECREF(tmp);
+		}
+		else {
+			_alifErr_clear(thread);
+		}
+	}
+	if ((AlifObject *)ALIF_TYPE(exc) != _alifExcSyntaxError_) {
+		AlifIntT rc = alifObject_hasAttrWithError(exc, &ALIF_ID(Msg));
+		if (rc < 0) {
+			_alifErr_clear(thread);
+		}
+		else if (!rc) {
+			tmp = alifObject_str(exc);
+			if (tmp) {
+				if (alifObject_setAttr(exc, &ALIF_ID(Msg), tmp)) {
+					_alifErr_clear(thread);
+				}
+				ALIF_DECREF(tmp);
+			}
+			else {
+				_alifErr_clear(thread);
+			}
+		}
+
+		rc = alifObject_hasAttrWithError(exc, &ALIF_ID(PrintFileAndLine));
+		if (rc < 0) {
+			_alifErr_clear(thread);
+		}
+		else if (!rc) {
+			if (alifObject_setAttr(exc, &ALIF_ID(PrintFileAndLine), ALIF_NONE)) {
+				_alifErr_clear(thread);
+			}
+		}
+	}
+	_alifErr_setRaisedException(thread, exc);
+}
+
+
+
+
+
+
+
+
+
+void alifErr_rangedSyntaxLocationObject(AlifObject* _filename, AlifIntT _lineno,
+	AlifIntT _colOffset, AlifIntT _endLineno, AlifIntT _endColOffset) { // 1830
+	alifErr_syntaxLocationObjectEx(_filename, _lineno, _colOffset, _endLineno, _endColOffset);
 }
 
 
@@ -648,7 +864,7 @@ static AlifObject* err_programText(FILE* _fp, AlifIntT _lineno, const char* _enc
 
 	for (AlifIntT i = 0; i < _lineno; ) {
 		line_size = 0;
-		if (alifUniversal_newLineFGetsWithSize(linebuf, sizeof(linebuf),
+		if (_alifUniversal_newLineFGetsWithSize(linebuf, sizeof(linebuf),
 			_fp, nullptr, &line_size) == nullptr) {
 			/* Error or EOF. */
 			return nullptr;
@@ -683,7 +899,7 @@ AlifObject* _alifErr_programDecodedTextObject(AlifObject* filename, AlifIntT lin
 		return nullptr;
 	}
 
-	FILE* fp = alif_fOpenObj(filename, "r");
+	FILE* fp = _alif_fOpenObj(filename, "r");
 	if (fp == nullptr) {
 		alifErr_clear();
 		return nullptr;

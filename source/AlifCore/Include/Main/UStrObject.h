@@ -16,7 +16,7 @@ using AlifUCS1 = uint8_t;
 
 
 
-extern AlifTypeObject _alifUStrType_; // 103
+ALIFAPI_DATA(AlifTypeObject) _alifUStrType_; // 103
 
 // 106
 #define ALIFUSTR_CHECK(op) \
@@ -24,107 +24,116 @@ extern AlifTypeObject _alifUStrType_; // 103
 #define ALIFUSTR_CHECKEXACT(op) ALIF_IS_TYPE((op), &_alifUStrType_) // 108
 
 
-AlifObject* alifUStr_fromStringAndSize(const char*, AlifSizeT); // 122
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromStringAndSize(const char*, AlifSizeT); // 122
 
 
-AlifObject* alifUStr_fromString(const char*); // 129
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromString(const char*); // 129
 
-AlifObject* alifUStr_subString(AlifObject*, AlifSizeT, AlifSizeT); // 134
+ALIFAPI_FUNC(AlifObject*) alifUStr_subString(AlifObject*, AlifSizeT, AlifSizeT); // 134
 
-AlifObject* alifUStr_fromFormatV(const char*, va_list); // 237
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromFormatV(const char*, va_list); // 237
 
-AlifObject* alifUStr_fromFormat(const char*, ...); // 241
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromFormat(const char*, ...); // 241
 
 #ifdef HAVE_WCHAR_H // 253
 
-AlifObject* alifUStr_fromWideChar(const wchar_t*, AlifSizeT); // 260
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromWideChar(const wchar_t*, AlifSizeT); // 260
 
-AlifSizeT alifUStr_asWideChar(AlifObject*, wchar_t*, AlifSizeT); // 277
+ALIFAPI_FUNC(AlifSizeT) alifUStr_asWideChar(AlifObject*, wchar_t*, AlifSizeT); // 277
 
 
-wchar_t* alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
+ALIFAPI_FUNC(wchar_t*) alifUStr_asWideCharString(AlifObject*, AlifSizeT*); // 291
 
 #endif // 296
 
 
-AlifObject* alifUStr_fromOrdinal(AlifIntT); // 307
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromOrdinal(AlifIntT); // 307
 
 
 const char* alifUStr_getDefaultEncoding(void); // 330
 
 
 
-AlifObject* alifUStr_decode(const char*, AlifSizeT, const char*, const char*); // 337
+ALIFAPI_FUNC(AlifObject*) alifUStr_decode(const char*, AlifSizeT, const char*, const char*); // 337
 
 
-AlifObject* alifUStr_asEncodedString(AlifObject*, const char*, const char*); // 387
+ALIFAPI_FUNC(AlifObject*) alifUStr_asEncodedString(AlifObject*, const char*, const char*); // 387
 
 
 
 /* --- UTF-8 Codecs ---------------------------------------------------- */
 
-AlifObject* alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF8(const char*, AlifSizeT, const char*); // 429
 
-AlifObject* alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF8Stateful(const char*, AlifSizeT, const char*, AlifSizeT*); // 435
 
-AlifObject* alifUStr_asUTF8String(AlifObject*); // 442
+ALIFAPI_FUNC(AlifObject*) alifUStr_asUTF8String(AlifObject*); // 442
 
 const char* alifUStr_asUTF8AndSize(AlifObject*, AlifSizeT*); // 458
 
 /* --- UTF-32 Codecs --------------------------------------------------- */
 
-AlifObject* alifUStr_decodeUTF32(const char*, AlifSizeT, const char*, AlifIntT*); // 488
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF32(const char*, AlifSizeT, const char*, AlifIntT*); // 488
 
-AlifObject* alifUStr_decodeUTF32Stateful(const char*, AlifSizeT, const char*, AlifIntT*, AlifSizeT*); // 497
-
-
-
-AlifObject* alifUStr_decodeUTF16(const char*, AlifSizeT, const char*, AlifIntT*); // 555
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF32Stateful(const char*, AlifSizeT, const char*, AlifIntT*, AlifSizeT*); // 497
 
 
 
-AlifObject* alifUStr_decodeUTF16Stateful(const char*, AlifSizeT, const char*, AlifIntT*, AlifSizeT*); // 564
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF16(const char*, AlifSizeT, const char*, AlifIntT*); // 555
 
 
 
-AlifObject* alifUStr_encodeCodePage(AlifIntT, AlifObject*, const char*); // 695
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeUTF16Stateful(const char*, AlifSizeT,
+	const char*, AlifIntT*, AlifSizeT*); // 564
 
 
-AlifObject* alifUStr_decodeLocale(const char*, const char*); // 723
+/* --- ASCII Codecs -------------------------------------------------------
+
+Only 7-bit ASCII data is expected. All other codes generate errors.
+
+*/
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeASCII(const char*, AlifSizeT, const char*); // 625
 
 
-AlifIntT alifUStr_fsConverter(AlifObject*, void*); // 743
+ALIFAPI_FUNC(AlifObject*) alifUStr_encodeCodePage(AlifIntT, AlifObject*, const char*); // 695
 
 
-AlifIntT alifUStr_fsDecoder(AlifObject*, void*); // 748
-
-AlifObject* alifUStr_decodeFSDefault(const char*); // 754
-
-AlifObject* alifUStr_decodeFSDefaultAndSize(const char*, AlifSizeT); // 759
-
-AlifObject* alifUStr_encodeFSDefault(AlifObject*); // 766
-
-AlifObject* alifUStr_concat(AlifObject*, AlifObject*); // 778
-
-void alifUStr_append(AlifObject**, AlifObject*); // 786
-
-void alifUStr_appendAndDel(AlifObject**, AlifObject*); // 794
-
-AlifObject* alifUStr_join(AlifObject*, AlifObject*); // 881
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeLocale(const char*, const char*); // 723
 
 
-AlifSizeT alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
-
-AlifObject* alifUStr_replace(AlifObject*, AlifObject*, AlifObject*, AlifSizeT); // 932
-
-AlifIntT alifUStr_compareWithASCIIString(AlifObject*, const char*); // 955
-
-AlifIntT alifUStr_equalToUTF8(AlifObject*, const char*); // 965
-AlifIntT alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 966
+ALIFAPI_FUNC(AlifIntT) alifUStr_fsConverter(AlifObject*, void*); // 743
 
 
+ALIFAPI_FUNC(AlifIntT) alifUStr_fsDecoder(AlifObject*, void*); // 748
 
-AlifIntT alifUStr_isIdentifier(AlifObject*); // 1008
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeFSDefault(const char*); // 754
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_decodeFSDefaultAndSize(const char*, AlifSizeT); // 759
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_encodeFSDefault(AlifObject*); // 766
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_concat(AlifObject*, AlifObject*); // 778
+
+ALIFAPI_FUNC(void) alifUStr_append(AlifObject**, AlifObject*); // 786
+
+ALIFAPI_FUNC(void) alifUStr_appendAndDel(AlifObject**, AlifObject*); // 794
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_join(AlifObject*, AlifObject*); // 881
+
+
+ALIFAPI_FUNC(AlifSizeT) alifUStr_findChar(AlifObject*, AlifUCS4, AlifSizeT, AlifSizeT, AlifIntT); // 911
+
+ALIFAPI_FUNC(AlifObject*) alifUStr_replace(AlifObject*, AlifObject*, AlifObject*, AlifSizeT); // 932
+
+ALIFAPI_FUNC(AlifIntT) alifUStr_compareWithASCIIString(AlifObject*, const char*); // 955
+
+ALIFAPI_FUNC(AlifIntT) alifUStr_equalToUTF8(AlifObject*, const char*); // 965
+ALIFAPI_FUNC(AlifIntT) alifUStr_equalToUTF8AndSize(AlifObject*, const char*, AlifSizeT); // 966
+
+
+
+ALIFAPI_FUNC(AlifIntT) alifUStr_isIdentifier(AlifObject*); // 1008
 
 /* ---------------------------------------------------------------------------------------------------------- */
 
@@ -164,10 +173,10 @@ static inline AlifUCS4 alifUnicode_lowSurrogate(AlifUCS4 ch) { // 42
 }
 
 
-AlifObject* alifUStr_internFromString(const char*); // 247
+ALIFAPI_FUNC(AlifObject*) alifUStr_internFromString(const char*); // 247
 
 
-AlifIntT alifUStr_compare(AlifObject*, AlifObject*); // 944
+ALIFAPI_FUNC(AlifIntT) alifUStr_compare(AlifObject*, AlifObject*); // 944
 
 
 
@@ -355,33 +364,33 @@ static inline AlifUCS4 alifUStr_maxCharValue(AlifObject* _op) { // 359
 
 
 
-AlifObject* alifUStr_new(AlifSizeT, AlifUCS4); // 386
+ALIFAPI_FUNC(AlifObject*) alifUStr_new(AlifSizeT, AlifUCS4); // 386
 
 
 
-AlifSizeT alifUStr_copyCharacters(AlifObject*, AlifSizeT,
+ALIFAPI_FUNC(AlifSizeT) alifUStr_copyCharacters(AlifObject*, AlifSizeT,
 	AlifObject*, AlifSizeT, AlifSizeT); // 416
 
 
-AlifSizeT alifUStr_fill(AlifObject*, AlifSizeT, AlifSizeT, AlifUCS4); // 432
+ALIFAPI_FUNC(AlifSizeT) alifUStr_fill(AlifObject*, AlifSizeT, AlifSizeT, AlifUCS4); // 432
 
-AlifObject* alifUStr_fromKindAndData(AlifIntT, const void*, AlifSizeT); // 441
+ALIFAPI_FUNC(AlifObject*) alifUStr_fromKindAndData(AlifIntT, const void*, AlifSizeT); // 441
 
 
 
 
 typedef class AlifUStrWriter AlifUStrWriter; // 449
 
-AlifObject* alifUStrWriter_finish(AlifUStrWriter*); // 453
+ALIFAPI_FUNC(AlifObject*) alifUStrWriter_finish(AlifUStrWriter*); // 453
 
-AlifUStrWriter* alifUStrWriter_create(AlifSizeT); // 451
-void alifUStrWriter_discard(AlifUStrWriter*); // 452
+ALIFAPI_FUNC(AlifUStrWriter*) alifUStrWriter_create(AlifSizeT); // 451
+ALIFAPI_FUNC(void) alifUStrWriter_discard(AlifUStrWriter*); // 452
 
-AlifIntT alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 471
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 471
 
-AlifIntT alifUStrWriter_writeRepr(AlifUStrWriter*, AlifObject*); // 474
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeRepr(AlifUStrWriter*, AlifObject*); // 474
 
-AlifIntT alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT); // 477
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT); // 477
 
 
 
@@ -401,7 +410,7 @@ public:
 
 
 
-void _alifUStrWriter_init(AlifUStrWriter*); // 523
+ALIFAPI_FUNC(void) _alifUStrWriter_init(AlifUStrWriter*); // 523
 
 
 // 530
@@ -414,7 +423,7 @@ void _alifUStrWriter_init(AlifUStrWriter*); // 523
         : alifUStrWriter_prepareInternal((_writer), (_length), (_maxChar))))
 
 
-AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
 
 
 
@@ -424,37 +433,47 @@ AlifIntT alifUStrWriter_prepareInternal(AlifUStrWriter*, AlifSizeT, AlifUCS4);
      ? 0                                                              \
      : alifUStrWriter_prepareKindInternal((_writer), (_kind)))
 
-AlifIntT alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_prepareKindInternal(AlifUStrWriter*, AlifIntT); // 557
 
-AlifIntT alifUStrWriter_writeChar(AlifUStrWriter*, AlifUCS4); // 563
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeChar(AlifUStrWriter*, AlifUCS4); // 563
 
-AlifIntT _alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 570
+ALIFAPI_FUNC(AlifIntT) _alifUStrWriter_writeStr(AlifUStrWriter*, AlifObject*); // 570
 
-AlifIntT _alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT);
+ALIFAPI_FUNC(AlifIntT) _alifUStrWriter_writeSubString(AlifUStrWriter*, AlifObject*, AlifSizeT, AlifSizeT);
 
-AlifIntT alifUStrWriter_writeASCIIString(AlifUStrWriter*, const char*, AlifSizeT); // 586
-AlifIntT alifUStrWriter_writeString(AlifUStrWriter*, const char*, AlifSizeT); //* alif
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeASCIIString(AlifUStrWriter*, const char*, AlifSizeT); // 586
+ALIFAPI_FUNC(AlifIntT) alifUStrWriter_writeString(AlifUStrWriter*, const char*, AlifSizeT); //* alif
 
-AlifObject* _alifUStrWriter_finish(AlifUStrWriter*); // 602
-
-
-void _alifUStrWriter_dealloc(AlifUStrWriter*); // 607
+ALIFAPI_FUNC(AlifObject*) _alifUStrWriter_finish(AlifUStrWriter*); // 602
 
 
-const char* alifUStr_asUTF8(AlifObject*); // 625
+ALIFAPI_FUNC(void) _alifUStrWriter_dealloc(AlifUStrWriter*); // 607
 
 
-
-AlifIntT _alifUStr_isWhitespace(const AlifUCS4); // 652
+ALIFAPI_FUNC(const char*) alifUStr_asUTF8(AlifObject*); // 625
 
 
 
-AlifIntT _alifUStr_toDecimalDigit(AlifUCS4); // 672
-
-AlifIntT _alifUStr_isPrintable(AlifUCS4); // 696
+ALIFAPI_FUNC(AlifIntT) _alifUStr_isWhitespace(const AlifUCS4); // 652
 
 
-extern const unsigned char _alifASCIIWhitespace_[]; // 705
+
+ALIFAPI_FUNC(AlifIntT) _alifUStr_toDecimalDigit(AlifUCS4); // 672
+
+ALIFAPI_FUNC(AlifIntT)_alifUStr_toDigit(AlifUCS4); // 676
+
+ALIFAPI_FUNC(AlifIntT) _alifUStr_isDecimalDigit(AlifUCS4); // 684
+
+ALIFAPI_FUNC(AlifIntT)_alifUStr_isDigit(AlifUCS4); // 688
+
+ALIFAPI_FUNC(AlifIntT)_alifUStr_isNumeric(AlifUCS4); // 692
+
+ALIFAPI_FUNC(AlifIntT) _alifUStr_isPrintable(AlifUCS4); // 696
+
+
+ALIFAPI_FUNC(AlifIntT)_alifUStr_isAlpha(AlifUCS4); // 700
+
+ALIFAPI_DATA(const unsigned char) _alifASCIIWhitespace_[]; // 705
 
 
 static inline int alifUStr_isSpace(AlifUCS4 ch) { // 711
@@ -466,3 +485,18 @@ static inline int alifUStr_isSpace(AlifUCS4 ch) { // 711
 
 #define ALIF_USTR_ISPRINTABLE(_ch) _alifUStr_isPrintable(_ch) // 730
 #define ALIF_USTR_TODECIMAL(_ch) _alifUStr_toDecimalDigit(_ch) // 732
+
+
+#define ALIF_USTR_ISDECIMAL(_ch) _alifUStr_isDecimalDigit(_ch) // 727
+#define ALIF_USTR_ISDIGIT(_ch) _alifUStr_isDigit(_ch) // 728
+#define ALIF_USTR_ISNUMERIC(_ch) _alifUStr_isNumeric(_ch) // 729
+
+#define ALIF_USTR_ISALPHA(_ch) _alifUStr_isAlpha(_ch) // 736
+
+
+static inline AlifIntT alifUStr_isalnum(AlifUCS4 _ch) { // 738
+	return (ALIF_USTR_ISALPHA(_ch)
+		or ALIF_USTR_ISDECIMAL(_ch)
+		or ALIF_USTR_ISDIGIT(_ch)
+		or ALIF_USTR_ISNUMERIC(_ch));
+}

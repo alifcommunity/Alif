@@ -15,15 +15,14 @@
 
 extern class AlifMemory _alifMem_;
 
-void* alifMem_objAlloc(AlifUSizeT);
-void* alifMem_dataAlloc(AlifUSizeT);
+ALIFAPI_FUNC(void*) alifMem_objAlloc(AlifUSizeT);
+ALIFAPI_FUNC(void*) alifMem_dataAlloc(AlifUSizeT);
 
-void alifMem_objFree(void*);
-void alifMem_dataFree(void*);
-void alifMem_freeDelayed(void*); // 120
+ALIFAPI_FUNC(void) alifMem_objFree(void*);
+ALIFAPI_FUNC(void) alifMem_dataFree(void*);
 
-void* alifMem_objRealloc(void*, AlifUSizeT);
-void* alifMem_dataRealloc(void*, AlifUSizeT);
+ALIFAPI_FUNC(void*) alifMem_objRealloc(void*, AlifUSizeT);
+ALIFAPI_FUNC(void*) alifMem_dataRealloc(void*, AlifUSizeT);
 
 const void alif_getMemState();
 
@@ -47,6 +46,8 @@ const void alif_getMemState();
 extern AlifTypeObject _alifManagedBufferType_;
 extern AlifTypeObject _alifMemoryViewType_;
 
+
+AlifObject* alifMemoryView_fromMemory(char*, AlifSizeT, AlifIntT);
 
 AlifObject* alifMemoryView_fromBuffer(const AlifBuffer*);
 
@@ -79,3 +80,20 @@ public:
 #define ALIF_MEMORYVIEW_SCALAR      0x008
 #define ALIF_MEMORYVIEW_PIL         0x010
 #define ALIF_MEMORYVIEW_RESTRICTED  0x020
+
+
+
+
+
+
+
+/* ------------------------------------ دوال مساعدة ----------------------------------- */
+
+
+#define ALIFMEM_NEW(_type, _n) /* for data only */ \
+  ( ((AlifUSizeT)(_n) > ALIF_SIZET_MAX / sizeof(_type)) ? nullptr :      \
+        ( (_type *) alifMem_dataAlloc((_n) * sizeof(_type)) ) )
+
+#define ALIFMEM_RESIZE(_p, _type, _n) /* for data only */ \
+  ( (_p) = ((AlifUSizeT)(_n) > ALIF_SIZET_MAX / sizeof(_type)) ? nullptr :        \
+        (_type *) alifMem_dataRealloc((_p), (_n) * sizeof(_type)) )

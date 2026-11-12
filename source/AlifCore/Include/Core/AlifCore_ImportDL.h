@@ -3,6 +3,8 @@
 
 
 
+extern const char* _alifImportDynLoadFiletab_[]; // 15
+
 
 enum AlifExtModuleKind { // 18
 	Alif_Ext_Module_Kind_UNKNOWN = 0,
@@ -40,8 +42,11 @@ extern void _alifExtModule_loaderInfoClear(AlifExtModuleLoaderInfo*); // 46
 extern AlifIntT
 _alifExtModule_loaderInfoInitForBuiltin(AlifExtModuleLoaderInfo*, AlifObject*); // 56
 
-
-
+#ifdef HAVE_DYNAMIC_LOADING
+extern AlifIntT _alifExtModule_loaderInfoInitFromSpec(
+	class AlifExtModuleLoaderInfo*,
+	AlifObject*); // 60
+#endif
 
 class AlifExtModuleLoaderResult { // 66
 public:
@@ -68,7 +73,28 @@ public:
 extern void _alifExtModule_loaderResultClear(AlifExtModuleLoaderResult*); // 84
 
 typedef AlifObject* (*AlifModInitFunction)(void); // 91
-
+#ifdef HAVE_DYNAMIC_LOADING
+extern AlifModInitFunction _alifImport_getModInitFunc(
+	class AlifExtModuleLoaderInfo*, FILE*); // 92
+#endif
 
 extern AlifIntT _alifImport_runModInitFunc(AlifModInitFunction,
 	AlifExtModuleLoaderInfo*, AlifExtModuleLoaderResult*); // 97
+
+
+
+// 106
+#ifdef _WINDOWS
+#include <windows.h>
+typedef FARPROC DLFuncPtr;
+
+
+#else
+typedef void (*DLFuncPtr)(void);
+#endif
+// 133
+
+
+//#define ALIFD_TAGGED_SUFFIX ALIFD_DEBUG_SUFFIX "." ALIFD_SOABI ".alifd"
+//#define ALIFD_UNTAGGED_SUFFIX ALIFD_DEBUG_SUFFIX ".alifd"
+#define ALIFD_UNTAGGED_SUFFIX ".alifd" //* alif

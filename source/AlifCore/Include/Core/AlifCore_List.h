@@ -4,9 +4,9 @@
 
 
 
-AlifObject* _alifList_extend(AlifListObject*, AlifObject*); // 11
+ALIFAPI_FUNC(AlifObject*) _alifList_extend(AlifListObject*, AlifObject*); // 11
 
-AlifIntT alifList_appendTakeRefListResize(AlifListObject*, AlifObject*); // 17
+ALIFAPI_FUNC(AlifIntT) _alifList_appendTakeRefListResize(AlifListObject*, AlifObject*); // 17
 
 
 static inline AlifIntT alifList_appendTakeRef(AlifListObject* _self,
@@ -18,7 +18,7 @@ static inline AlifIntT alifList_appendTakeRef(AlifListObject* _self,
 		ALIF_SET_SIZE(_self, len + 1);
 		return 0;
 	}
-	return alifList_appendTakeRefListResize(_self, _newItem);
+	return _alifList_appendTakeRefListResize(_self, _newItem);
 }
 
 
@@ -38,4 +38,4 @@ static inline void alif_memoryRepeat(char* _dest, AlifSizeT _lenDest, AlifSizeT 
 
 
 
-AlifObject* _alifList_fromStackRefSteal(const AlifStackRef*, AlifSizeT); // 61
+ALIFAPI_FUNC(AlifObject*) _alifList_fromStackRefSteal(const AlifStackRef*, AlifSizeT); // 61

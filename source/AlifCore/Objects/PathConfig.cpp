@@ -182,7 +182,7 @@ AlifIntT _alifPathConfig_computeSysPath0(const AlifWStringList* _argv,
 
 	if (haveModuleArg) {
 	#if defined(HAVE_REALPATH) or defined(_WINDOWS)
-		if (!alif_wGetCWD(fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
+		if (!_alif_wGetCWD(fullpath, ALIF_ARRAY_LENGTH(fullpath))) {
 			return 0;
 		}
 		path0 = fullpath;

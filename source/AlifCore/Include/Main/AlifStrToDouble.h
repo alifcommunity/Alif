@@ -2,13 +2,13 @@
 
 
 
-double alifOS_stringToDouble(const char*, char**, AlifObject*); // 9
+ALIFAPI_FUNC(double) alifOS_stringToDouble(const char*, char**, AlifObject*); // 9
 
 
 
 
 
-char* alifOS_doubleToString(double, char, AlifIntT, AlifIntT, AlifIntT*); // 15
+ALIFAPI_FUNC(char*) alifOS_doubleToString(double, char, AlifIntT, AlifIntT, AlifIntT*); // 15
 
 
 

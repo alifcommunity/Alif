@@ -24,22 +24,22 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 	switch (_opcode) {
 	case BINARY_OP:
 		return 2;
-		//case BINARY_OP_ADD_FLOAT:
-		//	return 2;
-		//case BINARY_OP_ADD_INT:
-		//	return 2;
-		//case BINARY_OP_ADD_UNICODE:
-		//	return 2;
-		//case BINARY_OP_INPLACE_ADD_UNICODE:
-		//	return 2;
-		//case BINARY_OP_MULTIPLY_FLOAT:
-		//	return 2;
-		//case BINARY_OP_MULTIPLY_INT:
-		//	return 2;
-		//case BINARY_OP_SUBTRACT_FLOAT:
-		//	return 2;
-		//case BINARY_OP_SUBTRACT_INT:
-		//	return 2;
+	case BINARY_OP_ADD_FLOAT:
+		return 2;
+	case BINARY_OP_ADD_INT:
+		return 2;
+	case BINARY_OP_ADD_UNICODE:
+		return 2;
+	case BINARY_OP_INPLACE_ADD_UNICODE:
+		return 2;
+	case BINARY_OP_MULTIPLY_FLOAT:
+		return 2;
+	case BINARY_OP_MULTIPLY_INT:
+		return 2;
+	case BINARY_OP_SUBTRACT_FLOAT:
+		return 2;
+	case BINARY_OP_SUBTRACT_INT:
+		return 2;
 	case BINARY_SLICE:
 		return 3;
 	case BINARY_SUBSCR:
@@ -140,10 +140,10 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 2;
 	case CONTAINS_OP:
 		return 2;
-		//case CONTAINS_OP_DICT:
-		//	return 2;
-		//case CONTAINS_OP_SET:
-		//	return 2;
+	case CONTAINS_OP_DICT:
+		return 2;
+	case CONTAINS_OP_SET:
+		return 2;
 	case CONVERT_VALUE:
 		return 1;
 	case COPY:
@@ -330,8 +330,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 0;
 	case LOAD_SMALL_INT:
 		return 0;
-		//case LOAD_SPECIAL:
-		//	return 1;
+	case LOAD_SPECIAL:
+		return 1;
 	case LOAD_SUPER_ATTR:
 		return 3;
 		//case LOAD_SUPER_ATTR_ATTR:
@@ -380,8 +380,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 0;
 	case RESUME:
 		return 0;
-		//case RESUME_CHECK:
-		//	return 0;
+	case RESUME_CHECK:
+		return 0;
 	case RETURN_GENERATOR:
 		return 0;
 	case RETURN_VALUE:
@@ -454,8 +454,6 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case UNARY_NEGATIVE:
 		return 1;
-	case UNARY_SQRT: //* alif
-		return 1;
 	case UNARY_NOT:
 		return 1;
 	case UNPACK_EX:
@@ -468,8 +466,8 @@ AlifIntT _alifOpcode_numPopped(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 1;
 		//case UNPACK_SEQUENCE_TWO_TUPLE:
 		//	return 1;
-		//case WITH_EXCEPT_START:
-		//	return 5;
+	case WITH_EXCEPT_START:
+		return 5;
 	case YIELD_VALUE:
 		return 1;
 	default:
@@ -492,22 +490,22 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 	switch (_opcode) {
 	case BINARY_OP:
 		return 1;
-		//case BINARY_OP_ADD_FLOAT:
-		//	return 1;
-		//case BINARY_OP_ADD_INT:
-		//	return 1;
-		//case BINARY_OP_ADD_UNICODE:
-		//	return 1;
-		//case BINARY_OP_INPLACE_ADD_UNICODE:
-		//	return 0;
-		//case BINARY_OP_MULTIPLY_FLOAT:
-		//	return 1;
-		//case BINARY_OP_MULTIPLY_INT:
-		//	return 1;
-		//case BINARY_OP_SUBTRACT_FLOAT:
-		//	return 1;
-		//case BINARY_OP_SUBTRACT_INT:
-		//	return 1;
+	case BINARY_OP_ADD_FLOAT:
+		return 1;
+	case BINARY_OP_ADD_INT:
+		return 1;
+	case BINARY_OP_ADD_UNICODE:
+		return 1;
+	case BINARY_OP_INPLACE_ADD_UNICODE:
+		return 0;
+	case BINARY_OP_MULTIPLY_FLOAT:
+		return 1;
+	case BINARY_OP_MULTIPLY_INT:
+		return 1;
+	case BINARY_OP_SUBTRACT_FLOAT:
+		return 1;
+	case BINARY_OP_SUBTRACT_INT:
+		return 1;
 	case BINARY_SLICE:
 		return 1;
 	case BINARY_SUBSCR:
@@ -608,10 +606,10 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 1;
 	case CONTAINS_OP:
 		return 1;
-		//case CONTAINS_OP_DICT:
-		//	return 1;
-		//case CONTAINS_OP_SET:
-		//	return 1;
+	case CONTAINS_OP_DICT:
+		return 1;
+	case CONTAINS_OP_SET:
+		return 1;
 	case CONVERT_VALUE:
 		return 1;
 	case COPY:
@@ -798,8 +796,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case LOAD_SMALL_INT:
 		return 1;
-		//case LOAD_SPECIAL:
-		//	return 2;
+	case LOAD_SPECIAL:
+		return 2;
 	case LOAD_SUPER_ATTR:
 		return 1 + (_oparg & 1);
 		//case LOAD_SUPER_ATTR_ATTR:
@@ -848,8 +846,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return 0;
 	case RESUME:
 		return 0;
-		//case RESUME_CHECK:
-		//	return 0;
+	case RESUME_CHECK:
+		return 0;
 	case RETURN_GENERATOR:
 		return 1;
 	case RETURN_VALUE:
@@ -922,8 +920,6 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		return 1;
 	case UNARY_NEGATIVE:
 		return 1;
-	case UNARY_SQRT: //* alif
-		return 1;
 	case UNARY_NOT:
 		return 1;
 	case UNPACK_EX:
@@ -936,8 +932,8 @@ AlifIntT _alifOpcode_numPushed(AlifIntT _opcode, AlifIntT _oparg) {
 		//	return _oparg;
 		//case UNPACK_SEQUENCE_TWO_TUPLE:
 		//	return 2;
-		//case WITH_EXCEPT_START:
-		//	return 6;
+	case WITH_EXCEPT_START:
+		return 6;
 	case YIELD_VALUE:
 		return 1;
 	default:
@@ -1135,7 +1131,7 @@ const class OpcodeMetadata _alifOpcodeOpcodeMetadata_[266] = {
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_EX // 113
 	{ true, InstructionFormat::Instr_FMT_IBC, HAS_ARG_FLAG | HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNPACK_SEQUENCE // 114
 	{ true, InstructionFormat::Instr_FMT_IB, HAS_ARG_FLAG }, // YIELD_VALUE // 115
-	{ true, InstructionFormat::Instr_FMT_IX, HAS_ERROR_FLAG | HAS_ESCAPES_FLAG }, // UNARY_SQRT // 116, //* alif
+	{false, -1},
 	{false, -1},
 	{false, -1},
 	{false, -1},
@@ -1378,7 +1374,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	UNARY_INVERT, // UNARY_INVERT // 38
 	UNARY_NEGATIVE, // UNARY_NEGATIVE // 39
 	UNARY_NOT, // UNARY_NOT // 40
-	0,//WITH_EXCEPT_START, // WITH_EXCEPT_START // 41
+	WITH_EXCEPT_START, // WITH_EXCEPT_START // 41
 	BINARY_OP, // BINARY_OP // 42
 	BUILD_LIST, // BUILD_LIST // 43
 	BUILD_MAP, // BUILD_MAP // 44
@@ -1445,7 +1441,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	STORE_ATTR, // STORE_ATTR // 105
 	STORE_DEREF, // STORE_DEREF // 106
 	STORE_FAST, // STORE_FAST // 107
-	0,//STORE_FAST_LOAD_FAST, // STORE_FAST_LOAD_FAST // 108
+	0, //STORE_FAST_LOAD_FAST, // STORE_FAST_LOAD_FAST // 108
 	STORE_FAST_STORE_FAST, // STORE_FAST_STORE_FAST // 109
 	STORE_GLOBAL, // STORE_GLOBAL // 110
 	STORE_NAME, // STORE_NAME // 111
@@ -1453,7 +1449,7 @@ const uint8_t _alifOpcodeDeopt_[256] = {
 	UNPACK_EX, // UNPACK_EX // 113
 	UNPACK_SEQUENCE, // UNPACK_SEQUENCE // 114
 	YIELD_VALUE, // YIELD_VALUE // 115
-	UNARY_SQRT, // UNARY_SQRT // 116 //* alif //* review
+	0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	RESUME, // RESUME // 149

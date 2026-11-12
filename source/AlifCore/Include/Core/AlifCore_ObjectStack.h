@@ -31,13 +31,15 @@ public:
 };
 
 
-extern AlifObjectStackChunk* alifObjectStackChunk_new();
+extern AlifObjectStackChunk* _alifObjectStackChunk_new();
+extern void _alifObjectStackChunk_free(AlifObjectStackChunk*); // 32
 
 
-static inline AlifIntT alifObjectStack_push(AlifObjectStack* _stack, AlifObject* _obj) { // 36
+static inline AlifIntT _alifObjectStack_push(AlifObjectStack* _stack,
+	AlifObject* _obj) { // 36
 	AlifObjectStackChunk* buf = _stack->head;
 	if (buf == nullptr or buf->n_ == ALIFOBJECT_STACK_CHUNK_SIZE) {
-		buf = alifObjectStackChunk_new();
+		buf = _alifObjectStackChunk_new();
 		if (buf == nullptr) {
 			return -1;
 		}
@@ -50,3 +52,25 @@ static inline AlifIntT alifObjectStack_push(AlifObjectStack* _stack, AlifObject*
 	buf->n_++;
 	return 0;
 }
+
+
+
+
+static inline AlifObject* _alifObjectStack_pop(AlifObjectStack* _stack) { // 57
+	AlifObjectStackChunk* buf = _stack->head;
+	if (buf == nullptr) {
+		return nullptr;
+	}
+	buf->n_--;
+	AlifObject* obj = buf->objs[buf->n_];
+	if (buf->n_ == 0) {
+		_stack->head = buf->prev;
+		_alifObjectStackChunk_free(buf);
+	}
+	return obj;
+}
+
+
+
+
+extern void _alifObjectStack_clear(AlifObjectStack*); // 89

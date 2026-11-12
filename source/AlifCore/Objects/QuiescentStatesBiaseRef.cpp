@@ -140,11 +140,11 @@ AlifSizeT alifQSBR_reserve(AlifInterpreter* _interp) { // 190
 	QSBRThreadState* qsbr = qsbr_allocate(shared);
 
 	if (qsbr == nullptr) {
-		alifEval_stopTheWorld(_interp);
+		_alifEval_stopTheWorld(_interp);
 		if (grow_threadArray(shared) == 0) {
 			qsbr = qsbr_allocate(shared);
 		}
-		alifEval_startTheWorld(_interp);
+		_alifEval_startTheWorld(_interp);
 	}
 	ALIFMUTEX_UNLOCK(&shared->mutex);
 
@@ -167,5 +167,22 @@ void alifQSBR_register(AlifThreadImpl* _thread,
 	QSBRThreadState* qsbr = &_interp->qsbr.array[_index].qsbr;
 	qsbr->thread = (AlifThread*)_thread;
 	_thread->qsbr = qsbr;
+	ALIFMUTEX_UNLOCK(&shared->mutex);
+}
+
+
+
+void _alifQSBR_unregister(AlifThread* _thread) { // 234
+	QSBRShared* shared = &_thread->interpreter->qsbr;
+	AlifThreadImpl* threadImp = (AlifThreadImpl*)_thread;
+
+	ALIFMUTEX_LOCK(&shared->mutex);
+	QSBRThreadState* qsbr = threadImp->qsbr;
+
+	threadImp->qsbr = nullptr;
+	qsbr->thread = nullptr;
+	qsbr->allocated = false;
+	qsbr->freeListNext = shared->freeList;
+	shared->freeList = qsbr;
 	ALIFMUTEX_UNLOCK(&shared->mutex);
 }

@@ -54,6 +54,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BoolObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Buffer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BytesMethods.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CellObject.cpp" />
@@ -66,6 +67,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\DescrObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\dtoa\DoubleToASCII.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DynLoadWin.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\EnumObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Errors.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Exceptions.cpp" />
@@ -84,11 +86,13 @@
     <ClCompile Include="..\source\AlifCore\Objects\GenObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetPlatform.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ImportDL.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\IndexPool.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InstructionSequence.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />
@@ -102,17 +106,18 @@
     <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\MySnprintf.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\NamespaceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParkingLot.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParserEngineAPI.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PathConfig.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PreConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\RangeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Specialize.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StructMember.cpp" />
@@ -132,6 +137,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\FreezeModule\FreezeModule.cpp" />
     <ClCompile Include="..\source\FreezeModule\GetPathFreeze.cpp" />
+    <ClCompile Include="..\source\Modules\PosixModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
@@ -199,6 +205,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
@@ -246,7 +253,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALIF_NO_ENABLE_SHARED;ALIF_BUILD_CORE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -258,13 +265,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
     <CustomBuildStep>
       <Command>
       </Command>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"
+"$(LocalDebuggerCommand)" Importlib._bootstrap "$(ProjectDir)..\library\مكتبة_الاستيراد\برنامج_الاقلاع.alif" Importlib._bootstrap.h &amp;&amp; move Importlib._bootstrap.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"
+"$(LocalDebuggerCommand)" Importlib._bootstrap_external "$(ProjectDir)..\library\مكتبة_الاستيراد\برنامج_الاقلاع_الخارجي.alif" Importlib._bootstrap_external.h &amp;&amp; move Importlib._bootstrap_external.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>if exist "$(TargetDir)FreezeModule" rmdir /s /q "$(TargetDir)FreezeModule"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -272,7 +285,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ALIF_NO_ENABLE_SHARED;ALIF_BUILD_CORE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\source\Alif;..\source\AlifCore\Include\Core;..\source\AlifCore\Include\Main;..\source\AlifCore\Include\Main\Atomics;..\source\AlifCore\Include\Main\StringLib;..\source\AlifCore\Include\Main\FrozenModules;..\source\AlifCore\Include\Main\mimalloc;..\source\AlifCore\Include\Main\mimalloc\mimalloc;..\source\Windows;..\source\Modules\_io;..\source\Modules\_io\clinic;..\source\Modules\clinic</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -286,13 +299,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>pathcch.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
-    </PostBuildEvent>
+    <PostBuildEvent />
     <CustomBuildStep>
       <Command>
       </Command>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>"$(LocalDebuggerCommand)" GetPath "$(ProjectDir)..\source\Modules\تحديد_المسارات.alif" GetPath.h &amp;&amp; move GetPath.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"
+"$(LocalDebuggerCommand)" Importlib._bootstrap "$(ProjectDir)..\library\مكتبة_الاستيراد\برنامج_الاقلاع.alif" Importlib._bootstrap.h &amp;&amp; move Importlib._bootstrap.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"
+"$(LocalDebuggerCommand)" Importlib._bootstrap_external "$(ProjectDir)..\library\مكتبة_الاستيراد\برنامج_الاقلاع_الخارجي.alif" Importlib._bootstrap_external.h &amp;&amp; move Importlib._bootstrap_external.h "$(ProjectDir)..\source\AlifCore\Include\Main\FrozenModules"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,30 +2,31 @@
 
 
 
-void alifErr_setObject(AlifObject*, AlifObject*); // 10
-void alifErr_setString(AlifObject*, const char*); // 11
+ALIFAPI_FUNC(void) alifErr_setObject(AlifObject*, AlifObject*); // 10
+ALIFAPI_FUNC(void) alifErr_setString(AlifObject*, const char*); // 11
 
 
-AlifObject* alifErr_occurred(void); // 15
-void alifErr_clear(void); // 16
-void alifErr_fetch(AlifObject**, AlifObject**, AlifObject**); // 17
-void alifErr_restore(AlifObject*, AlifObject*, AlifObject*); // 18
-AlifObject* alifErr_getRaisedException(void); // 19
-void alifErr_setRaisedException(AlifObject*); // 20
-void alifErr_setHandledException(AlifObject*); // 23
+ALIFAPI_FUNC(AlifObject*) alifErr_occurred(void); // 15
+ALIFAPI_FUNC(void) alifErr_clear(void); // 16
+ALIFAPI_FUNC(void) alifErr_fetch(AlifObject**, AlifObject**, AlifObject**); // 17
+ALIFAPI_FUNC(void) alifErr_restore(AlifObject*, AlifObject*, AlifObject*); // 18
+ALIFAPI_FUNC(AlifObject*) alifErr_getRaisedException(void); // 19
+ALIFAPI_FUNC(void) alifErr_setRaisedException(AlifObject*); // 20
+ALIFAPI_FUNC(void) alifErr_setHandledException(AlifObject*); // 23
 
-void ALIF_NO_RETURN alif_fatalError(const char* _msg); // 35
+ALIFAPI_FUNC(void) ALIF_NO_RETURN alif_fatalError(const char* _msg); // 35
 
-AlifIntT alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
-AlifIntT alifErr_exceptionMatches(AlifObject*); // 39
+ALIFAPI_FUNC(AlifIntT) alifErr_givenExceptionMatches(AlifObject*, AlifObject*); // 38
+ALIFAPI_FUNC(AlifIntT) alifErr_exceptionMatches(AlifObject*); // 39
 
-AlifIntT alifException_setTraceback(AlifObject*, AlifObject*); // 43
-AlifObject* alifException_getTraceback(AlifObject*); // 44
+ALIFAPI_FUNC(AlifIntT) alifException_setTraceback(AlifObject*, AlifObject*); // 43
+ALIFAPI_FUNC(AlifObject*) alifException_getTraceback(AlifObject*); // 44
 
-void alifException_setCause(AlifObject*, AlifObject*); // 48
+ALIFAPI_FUNC(AlifObject*) alifException_getCause(AlifObject*); // 47
+ALIFAPI_FUNC(void) alifException_setCause(AlifObject*, AlifObject*); // 48
 
-AlifObject* alifException_getContext(AlifObject*); // 51
-void alifException_setContext(AlifObject*, AlifObject*); // 52
+ALIFAPI_FUNC(AlifObject*) alifException_getContext(AlifObject*); // 51
+ALIFAPI_FUNC(void) alifException_setContext(AlifObject*, AlifObject*); // 52
 
 
 // 60
@@ -42,52 +43,80 @@ void alifException_setContext(AlifObject*, AlifObject*); // 52
 #define ALIFBASEEXCEPTIONGROUP_CHECK(x)                   \
     ALIFOBJECT_TYPECHECK((x), (AlifTypeObject*)_alifExcBaseExceptionGroup_)
 
-extern AlifObject* _alifExcBaseException_; // 76
-extern AlifObject* _alifExcException_; // 77
-extern AlifObject* _alifExcBaseExceptionGroup_; // 77
+ALIFAPI_DATA(AlifObject*) _alifExcBaseException_; // 76
+ALIFAPI_DATA(AlifObject*) _alifExcException_; // 77
+ALIFAPI_DATA(AlifObject*) _alifExcBaseExceptionGroup_; // 77
 
-extern AlifObject* _alifExcStopAsyncIteration_; // 80
+ALIFAPI_DATA(AlifObject*) _alifExcStopAsyncIteration_; // 80
 
-extern AlifObject* _alifExcStopIteration_; // 82
-extern AlifObject* _alifExcAttributeError_; // 88
-extern AlifObject* _alifExcOSError_; // 92
-extern AlifObject* _alifExcImportError_; // 93
-extern AlifObject* _alifExcIndexError_; // 97
+ALIFAPI_DATA(AlifObject*) _alifExcStopIteration_; // 82
+ALIFAPI_DATA(AlifObject*) _alifExcAttributeError_; // 88
+ALIFAPI_DATA(AlifObject*) _alifExcOSError_; // 92
+ALIFAPI_DATA(AlifObject*) _alifExcImportError_; // 93
 
-
-
-extern AlifObject* _alifExcOverflowError_; // 102
-extern AlifObject* _alifExcRuntimeError_; // 102
-
-extern AlifObject* _alifExcSyntaxError_; // 108
-extern AlifObject* _alifExcIndentationError_; // 109
-extern AlifObject* _alifExcSystemError_; // 112
-extern AlifObject* _alifExcTypeError_; // 114
-
-extern AlifObject* _alifExcValueError_; // 120
-
-extern AlifObject* _alifExcBlockingIOError_; // 124
+ALIFAPI_DATA(AlifObject*) _alifExcIndexError_; // 97
+ALIFAPI_DATA(AlifObject*) _alifExcKeyError_; // 98
 
 
-AlifObject* alifErr_setFromErrnoWithFilenameObject(AlifObject*, AlifObject*);
-AlifObject* alifErr_setFromErrnoWithFilenameObjects(AlifObject*, AlifObject*, AlifObject*);
+
+ALIFAPI_DATA(AlifObject*) _alifExcNameError_; // 101
+ALIFAPI_DATA(AlifObject*) _alifExcOverflowError_; // 102
+ALIFAPI_DATA(AlifObject*) _alifExcRuntimeError_; // 103
+ALIFAPI_DATA(AlifObject*) _alifExcNotImplementedError; // 107
+ALIFAPI_DATA(AlifObject*) _alifExcSyntaxError_; // 108
+ALIFAPI_DATA(AlifObject*) _alifExcIndentationError_; // 109
+ALIFAPI_DATA(AlifObject*) _alifExcSystemError_; // 112
+ALIFAPI_DATA(AlifObject*) _alifExcSystemExit_; // 113
+ALIFAPI_DATA(AlifObject*) _alifExcTypeError_; // 114
+
+ALIFAPI_DATA(AlifObject*) _alifExcUnicodeEncodeError_; // 117
+
+ALIFAPI_DATA(AlifObject*) _alifExcValueError_; // 120
+
+ALIFAPI_DATA(AlifObject*) _alifExcBlockingIOError_; // 124
 
 
-AlifObject* alifErr_format(AlifObject*, const char*, ...); // 180
+ALIFAPI_FUNC(AlifObject*) alifErr_setFromErrnoWithFilenameObject(AlifObject*, AlifObject*);
+ALIFAPI_FUNC(AlifObject*) alifErr_setFromErrnoWithFilenameObjects(AlifObject*, AlifObject*, AlifObject*);
+
+
+ALIFAPI_FUNC(AlifObject*) alifErr_format(AlifObject*, const char*, ...); // 180
 
 
 
 #ifdef _WINDOWS // 192
 
-AlifObject* alifErr_setExcFromWindowsErrWithFilenameObject(
+ALIFAPI_FUNC(AlifObject*) alifErr_setExcFromWindowsErrWithFilenameObject(
 	AlifObject*, AlifIntT, AlifObject*);
-AlifObject* alifErr_setExcFromWindowsErrWithFilenameObjects(
+ALIFAPI_FUNC(AlifObject*) alifErr_setExcFromWindowsErrWithFilenameObjects(
 	AlifObject*, AlifIntT, AlifObject*, AlifObject*);
 
 #endif /* _WINDOWS */ // 210
 
 
-AlifObject* alifErr_newException(const char*, AlifObject*, AlifObject*); // 229
+
+ALIFAPI_FUNC(AlifObject*) alifErr_setImportError(AlifObject*, AlifObject*, AlifObject*); // 217
+
+
+ALIFAPI_FUNC(AlifObject*) alifErr_newException(const char*, AlifObject*, AlifObject*); // 229
+
+
+
+ALIFAPI_FUNC(AlifIntT) alifUnicodeEncodeError_setStart(AlifObject*, AlifSizeT); // 285
+
+ALIFAPI_FUNC(AlifIntT) alifUnicodeEncodeError_setEnd(AlifObject*, AlifSizeT); // 297
+
+
+ALIFAPI_FUNC(AlifIntT) alifUnicodeEncodeError_setReason(AlifObject*, const char*); // 308
+
+
+// 320
+ALIFAPI_FUNC(AlifIntT) alifOS_snprintf(char*, AlifUSizeT, const char*, ...)
+ALIF_GCC_ATTRIBUTE((format(printf, 3, 4)));
+ALIFAPI_FUNC(AlifIntT) alifOS_vsnprintf(char*, AlifUSizeT, const char*, va_list)
+ALIF_GCC_ATTRIBUTE((format(printf, 3, 0)));
+
+
 
 /* --------------------------------------------------------------------------------- */
 
@@ -134,6 +163,23 @@ public:
 };
 
 
+class AlifUnicodeErrorObject { // 43
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* encoding{};
+	AlifObject* object{};
+	AlifSizeT start{};
+	AlifSizeT end{};
+	AlifObject* reason{};
+};
+
+
+class AlifSystemExitObject { // 52
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* code{};
+};
+
 class AlifOSErrorObject { // 57
 public:
 	ALIFEXCEPTION_HEAD;
@@ -154,7 +200,11 @@ public:
 	AlifObject* value{};
 };
 
-
+class AlifNameErrorObject { // 74
+public:
+	ALIFEXCEPTION_HEAD;
+	AlifObject* name{};
+};
 
 class AlifAttributeErrorObject { // 79
 public:
@@ -166,9 +216,11 @@ public:
 
 
 
-void _alifErr_chainExceptions1(AlifObject*); // 93
+ALIFAPI_FUNC(void) _alifErr_chainExceptions1(AlifObject*); // 93
 
 
+ALIFAPI_FUNC(void) alifErr_rangedSyntaxLocationObject(AlifObject*, AlifIntT,
+	AlifIntT, AlifIntT, AlifIntT); // 112
 
 
-AlifObject* alifErr_programTextObject(AlifObject*, AlifIntT); // 119
+ALIFAPI_FUNC(AlifObject*) alifErr_programTextObject(AlifObject*, AlifIntT); // 119

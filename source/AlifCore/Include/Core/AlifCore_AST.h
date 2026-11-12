@@ -19,7 +19,7 @@ enum Operator_ {
 	LShift = 7, RShift = 8, BitOr = 9, BitXor = 10, BitAnd = 11,
 	FloorDiv = 12
 };
-enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4, Sqrt = 5 };
+enum UnaryOp_ { Invert = 1, Not = 2, UAdd = 3, USub = 4};
 enum CmpOp_ {
 	Equal = 1, NotEq = 2, LessThan = 3, LessThanEq = 4, GreaterThan = 5, GreaterThanEq = 6, Is = 7, IsNot = 8,
 	In = 9, NotIn = 10
@@ -44,11 +44,15 @@ public:
 	ModuleTy typedElements[1]{};
 };
 
+ASDLModSeq* alifNew_modSeq(AlifSizeT, AlifASTMem*);
+
 class ASDLStmtSeq { // 64
 public:
 	ASDL_SEQ_HEAD;
 	StmtTy typedElements[1]{};
 };
+
+ASDLStmtSeq* alifNew_stmtSeq(AlifSizeT, AlifASTMem*);
 
 class ASDLExprSeq { // 71
 public:
@@ -106,7 +110,7 @@ public:
 	TypeParamTy typedElements[1]{};
 };
 
-enum ModK_ { ModuleK = 1, InteractiveK, ExpressionK, FunctionK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
+enum ModK_ { ModuleK = 1, InteractiveK, ExpressionK, FunctionTypeK }; // يجب تحديد رقم البداية 1 لكي لا يبدأ من 0 حيث يتم التحقق فيما بعد ولا يجب أن تكون الحالة 0
 class Module { // 163
 public:
 	enum ModK_ type {};
@@ -130,7 +134,7 @@ public:
 		public:
 			ASDLExprSeq* argTypes{};
 			ExprTy returns{};
-		} function;
+		} functionType;
 
 	} V;
 };
@@ -138,7 +142,7 @@ public:
 enum StmtK_ { // 187
 	ClassDefK = 1, FunctionDefK, AsyncFunctionDefK, ReturnK,
 	DeleteK, AssignK, TypeAliasK, AugAssignK, ForK, AsyncForK, WhileK,
-	IfK, WithK, AsyncWithK, TryK, TryStarK, ImportK, ImportFromK,
+	IfK, WithK, AsyncWithK, RaiseK, TryK, TryStarK, ImportK, ImportFromK,
 	ExprK, PassK, BreakK, ContinueK, GlobalK, NonlocalK,
 };
 class Stmt { // 196
@@ -151,6 +155,7 @@ public:
 			ASDLExprSeq* bases{};
 			ASDLKeywordSeq* keywords{};
 			ASDLStmtSeq* body{};
+			ASDLExprSeq* decoratorList;
 			ASDLTypeParamSeq* typeParams{};
 		} classDef;
 
@@ -159,6 +164,7 @@ public:
 			Identifier name{};
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
+			ASDLExprSeq* decoratorList{};
 			ASDLTypeParamSeq* typeParams{};
 			ExprTy returns{};
 		} functionDef;
@@ -168,6 +174,8 @@ public:
 			Identifier name{};
 			ArgumentsTy args{};
 			ASDLStmtSeq* body{};
+			ASDLExprSeq* decoratorList{};
+			ExprTy returns{};
 			ASDLTypeParamSeq* typeParams{};
 		} asyncFunctionDef;
 
@@ -206,6 +214,7 @@ public:
 			ExprTy target{};
 			ExprTy iter{};
 			ASDLStmtSeq* body{};
+			ASDLStmtSeq* then{};
 		} for_;
 
 		class {
@@ -213,12 +222,14 @@ public:
 			ExprTy target{};
 			ExprTy iter{};
 			ASDLStmtSeq* body{};
+			ASDLStmtSeq* then{};
 		} asyncFor;
 
 		class {
 		public:
 			ExprTy condition{};
 			ASDLStmtSeq* body{};
+			ASDLStmtSeq* then{};
 		} while_;
 
 		class {
@@ -240,6 +251,12 @@ public:
 			ASDLStmtSeq* body{};
 			String comment{};
 		} asyncWith;
+
+		class {
+		public:
+			ExprTy exc{};
+			ExprTy cause{};
+		} raise;
 
 		class {
 		public:
@@ -273,6 +290,11 @@ public:
 		public:
 			ASDLIdentifierSeq* names{};
 		} global;
+
+		class {
+		public:
+			ASDLIdentifierSeq* names{};
+		} nonlocal;
 
 		class {
 		public:
@@ -585,22 +607,25 @@ public:
 
 ModuleTy alifAST_module(ASDLStmtSeq*, AlifASTMem*);
 ModuleTy alifAST_interactive(ASDLStmtSeq*, AlifASTMem*);
+ModuleTy alifAST_expression(ExprTy, AlifASTMem*);
+ModuleTy alifAST_functionType(ASDLExprSeq*, ExprTy, AlifASTMem*);
 StmtTy alifAST_assign(ASDLExprSeq*, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_typeAlias(ExprTy, ASDLTypeParamSeq*, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_expr(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_constant(Constant, String, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_asyncFunctionDef(Identifier, ArgumentsTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_functionDef(Identifier, ArgumentsTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_asyncFunctionDef(Identifier, ArgumentsTy, ASDLStmtSeq*, ASDLExprSeq*, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_functionDef(Identifier, ArgumentsTy, ASDLStmtSeq*, ASDLExprSeq*, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_return(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_delete(ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_classDef(Identifier, ASDLExprSeq*, ASDLKeywordSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_classDef(Identifier, ASDLExprSeq*, ASDLKeywordSeq*, ASDLStmtSeq*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_augAssign(ExprTy, Operator_, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_for(ExprTy, ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_asyncFor(ExprTy, ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
-StmtTy alifAST_while(ExprTy, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_for(ExprTy, ExprTy, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_asyncFor(ExprTy, ExprTy, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_while(ExprTy, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_if(ExprTy, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_with(ASDLWithItemSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_asyncWith(ASDLWithItemSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+StmtTy alifAST_raise(ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_try(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_tryStar(ASDLStmtSeq*, ASDLExcepthandlerSeq*, ASDLStmtSeq*, ASDLStmtSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 StmtTy alifAST_import(ASDLAliasSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
@@ -617,6 +642,7 @@ ExprTy alifAST_ifExpr(ExprTy, ExprTy, ExprTy, AlifIntT, AlifIntT, AlifIntT, Alif
 ExprTy alifAST_dict(ASDLExprSeq*, ASDLExprSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_listComp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_dictComp(ExprTy, ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
+ExprTy alifAST_setComp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_generatorExp(ExprTy, ASDLComprehensionSeq*, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_await(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 ExprTy alifAST_yield(ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
@@ -646,5 +672,8 @@ TypeParamTy alifAST_paramSpec(Identifier, ExprTy, AlifIntT, AlifIntT, AlifIntT, 
 TypeParamTy alifAST_typeVarTuple(Identifier, ExprTy, AlifIntT, AlifIntT, AlifIntT, AlifIntT, AlifASTMem*);
 
 AlifObject* alifAST_mod2obj(ModuleTy); // 909
+
+AlifIntT alifAST_check(AlifObject*); // 911
+
 
 extern AlifObject* alifAST_getDocString(ASDLStmtSeq*);

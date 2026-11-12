@@ -16,6 +16,18 @@
 
 #define UNLOCK_CODE()   ALIF_END_CRITICAL_SECTION()
 
+#define MODIFY_BYTECODE(code, func, ...)                       \
+    do {                                                       \
+        AlifCodeObject* co = (code);                             \
+        for (AlifSizeT i = 0; i < code->coTlbc->size; i++) { \
+            char *bc = co->coTlbc->entries[i];                \
+            if (bc == nullptr) {                                  \
+                continue;                                      \
+            }                                                  \
+            (func)((AlifCodeUnit*)bc, __VA_ARGS__);           \
+        }                                                      \
+    } while (0)
+
 
 AlifObject _alifInstrumentationDisable_ = ALIFOBJECT_HEAD_INIT(&_alifBaseObjectType_); // 54
 
@@ -47,9 +59,38 @@ static const uint8_t _deInstrument_[256] = { // 94
 
 
 
+AlifIntT _alifInstruction_getLength(AlifCodeObject* code,
+	AlifIntT offset) { // 321
+	//ASSERT_WORLD_STOPPED_OR_LOCKED(code);
+
+	AlifIntT opcode = alifAtomic_loadUint8Relaxed(&ALIFCODE_CODE(code)[offset].op.code);
+	if (opcode == INSTRUMENTED_LINE) {
+		opcode = code->monitoring->lines[offset].originalOpcode;
+	}
+	if (opcode == INSTRUMENTED_INSTRUCTION) {
+		opcode = code->monitoring->perInstructionOpcodes[offset];
+	}
+	int deinstrumented = _deInstrument_[opcode];
+	if (deinstrumented) {
+		opcode = deinstrumented;
+	}
+	else {
+		opcode = _alifOpcodeDeopt_[opcode];
+	}
+	if (opcode == ENTER_EXECUTOR) {
+		AlifIntT exec_index = ALIFCODE_CODE(code)[offset].op.arg;
+		AlifExecutorObject* exec = code->executors->executors[exec_index];
+		opcode = _alifOpcodeDeopt_[exec->data.opcode];
+	}
+	return 1 + _alifOpcodeCaches_[opcode];
+}
+
+
 
 AlifCodeUnit _alif_getBaseCodeUnit(AlifCodeObject* _code, AlifIntT _i) { // 583
-	AlifCodeUnit inst = ALIFCODE_CODE(_code)[_i];
+	AlifCodeUnit* src_instr = ALIFCODE_CODE(_code) + _i;
+	AlifCodeUnit inst = {
+		.cache = alifAtomic_loadUint16Relaxed(&(*(uint16_t*)src_instr))};
 	AlifIntT opcode = inst.op.code;
 	if (opcode < MIN_INSTRUMENTED_OPCODE) {
 		inst.op.code = _alifOpcodeDeopt_[opcode];

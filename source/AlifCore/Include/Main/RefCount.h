@@ -67,7 +67,7 @@ static inline void alifSet_refCount(AlifObject* ob, AlifSizeT refcnt) { // 115
 }
 #define ALIF_SET_REFCNT(_ob, _refcnt) alifSet_refCount(ALIFOBJECT_CAST(_ob), (_refcnt))
 
-void alif_dealloc(AlifObject*); // 196
+ALIFAPI_FUNC(void) alif_dealloc(AlifObject*); // 196
 
 static inline ALIF_ALWAYS_INLINE void alif_incRef(AlifObject* op) { // 211
 	uint32_t local = alifAtomic_loadUint32Relaxed(&op->refLocal);
@@ -88,10 +88,10 @@ static inline ALIF_ALWAYS_INLINE void alif_incRef(AlifObject* op) { // 211
 
 
 
-void alif_decRefShared(AlifObject*); // 269
-void alif_decRefSharedDebug(AlifObject*, const char*, AlifIntT); // 270
+ALIFAPI_FUNC(void) alif_decRefShared(AlifObject*); // 269
+ALIFAPI_FUNC(void) alif_decRefSharedDebug(AlifObject*, const char*, AlifIntT); // 270
 
-void alif_mergeZeroLocalRefcount(AlifObject*); // 276
+ALIFAPI_FUNC(void) alif_mergeZeroLocalRefcount(AlifObject*); // 276
 
 
 static inline void alif_decreaseRef(AlifObject* _op) { // 319

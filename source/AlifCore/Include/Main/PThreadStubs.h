@@ -45,12 +45,12 @@ typedef struct { unsigned __attr; } pthread_attr_t;
 
 
 
-AlifIntT pthread_mutex_destroy(pthread_mutex_t*); // 61
+ALIFAPI_FUNC(AlifIntT) pthread_mutex_destroy(pthread_mutex_t*); // 61
 
-AlifIntT pthread_condInit(pthread_cond_t* restrict cond,
+ALIFAPI_FUNC(AlifIntT) pthread_condInit(pthread_cond_t* restrict cond,
 	const pthread_condattr_t* restrict attr); // 67
 
-AlifIntT pthread_condTimedWait(pthread_cond_t* restrict cond,
+ALIFAPI_FUNC(AlifIntT) pthread_condTimedWait(pthread_cond_t* restrict cond,
 	pthread_mutex_t* restrict mutex, const struct timespec* restrict abstime); // 72
 
 

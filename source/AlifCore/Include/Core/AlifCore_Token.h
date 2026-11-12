@@ -1,6 +1,8 @@
 #pragma once
 
 
+#undef TILDE   /* Prevent clash of our definition with system macro. Ex AIX, ioctl.h */
+
 #define ENDMARKER				0
 #define NAME					1
 #define NUMBER					2
@@ -23,44 +25,46 @@
 #define AMPER					19	// &
 #define LSHIFTEQUAL				20	// <<=
 #define RSHIFTEQUAL				21	// >>=
-#define DOUBLECIRCUMFLEXEQUAL	22	// ^^=
+#define STARVBAREQUAL       	22	// *|=
 #define VBAREQUAL				23	// |=
 #define AMPEREQUAL				24	// &=
 #define DOUBLESLASHEQUAL		25	// //=
 #define SLASHSTAREQUAL			26	// /*=
 #define CIRCUMFLEXEQUAL			27	// ^=
-#define SLASHEQUAL				28	// /=
-#define STAREQUAL				29	// *=
-#define MINUSEQUAL				30	// -=
-#define PLUSEQUAL				31	// +=
-#define DOUBLESTAR				32	// **
-#define EQUALEQUAL				33  // ==
-#define NOTEQUAL				34  // !=
-#define LESSEQUAL				35  // <=
-#define LESSTHAN				36  // <
-#define GREATEREQUAL			37  // >=
-#define GREATERTHAN				38  // >
-#define VBAR					39  // |
-#define STARVBAR				40  // *|
-#define RSHIFT					41  // >>
-#define LSHIFT					42  // <<
-#define DOUBLESLASH				43  // //
-#define SLASH					44  // /
-#define SLASHSTAR				45  // /*
-#define CIRCUMFLEX				46  // ^
-#define SLASHCIRCUMFLEX			47  // /^
-#define LBRACE					48  // {
-#define RBRACE					49  // }
-#define EXCLAMATION				50  // !
-#define OP						51
-#define ELLIPSIS				52	// ...
-#define TYPE_COMMENT            53
-#define COMMENT					54
-#define FSTRINGSTART			55	
-#define FSTRINGMIDDLE			56	
-#define FSTRINGEND				57	
-#define NL						58	
-#define ERRORTOKEN				59	
+#define SLASHEQUAL				29	// /=
+#define STAREQUAL				30	// *=
+#define MINUSEQUAL				31	// -=
+#define PLUSEQUAL				32	// +=
+#define DOUBLESTAR				33	// **
+#define EQUALEQUAL				34  // ==
+#define NOTEQUAL				35  // !=
+#define LESSEQUAL				36  // <=
+#define LESSTHAN				37  // <
+#define GREATEREQUAL			38  // >=
+#define GREATERTHAN				39  // >
+#define VBAR					40  // |
+#define STARVBAR				41  // *|
+#define RSHIFT					42  // >>
+#define LSHIFT					43  // <<
+#define TILDE                   44  // ~
+#define DOUBLESLASH				45  // //
+#define SLASH					46  // /
+#define SLASHSTAR				47  // /*
+#define CIRCUMFLEX				48  // ^
+#define SLASHCIRCUMFLEX			49  // /^
+#define LBRACE					50  // {
+#define RBRACE					51  // }
+#define AT                      52  // @
+#define EXCLAMATION				53  // !
+#define OP						54
+#define ELLIPSIS				55	// ...
+#define TYPE_COMMENT            56
+#define COMMENT					57
+#define FSTRINGSTART			58	
+#define FSTRINGMIDDLE			59	
+#define FSTRINGEND				60	
+#define NL						61	
+#define ERRORTOKEN				62	
 #define NTOFFSET				256
 
 
@@ -76,7 +80,7 @@
 
 
 
-extern const char* const _alifParserTokenNames_[];
-AlifIntT alifToken_oneChar(AlifIntT);
-AlifIntT alifToken_twoChars(AlifIntT, AlifIntT);
-AlifIntT alifToken_threeChars(AlifIntT, AlifIntT, AlifIntT);
+ALIFAPI_DATA(const char* const) _alifParserTokenNames_[];
+ALIFAPI_FUNC(AlifIntT) alifToken_oneChar(AlifIntT);
+ALIFAPI_FUNC(AlifIntT) alifToken_twoChars(AlifIntT, AlifIntT);
+ALIFAPI_FUNC(AlifIntT) alifToken_threeChars(AlifIntT, AlifIntT, AlifIntT);

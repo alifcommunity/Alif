@@ -1,6 +1,6 @@
 #pragma once
 
-extern AlifTypeObject _alifTupleType_; // 23
+ALIFAPI_DATA(AlifTypeObject) _alifTupleType_; // 23
 
 // 26
 #define ALIFTUPLE_CHECK(_op) \
@@ -8,11 +8,11 @@ extern AlifTypeObject _alifTupleType_; // 23
 #define ALIFTUPLE_CHECKEXACT(_op) ALIF_IS_TYPE((_op), &_alifTupleType_)
 
 
-AlifObject* alifTuple_new(AlifSizeT ); // 30
-AlifSizeT alifTuple_size(AlifObject*); // 31
-AlifObject* alifTuple_getItem(AlifObject*, AlifSizeT); // 32
-AlifObject* alifTuple_getSlice(AlifObject*, AlifSizeT, AlifSizeT); // 34
-AlifObject* alifTuple_pack(AlifSizeT , ...); // 35
+ALIFAPI_FUNC(AlifObject*) alifTuple_new(AlifSizeT ); // 30
+ALIFAPI_FUNC(AlifSizeT) alifTuple_size(AlifObject*); // 31
+ALIFAPI_FUNC(AlifObject*) alifTuple_getItem(AlifObject*, AlifSizeT); // 32
+ALIFAPI_FUNC(AlifObject*) alifTuple_getSlice(AlifObject*, AlifSizeT, AlifSizeT); // 34
+ALIFAPI_FUNC(AlifObject*) alifTuple_pack(AlifSizeT , ...); // 35
 
 
 /* ------------------------------------------------------------------------------------------------------------*/
@@ -24,7 +24,7 @@ public:
 };
 
 
-AlifIntT alifTuple_resize(AlifObject** , AlifSizeT ); // 13
+ALIFAPI_FUNC(AlifIntT) _alifTuple_resize(AlifObject**, AlifSizeT); // 13
 
 // 16
 #define ALIFTUPLE_CAST(_op) ALIF_CAST(AlifTupleObject*, (_op))

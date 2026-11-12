@@ -54,6 +54,16 @@ public:
 };
 
 
+class AlifCodeArray { // 82
+public:
+	AlifSizeT size{};
+	char *entries[1]{};
+};
+
+#define _ALIFCODE_DEF_THREAD_LOCAL_BYTECODE() \
+    AlifCodeArray *coTlbc{};
+
+
 // 73
 #define ALIFCODE_DEF(_size) {                                                    \
 public:																			\
@@ -90,7 +100,8 @@ public:																			\
     AlifCoMonitoringData *monitoring{}; /* Monitoring data */                 \
     AlifSizeT uniqueID{};     /* ID used for per-thread refcounting */   \
     AlifIntT firstTraceable{};       /* index of first traceable instruction */   \
-    void *extra{};                                                            \
+    void *extra{};                                                           \
+	_ALIFCODE_DEF_THREAD_LOCAL_BYTECODE()                                     \
     char codeAdaptive[(_size)]{};                                             \
 }
 
@@ -128,17 +139,21 @@ class AlifCodeObject ALIFCODE_DEF(1); // 140
 
 #define MAXBLOCKS 21
 
-extern AlifTypeObject _alifCodeType_; // 189
+ALIFAPI_DATA(AlifTypeObject) _alifCodeType_; // 189
 #define ALIFCODE_CHECK(_op) ALIF_IS_TYPE((_op), &_alifCodeType_)
 
 
 
-static inline AlifIntT alifUnstableCode_getFirstFree(AlifCodeObject* _op) { // 188
+static inline AlifSizeT alifCode_getNumFree(AlifCodeObject* _op) { // 212
+	return _op->nFreeVars;
+}
+
+static inline AlifIntT alifUnstableCode_getFirstFree(AlifCodeObject* _op) { // 217
 	return _op->nLocalsPlus - _op->nFreeVars;
 }
 
 
-AlifIntT alifCode_addr2Line(AlifCodeObject*, AlifIntT); // 243
+ALIFAPI_FUNC(AlifIntT) alifCode_addr2Line(AlifCodeObject*, AlifIntT); // 243
 
 
 // 247
@@ -174,10 +189,10 @@ public:
 typedef AlifCodeAddressRange LineOffsets;
 
 
-AlifIntT _alifCode_checkLineNumber(AlifIntT, AlifCodeAddressRange*); // 304
+ALIFAPI_FUNC(AlifIntT) _alifCode_checkLineNumber(AlifIntT, AlifCodeAddressRange*); // 329
 
 
-AlifObject* alifCode_constantKey(AlifObject*); // 309
+ALIFAPI_FUNC(AlifObject*) _alifCode_constantKey(AlifObject*); // 309
 
 enum AlifCodeLocationInfoKind { // 340
 	AlifCode_Location_Info_Short = 0,

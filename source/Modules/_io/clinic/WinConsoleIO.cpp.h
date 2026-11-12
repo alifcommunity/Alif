@@ -36,7 +36,8 @@ static AlifIntT _io_windowsConsoleIO__init__(AlifObject* self, AlifObject* args,
 	AlifIntT closefd = 1;
 	AlifObject* opener = ALIF_NONE;
 
-	fastargs = ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser, 1, 4, 0, argsbuf);
+	fastargs = _ALIFARG_UNPACKKEYWORDS(ALIFTUPLE_CAST(args)->item, nargs, kwargs, nullptr, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 4, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!fastargs) {
 		goto exit;
 	}
@@ -133,7 +134,7 @@ static AlifObject* _io_WindowsConsoleIO_write(WinConsoleIO* self,
 	AlifTypeObject* cls, AlifObject* const* args, AlifSizeT nargs, AlifObject* kwnames) { // 363
 	AlifObject* returnValue = nullptr;
 #if defined(ALIF_BUILD_CORE) and !defined(ALIF_BUILD_CORE_MODULE)
-#  define KWTUPLE (AlifObject *)&_alifSingleton_(tupleEmpty)
+#  define KWTUPLE (AlifObject *)&ALIF_SINGLETON(tupleEmpty)
 #else
 #  define KWTUPLE nullptr
 #endif
@@ -148,7 +149,8 @@ static AlifObject* _io_WindowsConsoleIO_write(WinConsoleIO* self,
 	AlifObject* argsbuf[1];
 	AlifBuffer b = { nullptr, nullptr };
 
-	args = ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser, 1, 1, 0, argsbuf);
+	args = _ALIFARG_UNPACKKEYWORDS(args, nargs, nullptr, kwnames, &_parser,
+		/*minpos*/ 1, /*maxpos*/ 1, /*minkw*/ 0, /*varpos*/ 0, argsbuf);
 	if (!args) {
 		goto exit;
 	}

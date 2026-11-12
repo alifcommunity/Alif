@@ -26,6 +26,8 @@ public:
 		AlifIntT isFinalized{};
 	}refCounts{};
 
+	int32_t tlbcIndex{}; // thread-local bytecode
+
 	// When >1, code objects do not immortalize their non-string constants.
 	AlifIntT suppressCoConstImmortalization{};
 };

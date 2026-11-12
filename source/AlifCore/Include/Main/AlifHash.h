@@ -41,7 +41,7 @@
 #define ALIFHASH_INF 314159
 
 
-AlifHashT _alif_hashDouble(AlifObject*, double); // 30
+ALIFAPI_FUNC(AlifHashT) _alif_hashDouble(AlifObject*, double); // 30
 
 
 /* hash function definition */
@@ -54,5 +54,5 @@ public:
 };
 
 
-AlifHashT alif_hashPointer(const void*); // 46
-AlifHashT alifObject_genericHash(AlifObject*); // 47
+ALIFAPI_FUNC(AlifHashT) alif_hashPointer(const void*); // 46
+ALIFAPI_FUNC(AlifHashT) alifObject_genericHash(AlifObject*); // 47

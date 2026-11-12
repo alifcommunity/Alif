@@ -16,6 +16,7 @@
 #include "AlifCore_ThreadState.h"
 #include "AlifCore_GlobalObjects.h"
 #include "AlifCore_Import.h"
+#include "AlifCore_IndexPool.h"
 #include "AlifCore_Tuple.h"
 #include "AlifCore_TypeObject.h"
 #include "AlifCore_Exceptions.h"
@@ -74,6 +75,7 @@ public:
 	public:
 		AlifUSizeT nextUniquID{};
 		AlifThread* head{};
+		AlifThreadImpl *preallocated{};
 		AlifThread* main{};
 		AlifUSizeT count{};
 
@@ -115,7 +117,8 @@ public:
 	MimallocInterpState mimalloc{};
 	BRCState brc{};  // biased reference counting state
 	AlifUniqueIDPool uniqueIDs{};
-	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS];
+	AlifMutex weakrefLocks[NUM_WEAKREF_LIST_LOCKS]{};
+	AlifIndexPool tlbcIndices{}; // thread-local bytecode
 
 	StopTheWorldState stopTheWorld{};
 
@@ -145,6 +148,7 @@ public:
 
 
 	AlifInterpCachedObjects cachedObjects{};
+	AlifSizeT _interactiveSrcCount{};
 
 	AlifThreadImpl initialThread{};
 };
@@ -161,7 +165,7 @@ static inline unsigned long alifInterpreterState_getFinalizingID(AlifInterpreter
 
 
 
-extern const AlifConfig* alifInterpreter_getConfig(AlifInterpreter*); // 329
+extern const AlifConfig* _alifInterpreterState_getConfig(AlifInterpreter*); // 329
 
 // 379
 #define ALIF_RTFLAGS_USE_ALIFMEM (1UL << 5)
@@ -176,7 +180,9 @@ static inline AlifThread* alifInterpreter_getFinalizing(AlifInterpreter* _interp
 	return (AlifThread*)alifAtomic_loadPtrRelaxed(&_interp->finalizing);
 }
 
-AlifStatus alifInterpreter_new(AlifThread*, AlifInterpreter**); // 399
+extern AlifIntT _alifInterpreterState_hasFeature(AlifInterpreter*, unsigned long); // 399
+
+ALIFAPI_FUNC(AlifStatus) _alifInterpreterState_new(AlifThread*, AlifInterpreter**); // 402
 
 // 407
 #define RARE_EVENT_INTERP_INC(_interp, _name) \

@@ -74,3 +74,6 @@ extern AlifSizeT alifQSBR_reserve(AlifInterpreter*); // 133
 
 
 extern void alifQSBR_register(AlifThreadImpl*, AlifInterpreter*, AlifSizeT); // 138
+
+
+extern void _alifQSBR_unregister(AlifThread*); // 142

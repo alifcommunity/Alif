@@ -23,17 +23,21 @@
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ASTState.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Audit.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Backoff.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_BytesMethods.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Cell.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Code.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Codecs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_DescrObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Errors.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Exceptions.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FileUtilsWindows.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FloatObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_FlowGraph.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Frame.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Function.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_GenObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_ImportDL.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_IndexPool.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Instruments.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Intrinsics.h" />
     <ClInclude Include="..\source\AlifCore\Include\Core\AlifCore_Math.h" />
@@ -162,6 +166,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\DictObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\EnumObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\ErrorCode.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\Exports.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FileUtils.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Codecs.h" />
@@ -169,6 +174,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\FrameObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\GetPath.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\Importlib._bootstrap.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\FrozenModules\Importlib._bootstrap_external.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\FuncObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\GenericAliasObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\GenObject.h" />
@@ -181,6 +187,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\LongIntRepr.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\LongObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\Marshal.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\MemoryHelpers.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\MethodObject.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\mimalloc\mimalloc\atomic.h" />
@@ -203,6 +210,7 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\ASCIILib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Codecs.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Count.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\CppType.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Equal.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\FastSearch.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Find.h" />
@@ -212,6 +220,8 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Replace.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Repr.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Split.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\StringDefs.h" />
+    <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\Transmogrify.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS1Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS2Lib.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\StringLib\UCS4Lib.h" />
@@ -230,17 +240,25 @@
     <ClInclude Include="..\source\AlifCore\Include\Main\UStrTypeDB.h" />
     <ClInclude Include="..\source\AlifCore\Include\Main\WeakRefObject.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\BltinModule.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\ByteArrayObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\BytesObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\DescrObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\DictObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\FloatObject.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\Import.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\ListObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\LongObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\MathModule.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\ModuleObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SetObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\SysModule.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\Traceback.cpp.h" />
+    <ClInclude Include="..\source\AlifCore\Objects\clinic\TupleObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\TypeObject.cpp.h" />
     <ClInclude Include="..\source\AlifCore\Objects\clinic\UStrObject.cpp.h" />
+    <ClInclude Include="..\source\Modules\clinic\PosixModule.cpp.h" />
     <ClInclude Include="..\source\Modules\clinic\_abc.cpp.h" />
+    <ClInclude Include="..\source\Modules\clinic\_CodecsModule.cpp.h" />
     <ClInclude Include="..\source\Modules\clinic\_RandomModule.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\BufferedIO.cpp.h" />
     <ClInclude Include="..\source\Modules\_io\clinic\FileIO.cpp.h" />
@@ -264,6 +282,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\AlifHash.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifLexer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifLifeCycle.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\AlifMath.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMemory.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifMimalloc.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifObject.cpp" />
@@ -287,6 +306,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\BootstrapHash.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Buffer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ByteArrayObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\BytesMethods.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\BytesObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Call.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\AlifCapsule.cpp" />
@@ -301,6 +321,7 @@
     <ClCompile Include="..\source\AlifCore\Objects\DictObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\CriticalSection.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\dtoa\DoubleToASCII.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\DynLoadWin.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\EnumObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Errors.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Exceptions.cpp" />
@@ -321,11 +342,13 @@
     <ClCompile Include="..\source\AlifCore\Objects\GetArgs.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetOption.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetPath.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\GetPlatform.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\GetVersion.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\HashTable.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Helpers.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Import.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ImportDL.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\IndexPool.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InitConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\InstructionSequence.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\Instrumentation.cpp" />
@@ -339,16 +362,17 @@
     <ClCompile Include="..\source\AlifCore\Objects\MethodObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModSupport.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ModuleObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\MySnprintf.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\NamespaceObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ObjectStack.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\ParserEngineAPI.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PathConfig.cpp" />
-    <ClCompile Include="..\source\AlifCore\Objects\PosixModule.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\PreConfig.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\QuiescentStatesBiaseRef.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\RangeObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SetObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\SliceObject.cpp" />
+    <ClCompile Include="..\source\AlifCore\Objects\Specialize.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringParser.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StringTokenizer.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\StructMember.cpp" />
@@ -368,15 +392,18 @@
     <ClCompile Include="..\source\AlifCore\Objects\WeakRefObject.cpp" />
     <ClCompile Include="..\source\AlifCore\Objects\WinConsoleIO.cpp" />
     <ClCompile Include="..\source\Modules\MathModule.cpp" />
+    <ClCompile Include="..\source\Modules\PosixModule.cpp" />
     <ClCompile Include="..\source\Modules\SignalModule.cpp" />
     <ClCompile Include="..\source\Modules\TimeModule.cpp" />
     <ClCompile Include="..\source\Modules\_abc.cpp" />
+    <ClCompile Include="..\source\Modules\_CodecsModule.cpp" />
     <ClCompile Include="..\source\Modules\_io\BufferedIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\FileIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\IOBase.cpp" />
     <ClCompile Include="..\source\Modules\_io\TextIO.cpp" />
     <ClCompile Include="..\source\Modules\_io\_IOModule.cpp" />
     <ClCompile Include="..\source\Modules\_RandomModule.cpp" />
+    <ClCompile Include="..\source\Windows\dl_nt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="FreezeModule.vcxproj">
@@ -455,6 +482,11 @@
     <IntDir>$(Platform)\$(Configuration)\$(TargetName)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>ALIF_ENABLE_SHARED;ALIF_BUILD_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

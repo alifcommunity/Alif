@@ -30,10 +30,12 @@
 #define SUCCESS 0
 #define ERROR -1
 
-#define RETURN_IF_ERROR(_x)  \
-    if ((_x) == -1) {        \
-        return ERROR;       \
-    }
+#define RETURN_IF_ERROR(_x)     \
+    do {                        \
+		if ((_x) == -1) {       \
+			return ERROR;       \
+		}                       \
+	} while (0)
 
 typedef AlifSourceLocation Location;
 typedef AlifJumpTargetLabel JumpTargetLabel;
@@ -47,7 +49,7 @@ typedef AlifCompileFBlockType FBlockType;
 
 class CompilerUnit {
 public:
-	SymTableEntry* ste{};
+	AlifSTEntryObject* ste{};
 
 	AlifIntT scopeType{};
 
@@ -119,7 +121,7 @@ static AlifIntT compiler_setup(AlifCompiler* _c, ModuleTy _mod, AlifObject* _fil
 	_c->future.features = merged;
 	_flags->flags = merged;
 	_c->flags = *_flags;
-	_c->optimize = (_optimize == -1) ? alif_getConfig()->optimizationLevel : _optimize;
+	_c->optimize = (_optimize == -1) ? _alif_getConfig()->optimizationLevel : _optimize;
 	_c->saveNestedSeqs = false;
 
 	if (!alifAST_optimize(_mod, _astMem, _c->optimize, merged)) {
@@ -304,7 +306,7 @@ static AlifObject* const_cacheInsert(AlifObject* _constCache,
 		return _o;
 	}
 
-	AlifObject* key_ = alifCode_constantKey(_o);
+	AlifObject* key_ = _alifCode_constantKey(_o);
 	if (key_ == nullptr) {
 		return nullptr;
 	}
@@ -360,7 +362,7 @@ static AlifObject* const_cacheInsert(AlifObject* _constCache,
 		AlifSizeT i_ = 0, pos_ = 0;
 		AlifObject* item{};
 		AlifHashT hash{};
-		while (alifSet_nextEntry(_o, &pos_, &item, &hash)) {
+		while (_alifSet_nextEntry(_o, &pos_, &item, &hash)) {
 			AlifObject* k_ = const_cacheInsert(_constCache, item, _recursive);
 			if (k_ == nullptr) {
 				ALIF_DECREF(tuple);
@@ -513,9 +515,9 @@ static AlifObject* dict_byType(AlifObject* _src, AlifIntT _scopeType,
 		k = ALIFLIST_GET_ITEM(sortedKeys, keyI);
 		v = alifDict_getItemWithError(_src, k);
 		if (!v) {
-			//if (!alifErr_occurred()) {
-			//	alifErr_SetObject(_alifExcKeyError_, k);
-			//}
+			if (!alifErr_occurred()) {
+				alifErr_setObject(_alifExcKeyError_, k);
+			}
 			ALIF_DECREF(sortedKeys);
 			ALIF_DECREF(dest);
 			return nullptr;
@@ -826,11 +828,11 @@ static AlifCodeObject* compiler_mod(AlifCompiler* _c, ModuleTy _mod) {
 
 AlifIntT _alifCompiler_getRefType(AlifCompiler* _c, AlifObject* _name) {
 	if (_c->u_->scopeType == ScopeType_::Compiler_Scope_Class and
-		(alifUStr_equalToASCIIString(_name, "__class__") or
-			alifUStr_equalToASCIIString(_name, "__classDict__"))) {
+		(_alifUStr_equalToASCIIString(_name, "__class__") or
+			_alifUStr_equalToASCIIString(_name, "__classDict__"))) {
 		return CELL;
 	}
-	SymTableEntry* ste = _c->u_->ste;
+	AlifSTEntryObject* ste = _c->u_->ste;
 	AlifIntT scope = alifST_getScope(ste, _name);
 	if (scope == 0) {
 		alifErr_format(_alifExcSystemError_,
@@ -888,7 +890,7 @@ AlifIntT _alifCompiler_lookupArg(AlifCompiler* _c,
 		//	"compiler_lookupArg(name=%R) with reftype=%d failed in %S; "
 		//	"freevars of code %S: %R",
 		//	_name, reftype, _c->u_->metadata.name, _co->name, freevars);
-		//ALIF_DECREF(freevars);
+		//ALIF_XDECREF(freevars);
 		return ERROR;
 	}
 	return arg;
@@ -973,7 +975,7 @@ AlifIntT _alifCompiler_resolveNameOp(AlifCompiler* _c, AlifObject* _mangled,
 
 
 AlifIntT _alifCompiler_tweakInlinedComprehensionScopes(AlifCompiler* _c, Location _loc,
-	SymTableEntry* _entry, AlifCompilerInlinedComprehensionState* _state) {
+	AlifSTEntryObject* _entry, AlifCompilerInlinedComprehensionState* _state) {
 	AlifIntT in_class_block = (_c->u_->ste->type == BlockType_::Class_Block)
 		and !_c->u_->inInlinedComp;
 	_c->u_->inInlinedComp++;
@@ -1176,7 +1178,7 @@ AlifSymTable* _alifCompiler_symTable(AlifCompiler* _c) {
 
 
 
-SymTableEntry* _alifCompiler_symTableEntry(AlifCompiler* _c) {
+AlifSTEntryObject* _alifCompiler_symTableEntry(AlifCompiler* _c) {
 	return _c->u_->ste;
 }
 
@@ -1281,7 +1283,7 @@ static AlifObject* constsDict_keysInorder(AlifObject* _dict) {
 
 
 static AlifIntT compute_codeFlags(AlifCompiler* _c) {
-	SymTableEntry* ste = _c->u_->ste;
+	AlifSTEntryObject* ste = _c->u_->ste;
 	AlifIntT flags = 0;
 	if (alifST_isFunctionLike(ste)) {
 		flags |= CO_NEWLOCALS | CO_OPTIMIZED;
@@ -1401,7 +1403,7 @@ AlifIntT _alifCompile_astOptimize(ModuleTy _mod, AlifObject* _filename,
 	}
 	AlifIntT flags = future.features | _cf->flags;
 	if (_optimize == -1) {
-		_optimize = alif_getConfig()->optimizationLevel;
+		_optimize = _alif_getConfig()->optimizationLevel;
 	}
 	if (!alifAST_optimize(_mod, _astMem, _optimize, flags)) {
 		return -1;

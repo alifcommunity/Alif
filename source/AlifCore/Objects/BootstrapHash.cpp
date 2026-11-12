@@ -112,7 +112,7 @@ static AlifIntT dev_urandom(char *buffer,
 				return -1;
 			if (n == 0) {
 				alifErr_format(_alifExcRuntimeError_,
-					"فشل في قراءة %zi بايت من /dev/urandom",
+					"فشل في قراءة %zi ثمانية من /dev/urandom",
 					size);
 				return -1;
 			}

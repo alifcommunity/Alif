@@ -506,8 +506,8 @@ static int attributes_to_mode(DWORD attr) { // 1085
 typedef union {
 	FILE_ID_128 id;
 	struct {
-		uint64_t ino;
-		uint64_t inoHigh;
+		uint64_t st_ino;
+		uint64_t st_ino_high;
 	};
 } id_128_to_ino;
 
@@ -521,13 +521,13 @@ void _alifAttribute_dataToStat(BY_HANDLE_FILE_INFORMATION* info, ULONG reparse_t
 	result->st_rdev = 0;
 	/* st_ctime is deprecated, but we preserve the legacy value in our caller, not here */
 	if (basic_info) {
-		LARGE_INTEGER_to_time_t_nsec(&basic_info->CreationTime, &result->birthtime, &result->birthtimeNSec);
+		LARGE_INTEGER_to_time_t_nsec(&basic_info->CreationTime, &result->st_birthtime, &result->st_birthtime_nsec);
 		LARGE_INTEGER_to_time_t_nsec(&basic_info->ChangeTime, &result->st_ctime, &result->st_ctime_nsec);
 		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastWriteTime, &result->st_mtime, &result->st_mtime_nsec);
 		LARGE_INTEGER_to_time_t_nsec(&basic_info->LastAccessTime, &result->st_atime, &result->st_atime_nsec);
 	}
 	else {
-		FILE_TIME_to_time_t_nsec(&info->ftCreationTime, &result->birthtime, &result->birthtimeNSec);
+		FILE_TIME_to_time_t_nsec(&info->ftCreationTime, &result->st_birthtime, &result->st_birthtime_nsec);
 		FILE_TIME_to_time_t_nsec(&info->ftLastWriteTime, &result->st_mtime, &result->st_mtime_nsec);
 		FILE_TIME_to_time_t_nsec(&info->ftLastAccessTime, &result->st_atime, &result->st_atime_nsec);
 	}
@@ -536,23 +536,81 @@ void _alifAttribute_dataToStat(BY_HANDLE_FILE_INFORMATION* info, ULONG reparse_t
 	if (id_info) {
 		id_128_to_ino file_id;
 		file_id.id = id_info->FileId;
-		result->st_ino = file_id.ino;
-		result->inoHigh = file_id.inoHigh;
+		result->st_ino = file_id.st_ino;
+		result->st_ino_high = file_id.st_ino_high;
 	}
-	if (!result->st_ino and !result->inoHigh) {
+	if (!result->st_ino and !result->st_ino_high) {
 		result->st_ino = (((uint64_t)info->nFileIndexHigh) << 32) + info->nFileIndexLow;
 	}
 
-	result->reparseTag = reparse_tag;
+	result->st_reparse_tag = reparse_tag;
 	if (info->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT &&
 		reparse_tag == IO_REPARSE_TAG_SYMLINK) {
 		/* set the bits that make this a symlink */
 		result->st_mode = (result->st_mode & ~S_IFMT) | S_IFLNK;
 	}
-	result->fileAttributes = info->dwFileAttributes;
+	result->st_file_attributes = info->dwFileAttributes;
 }
 
+void _alifStat_basicInfoToStat(FILE_STAT_BASIC_INFORMATION *info,
+	AlifStatStruct *result) { // 1157
+	memset(result, 0, sizeof(*result));
+	result->st_mode = attributes_to_mode(info->FileAttributes);
+	result->st_size = info->EndOfFile.QuadPart;
+	LARGE_INTEGER_to_time_t_nsec(&info->CreationTime, &result->st_birthtime, &result->st_birthtime_nsec);
+	LARGE_INTEGER_to_time_t_nsec(&info->ChangeTime, &result->st_ctime, &result->st_ctime_nsec);
+	LARGE_INTEGER_to_time_t_nsec(&info->LastWriteTime, &result->st_mtime, &result->st_mtime_nsec);
+	LARGE_INTEGER_to_time_t_nsec(&info->LastAccessTime, &result->st_atime, &result->st_atime_nsec);
+	result->st_nlink = info->NumberOfLinks;
+	result->st_dev = info->VolumeSerialNumber.QuadPart;
+	/* File systems with less than 128-bits zero pad into this field */
+	id_128_to_ino file_id;
+	file_id.id = info->FileId128;
+	result->st_ino = file_id.st_ino;
+	result->st_ino_high = file_id.st_ino_high;
 
+	result->st_reparse_tag = info->ReparseTag;
+	if (info->FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT &&
+		info->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
+		/* set the bits that make this a symlink */
+		result->st_mode = (result->st_mode & ~S_IFMT) | S_IFLNK;
+	}
+	result->st_file_attributes = info->FileAttributes;
+	switch (info->DeviceType) {
+	case FILE_DEVICE_DISK:
+	case FILE_DEVICE_VIRTUAL_DISK:
+	case FILE_DEVICE_DFS:
+	case FILE_DEVICE_CD_ROM:
+	case FILE_DEVICE_CONTROLLER:
+	case FILE_DEVICE_DATALINK:
+		break;
+	case FILE_DEVICE_DISK_FILE_SYSTEM:
+	case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+	case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+		result->st_mode = (result->st_mode & ~S_IFMT) | 0x6000; /* _S_IFBLK */
+		break;
+	case FILE_DEVICE_CONSOLE:
+	case FILE_DEVICE_NULL:
+	case FILE_DEVICE_KEYBOARD:
+	case FILE_DEVICE_MODEM:
+	case FILE_DEVICE_MOUSE:
+	case FILE_DEVICE_PARALLEL_PORT:
+	case FILE_DEVICE_PRINTER:
+	case FILE_DEVICE_SCREEN:
+	case FILE_DEVICE_SERIAL_PORT:
+	case FILE_DEVICE_SOUND:
+		result->st_mode = (result->st_mode & ~S_IFMT) | _S_IFCHR;
+		break;
+	case FILE_DEVICE_NAMED_PIPE:
+		result->st_mode = (result->st_mode & ~S_IFMT) | _S_IFIFO;
+		break;
+	default:
+		if (info->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			result->st_mode = (result->st_mode & ~S_IFMT) | _S_IFDIR;
+		}
+		break;
+	}
+}
 
 #endif // 1221
 
@@ -909,7 +967,7 @@ FILE* _alif_wfOpen(const wchar_t* _path, const wchar_t* _mode) { // 1716
 }
 
 
-FILE* alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
+FILE* _alif_fOpenObj(AlifObject* _path, const char* _mode) { // 1764
 	FILE* f{};
 	AlifIntT asyncErr = 0;
 #ifdef _WINDOWS
@@ -1114,6 +1172,11 @@ AlifSizeT _alif_write(AlifIntT _fd, const void* _buf, AlifUSizeT _count) { // 20
 	return _alif_writeImpl(_fd, _buf, _count, 1);
 }
 
+AlifSizeT _alif_writeNoRaise(AlifIntT _fd,
+	const void* _buf, AlifUSizeT _count) { // 2048
+	return _alif_writeImpl(_fd, _buf, _count, 0);
+}
+
 #ifdef HAVE_READLINK // 2054
 
 AlifIntT alif_wReadLink(const wchar_t* path, wchar_t* buf, AlifUSizeT buflen) { // 2061
@@ -1221,7 +1284,7 @@ AlifIntT _alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
 	if (_path[0] == '\0' or !wcscmp(_path, L".")) {
 		wchar_t cwd[MAXPATHLEN + 1]{};
 		cwd[ALIF_ARRAY_LENGTH(cwd) - 1] = 0;
-		if (!alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
+		if (!_alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
 			/* unable to get the current directory */
 			return -1;
 		}
@@ -1235,11 +1298,11 @@ AlifIntT _alif_absPath(const wchar_t* _path, wchar_t** _absPathP) { // 2176
 	}
 
 #ifdef _WINDOWS
-	return alifOS_getFullPathName(_path, _absPathP);
+	return _alifOS_getFullPathName(_path, _absPathP);
 #else
 	wchar_t cwd[MAXPATHLEN + 1]{};
 	cwd[ALIF_ARRAY_LENGTH(cwd) - 1] = 0;
-	if (!alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
+	if (!_alif_wGetCWD(cwd, ALIF_ARRAY_LENGTH(cwd) - 1)) {
 		/* unable to get the current directory */
 		return -1;
 	}
@@ -1525,7 +1588,7 @@ wchar_t* _alif_normPath(wchar_t* path, AlifSizeT size) { // 2606
 
 
 
-wchar_t* alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
+wchar_t* _alif_wGetCWD(wchar_t* _buf, AlifUSizeT _bufLen) { // 2620
 #ifdef _WINDOWS
 	AlifIntT iBufLen = (AlifIntT)ALIF_MIN(_bufLen, INT_MAX);
 	return _wgetcwd(_buf, iBufLen);
@@ -1723,8 +1786,27 @@ done:
 #undef GET_LOCALE_STRING
 }
 
-
-
+// 3033
+#ifndef _WINDOWS
+// Ticks per second used by clock() and times() functions.
+// See os.times() and time.process_time() implementations.
+AlifIntT _alif_getTicksPerSecond(long* ticks_per_second) { // 3036
+#if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
+    long value = sysconf(_SC_CLK_TCK);
+    if (value < 1) {
+        return -1;
+    }
+    *ticks_per_second = value;
+#elif defined(HZ)
+    assert(HZ >= 1);
+    *ticks_per_second = HZ;
+#else
+    // Magic fallback value; may be bogus
+    *ticks_per_second = 60;
+#endif
+    return 0;
+}
+#endif
 
 
 AlifIntT _alif_isValidFD(AlifIntT fd) { // 3059

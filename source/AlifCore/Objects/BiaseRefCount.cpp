@@ -57,12 +57,12 @@ void alifBRC_queueObject(AlifObject* ob) { // 53
 		return;
 	}
 
-	if (alifObjectStack_push(&tstate->brc.objectsToMerge, ob) < 0) {
+	if (_alifObjectStack_push(&tstate->brc.objectsToMerge, ob) < 0) {
 		ALIFMUTEX_UNLOCK(&bucket->mutex);
 
-		alifEval_stopTheWorld(interp);
+		_alifEval_stopTheWorld(interp);
 		AlifSizeT refcount = alif_explicitMergeRefcount(ob, -1);
-		alifEval_startTheWorld(interp);
+		_alifEval_startTheWorld(interp);
 
 		if (refcount == 0) {
 			alif_dealloc(ob);

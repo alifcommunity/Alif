@@ -1,8 +1,9 @@
 #pragma once
 
-
+#include "AlifCore_StackRef.h"
 #include "AlifCore_Lock.h"
 #include "AlifCore_Backoff.h"
+#include "AlifCore_ThreadState.h"
 
 
 
@@ -40,6 +41,13 @@ extern AlifStatus alifCode_init(AlifInterpreter*); // 75
 
 
 
+class AlifBinaryOpCache { // 101
+public:
+	AlifBackoffCounter counter{};
+};
+#define INLINE_CACHE_ENTRIES_BINARY_OP CACHE_ENTRIES(AlifBinaryOpCache)
+
+
 class AlifSendCache { // 173
 public:
 	AlifBackoffCounter counter{};
@@ -47,6 +55,13 @@ public:
 
 #define INLINE_CACHE_ENTRIES_SEND CACHE_ENTRIES(AlifSendCache)
 
+
+class AlifContainsOpCache { // 187
+public:
+	AlifBackoffCounter counter{};
+};
+
+#define INLINE_CACHE_ENTRIES_CONTAINS_OP CACHE_ENTRIES(AlifContainsOpCache)
 
 
 class AlifCallCache { // 153
@@ -132,6 +147,16 @@ extern AlifIntT _alifLineTable_nextAddressRange(AlifCodeAddressRange*); // 310
 extern AlifIntT _alifLineTable_previousAddressRange(AlifCodeAddressRange*); // 311
 
 
+#define ENABLE_SPECIALIZATION_FT 1 // 324
+
+
+extern void _alifSpecialize_binaryOp(AlifStackRef, AlifStackRef,
+	AlifCodeUnit*, AlifIntT, AlifStackRef*); // 348
+
+extern void _alifSpecialize_containsOp(AlifStackRef, AlifCodeUnit*); // 357
+
+
+
 static inline uint16_t read_u16(uint16_t* _p) { // 439
 	return *_p;
 }
@@ -178,6 +203,38 @@ static inline AlifIntT write_locationEntryStart(uint8_t* _ptr,
 }
 
 
+
+
+// 540
+#define ADAPTIVE_WARMUP_VALUE 1
+#define ADAPTIVE_WARMUP_BACKOFF 1
+
+
+// 549
+#define ADAPTIVE_COOLDOWN_VALUE 52
+#define ADAPTIVE_COOLDOWN_BACKOFF 0
+
+
+static inline AlifBackoffCounter adaptive_counterBits(uint16_t value,
+	uint16_t backoff) { // 557
+	return make_backoffCounter(value, backoff);
+}
+
+static inline AlifBackoffCounter adaptive_counterWarmup(void) {
+	return adaptive_counterBits(ADAPTIVE_WARMUP_VALUE,
+		ADAPTIVE_WARMUP_BACKOFF);
+}
+
+static inline AlifBackoffCounter adaptive_counterCooldown(void) { // 568
+	return adaptive_counterBits(ADAPTIVE_COOLDOWN_VALUE,
+		ADAPTIVE_COOLDOWN_BACKOFF);
+}
+
+static inline AlifBackoffCounter adaptive_counterBackoff(AlifBackoffCounter _counter) { // 574
+	return restart_backoffCounter(_counter);
+}
+
+
 // 584
 #define COMPARISON_UNORDERED 1
 
@@ -190,3 +247,37 @@ static inline AlifIntT write_locationEntryStart(uint8_t* _ptr,
 extern AlifIntT _alif_instrument(AlifCodeObject*, AlifInterpreter*);
 
 extern AlifCodeUnit _alif_getBaseCodeUnit(AlifCodeObject*, AlifIntT);
+
+
+extern AlifIntT _alifInstruction_getLength(AlifCodeObject*, AlifIntT); // 604
+
+
+// Return a pointer to the thread-local bytecode for the current thread, if it
+// exists.
+static inline AlifCodeUnit* _alifCode_getTLBCFast(AlifThread* _thread,
+	AlifCodeObject* _co) { // 614
+	AlifCodeArray* code = (AlifCodeArray*)alifAtomic_loadPtrAcquire(&_co->coTlbc);
+	int32_t idx = ((AlifThreadImpl*)_thread)->tlbcIndex;
+	if (idx < code->size and code->entries[idx] != nullptr) {
+		return (AlifCodeUnit*)code->entries[idx];
+	}
+	return nullptr;
+}
+
+// Return a pointer to the thread-local bytecode for the current thread,
+// creating it if necessary.
+extern AlifCodeUnit* _alifCode_getTLBC(AlifCodeObject*);
+
+// Reserve an index for the current thread into thread-local bytecode
+// arrays
+//
+// Returns the reserved index or -1 on error.
+extern int32_t _alif_reserveTLBCIndex(AlifInterpreter*);
+
+// Release the current thread's index into thread-local bytecode arrays
+extern void _alif_clearTLBCIndex(AlifThreadImpl*);
+
+// Free all TLBC copies not associated with live threads.
+//
+// Returns 0 on success or -1 on error.
+extern AlifIntT _alif_clearUnusedTLBC(AlifInterpreter*);

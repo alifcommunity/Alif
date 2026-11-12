@@ -192,6 +192,10 @@ sudo apt install build-essential
 - قم بفتح ملف linuxBuild ومن ثم تقوم بفتح الطرفية cmd في نفس مسار الملف
 - بعد ذلك تقوم بكتابة امر ⌨️
  ```sh
+ ./configure
+ ```
+ - والذي سيقوم بتوليد ملف Makefile, بعد ذلك قم بكتابة الأمر ⌨️
+ ```sh
  make
  ```
  سيتم بناء لغة alif ضمن مجلد build في وضع الإصدار release
@@ -211,6 +215,10 @@ sudo apt install build-essential
 - قم بتحميل الشفرة المصدرية من مجتمع ألف على github : [https://github.com/alifcommunity/Alif5](https://github.com/alifcommunity/Alif5)
 - قم بفتح ملف linuxBuild ومن ثم تقوم بفتح الطرفية cmd في نفس مسار الملف
 - بعد ذلك تقوم بكتابة امر ⌨️
+ ```sh
+ ./configure
+ ```
+ - والذي سيقوم بتوليد ملف Makefile, بعد ذلك قم بكتابة الأمر ⌨️
  ```sh
  make
  ```

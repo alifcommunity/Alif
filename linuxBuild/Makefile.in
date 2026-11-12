@@ -2,6 +2,8 @@ CPP = c++ # المترجم
 CPPFLAGS = -std=c++20
 RELEASE_FLAGS = -O2 -w
 DEBUG_FLAGS = -O0 -g
+LDFLAGS = 
+
 # -g تخزين معلومات debug
 # -Wall طباعة معظم التنبيهات
 # -w عدم طباعة التنبيهات
@@ -11,13 +13,27 @@ BUILD_DIR = build
 OBJ_DIR = $(BUILD_DIR)/obj
 TARGET_FREEZE =  $(BUILD_DIR)/freezemodule
 TARGET_ALIF = $(BUILD_DIR)/alif
+TARGET_FROZEN_MODULES = FrozenModules
+MACHDEP = @MACHDEP@
+SOABI=@SOABI@
+
+
+ifeq ($(shared), 1)
+	CPPFLAGS += -fPIC
+	LDFLAGS += -rdynamic -ldl
+endif
+
+ifeq ($(asan), 1)
+	LDFLAGS += -fsanitize=address
+endif
 
 # اكتشاف النظام
 OS_NAME := $(shell uname -s)
 
 
 SOURCES = 	$(wildcard $(SOURCE_DIR)/Alif/*.cpp)				\
-			$(filter-out $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp, $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp))	\
+			$(filter-out $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp $(SOURCE_DIR)/AlifCore/Objects/Frozen.cpp	\
+			 $(SOURCE_DIR)/AlifCore/Objects/DynLoadWin.cpp, $(wildcard $(SOURCE_DIR)/AlifCore/Objects/*.cpp))	\
 			$(wildcard $(SOURCE_DIR)/AlifCore/Objects/dtoa/*.cpp)	\
 			$(wildcard $(SOURCE_DIR)/Modules/*.cpp)			\
 			$(wildcard $(SOURCE_DIR)/Modules/_io/*.cpp)		\
@@ -59,7 +75,7 @@ endif
 
 debug:
 	@make -j2 freeze_debug
-	@make alif_debug 
+	@make alif_debug
 
 freeze_release: $(TARGET_FREEZE)
 alif_release : $(TARGET_ALIF)
@@ -90,29 +106,55 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(OBJ_DIR)
 	@echo "ترجمة.." $<
 	@$(CPP) $(CPPFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/AlifCore/Objects/GetPlatform.o: $(SOURCE_DIR)/AlifCore/Objects/GetPlatform.cpp | $(OBJ_DIR)
+	@echo "ترجمة.." $<
+	@$(CPP) $(CPPFLAGS) -DPLATFORM='"$(MACHDEP)"' -c $< -o $@
+
+$(OBJ_DIR)/AlifCore/Objects/DynLoadShlib.o: $(SOURCE_DIR)/AlifCore/Objects/DynLoadShlib.cpp | $(OBJ_DIR)
+	@echo "ترجمة.." $<
+	@$(CPP) $(CPPFLAGS) -DSOABI='"$(SOABI)"' -c $< -o $@
+
 # يقوم بتحديد قاعدة لربط ملفات الكائنات (OBJECTS)
 # إلى ملف الهدف النهائي (TARGET). 
 # يتم تحديد ملفات الكائنات في مسار الكائنات (BUILD_DIR).
+
+frozen_modules_folder:
+	@if [ -e "$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)" ] && [ ! -d "$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)" ]; then \
+		echo "تم العثور على ملف باسم: '$(TARGET_FROZEN_MODULES)' في المسار '$(SOURCE_DIR)/AlifCore/Include/Main/'. ستتم إزالته..."; \
+		rm -f "$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)"; \
+	fi
+	@if [ ! -d "$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)" ]; then \
+		echo "إنشاء المجلد '$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)'...";  \
+		mkdir -p "$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)";  \
+	else \
+		echo "المجلد '$(SOURCE_DIR)/AlifCore/Include/Main/$(TARGET_FROZEN_MODULES)' موجود بالفعل. متابعة ...";  \
+	fi
 
 # القاعدة تعني أن ملف الهدف النهائي (TARGET) 
 # يعتمد على جميع ملفات الكائنات (OBJECTS).
 # يتم استخدام العلامة النسبية | لتأكيد أن مسار الكائنات (BUILD_DIR)
 # يجب أن يكون موجودًا قبل بدء عملية الربط.
-$(TARGET_FREEZE): $(OBJECTS) | $(BUILD_DIR)
+$(TARGET_FREEZE): $(OBJECTS) | $(BUILD_DIR) frozen_modules_folder
 	@echo "جاري ربط مجرد الشيفرة..."
-	@$(CPP) $(filter-out build/obj/Alif/alif.o build/obj/AlifCore/Objects/Frozen.o, $^) -o $@
+	@$(CPP) $(LDFLAGS) $(filter-out build/obj/Alif/alif.o build/obj/AlifCore/Objects/Frozen.o, $^) -o $@
 	@echo "تم بناء مجرد الشيفرة بنجاح"
 	@echo "جاري بناء ومعالجة البرامج المكتوبة بلغة ألف"
-	@$(shell) ./build/freezemodule GetPath ../source/Modules/تحديد_المسارات.alif GetPath.h
-	@$(shell) mv -f GetPath.h ../source/AlifCore/Include/Main/FrozenModules
+	@$(shell) ./build/freezemodule "GetPath" "../source/Modules/تحديد_المسارات.alif" "GetPath.h"
+	@$(shell) mv -f "GetPath.h" "../source/AlifCore/Include/Main/FrozenModules"
+	@$(shell) ./build/freezemodule "Importlib._bootstrap" "../library/مكتبة_الاستيراد/برنامج_الاقلاع.alif" "Importlib._bootstrap.h"
+	@$(shell) mv -f "Importlib._bootstrap.h" "../source/AlifCore/Include/Main/FrozenModules"
+	@$(shell) ./build/freezemodule "Importlib._bootstrap_external" "../library/مكتبة_الاستيراد/برنامج_الاقلاع_الخارجي.alif" "Importlib._bootstrap_external.h"
+	@$(shell) mv -f "Importlib._bootstrap_external.h" "../source/AlifCore/Include/Main/FrozenModules"
 
 
 $(TARGET_ALIF): $(OBJECTS) | $(BUILD_DIR)
 	@echo "ترجمة.." $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp
+	@echo "ترجمة.." $(SOURCE_DIR)/AlifCore/Objects/Frozen.cpp
 	@$(CPP) $(CPPFLAGS) -c $(SOURCE_DIR)/AlifCore/Objects/GetPath.cpp -o $(OBJ_DIR)/AlifCore/Objects/GetPath.o
+	@$(CPP) $(CPPFLAGS) -c $(SOURCE_DIR)/AlifCore/Objects/Frozen.cpp -o $(OBJ_DIR)/AlifCore/Objects/Frozen.o
 	@echo "جاري ربط لغة ألف..."
-	@$(CPP) $(filter-out build/obj/FreezeModule/FreezeModule.o build/obj/FreezeModule/GetPathFreeze.o, $^)	\
-	 -o $@ $(OBJ_DIR)/AlifCore/Objects/GetPath.o
+	@$(CPP) $(LDFLAGS) $(filter-out build/obj/FreezeModule/FreezeModule.o build/obj/FreezeModule/GetPathFreeze.o, $^)	\
+	 -o $@ $(OBJ_DIR)/AlifCore/Objects/GetPath.o $(OBJ_DIR)/AlifCore/Objects/Frozen.o
 	@echo "تم بناء لغة ألف بنجاح"
 
 
@@ -144,4 +186,8 @@ help:
 	@echo "make release  # لبناء اللغة في وضع الإصدار"
 	@echo "make debug    # لبناء اللغة في وضع تتبع الاخطاء"
 	@echo "make clean    # لحذف جميع ملفات البناء"
+	@echo "يمكن تمرير الوسيطات التالية لخيارات اكثر في البناء:"
+	@echo "		asan=1   -> بناء اللغة مع تتبع خطأ العنوان"
+	@echo "		shared=1 -> لبناء اللغة في وضع المشاركة لاستيراد مكتبات مكتوبة بلغة cpp"
+
 

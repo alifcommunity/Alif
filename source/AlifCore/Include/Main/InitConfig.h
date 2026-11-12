@@ -18,12 +18,12 @@ public:
 	AlifIntT exitcode{};
 };
 
-AlifStatus alifStatus_ok(void);
-AlifStatus alifStatus_error(const char*);
-AlifStatus alifStatus_noMemory(void);
-AlifStatus alifStatus_exit(AlifIntT);
+ALIFAPI_FUNC(AlifStatus) alifStatus_ok(void);
+ALIFAPI_FUNC(AlifStatus) alifStatus_error(const char*);
+ALIFAPI_FUNC(AlifStatus) alifStatus_noMemory(void);
+ALIFAPI_FUNC(AlifStatus) alifStatus_exit(AlifIntT);
 
-AlifIntT alifStatus_exception(AlifStatus);
+ALIFAPI_FUNC(AlifIntT) alifStatus_exception(AlifStatus);
 
 /* --------------------------------- AlifWStringList --------------------------------- */
 class AlifWStringList { // 31
@@ -33,8 +33,8 @@ public:
 };
 
 // لماذا يوجد append و insert وتقومان بنفس الوظيفة ??
-AlifStatus alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
-AlifStatus alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
+ALIFAPI_FUNC(AlifStatus) alifWStringList_append(AlifWStringList*, const wchar_t*); // 38
+ALIFAPI_FUNC(AlifStatus) alifWStringList_insert(AlifWStringList*, AlifSizeT, const wchar_t*);
 
 
 /* ---------------------------------- AlifPreConfig ---------------------------------- */
@@ -57,7 +57,7 @@ public:
 	AlifIntT devMode{};
 };
 
-void alifPreConfig_initAlifConfig(AlifPreConfig*);
+ALIFAPI_FUNC(void) alifPreConfig_initAlifConfig(AlifPreConfig*);
 
 
 
@@ -114,6 +114,7 @@ public:
 
 	AlifIntT cpuCount{};
 
+	AlifIntT tlbcEnabled{}; // thread-local bytecode
 
 	/* ------- path config inputs ------- */
 	AlifIntT pathConfigWarnings{};
@@ -154,11 +155,11 @@ public:
 };
 
 
-void alifConfig_initAlifConfig(AlifConfig*); // 239
-void alifConfig_initIsolatedConfig(AlifConfig*); // 240
-void alifConfig_clear(AlifConfig*); // 241
-AlifStatus alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
+ALIFAPI_FUNC(void) alifConfig_initAlifConfig(AlifConfig*); // 239
+ALIFAPI_FUNC(void) alifConfig_initIsolatedConfig(AlifConfig*); // 240
+ALIFAPI_FUNC(void) alifConfig_clear(AlifConfig*); // 241
+ALIFAPI_FUNC(AlifStatus) alifConfig_setString(AlifConfig*, wchar_t**, const wchar_t*);
 
 
-AlifStatus alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*); // 251
-AlifStatus alifConfig_setArgv(AlifConfig*, AlifSizeT, wchar_t* const*); // 255
+ALIFAPI_FUNC(AlifStatus) alifConfig_setBytesArgv(AlifConfig*, AlifSizeT, char* const*); // 251
+ALIFAPI_FUNC(AlifStatus) alifConfig_setArgv(AlifConfig*, AlifSizeT, wchar_t* const*); // 255

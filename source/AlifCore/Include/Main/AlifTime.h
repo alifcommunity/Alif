@@ -8,12 +8,12 @@ using AlifTimeT = int64_t;
 
 
 
-double alifTime_asSecondsDouble(AlifTimeT); // 14
-AlifIntT alifTime_monotonic(AlifTimeT*); // 15
+ALIFAPI_FUNC(double) alifTime_asSecondsDouble(AlifTimeT);
+ALIFAPI_FUNC(AlifIntT) alifTime_monotonic(AlifTimeT*);
 
-AlifIntT alifTime_time(AlifTimeT*); // 17
+ALIFAPI_FUNC(AlifIntT) alifTime_time(AlifTimeT*);
 
-AlifIntT alifTime_monotonicRaw(AlifTimeT*); // 19
+ALIFAPI_FUNC(AlifIntT) alifTime_monotonicRaw(AlifTimeT*);
 
 
-AlifIntT alifTime_timeRaw(AlifTimeT*); // 21
+ALIFAPI_FUNC(AlifIntT) alifTime_timeRaw(AlifTimeT*);

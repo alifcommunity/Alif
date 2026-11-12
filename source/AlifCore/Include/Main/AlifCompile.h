@@ -57,4 +57,4 @@ public:
 
 #define ALIF_INVALID_STACK_EFFECT INT_MAX // 48
 
-AlifIntT alifCompile_opcodeStackEffect(AlifIntT, AlifIntT); // 49
+ALIFAPI_FUNC(AlifIntT) alifCompile_opcodeStackEffect(AlifIntT, AlifIntT); // 49

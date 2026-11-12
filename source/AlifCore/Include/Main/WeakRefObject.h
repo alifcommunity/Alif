@@ -3,9 +3,9 @@
 
 
 
-extern AlifTypeObject _alifWeakrefRefType_;
-extern AlifTypeObject _alifWeakrefProxyType_;
-extern AlifTypeObject _alifWeakrefCallableProxyType_;
+ALIFAPI_DATA(AlifTypeObject) _alifWeakrefRefType_;
+ALIFAPI_DATA(AlifTypeObject) _alifWeakrefProxyType_;
+ALIFAPI_DATA(AlifTypeObject) _alifWeakrefCallableProxyType_;
 
  // 15
 #define ALIFWEAKREF_CHECKREF(_op) ALIFOBJECT_TYPECHECK((_op), &_alifWeakrefRefType_)
@@ -19,7 +19,7 @@ extern AlifTypeObject _alifWeakrefCallableProxyType_;
 
 
 
-AlifObject* alifWeakRef_newRef(AlifObject*, AlifObject*); // 26
+ALIFAPI_FUNC(AlifObject*) alifWeakRef_newRef(AlifObject*, AlifObject*); // 26
 
 
 

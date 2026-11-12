@@ -73,7 +73,15 @@
 #endif
 
 
+#if !defined(MS_NO_COREDLL) && !defined(ALIF_NO_ENABLE_SHARED)
+#       define ALIF_ENABLE_SHARED 1 /* standard symbol for shared library */
+#       define MS_COREDLL       /* deprecated old symbol */
+#endif
 
+/*  All windows compilers that use this header support __declspec */
+#define HAVE_DECLSPEC_DLL
+
+#define PLATFORM "ويندوز32"
 
 #define LONG_BIT    32
 
@@ -180,9 +188,15 @@
 
 #define HAVE_TIMEGM 1
 
+#define HAVE_DIRENT_H 1 // 289
+
 #define HAVE_LANGINFO_H 1 // 663
 
 #define HAVE_UNISTD_H 1
+
+#define HAVE_DLFCN_H 1
+
+#define HAVE_DLOPEN 1
 
 #endif
 
@@ -240,3 +254,4 @@
 
 #define HAVE_SYS_STAT_H 1
 
+#define HAVE_DYNAMIC_LOADING

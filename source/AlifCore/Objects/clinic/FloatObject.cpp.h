@@ -4,8 +4,30 @@
 
 
 
+// 87
+#define FLOAT___ROUND___METHODDEF    \
+    {"__قرب__", ALIF_CPPFUNCTION_CAST(float___round__), METHOD_FASTCALL},
 
+static AlifObject* float___round__Impl(AlifObject*, AlifObject*);
 
+static AlifObject* float___round__(AlifObject* self,
+	AlifObject* const* args, AlifSizeT nargs) { // 93
+	AlifObject* returnValue{};
+	AlifObject* oNDigits = ALIF_NONE;
+
+	if (!_ALIFARG_CHECKPOSITIONAL("__قرب__", nargs, 0, 1)) {
+		goto exit;
+	}
+	if (nargs < 1) {
+		goto skip_optional;
+	}
+	oNDigits = args[0];
+skip_optional:
+	returnValue = float___round__Impl(self, oNDigits);
+
+exit:
+	return returnValue;
+}
 
 
 

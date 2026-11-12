@@ -54,6 +54,15 @@ AlifObject* _alif_checkFunctionResult(AlifThread* _thread,
 	return _result;
 }
 
+/* --- Core AlifObject call functions ------------------------------- */
+
+/* Call a callable Alif object without any arguments */
+AlifObject* alifObject_callNoArgs(AlifObject* func) { // 101
+	//EVAL_CALL_STAT_INC_IF_FUNCTION(EVAL_CALL_API, func);
+	AlifThread* thread = _alifThread_get();
+	return _alifObject_vectorCallThread(thread, func, nullptr, 0, nullptr);
+}
+
 AlifObject* _alifObject_vectorCallDictThread(AlifThread* _thread, AlifObject* _callable,
 	AlifObject* const* _args, AlifUSizeT _nargsf, AlifObject* _kwargs) { // 110
 	AlifSizeT nargs = ALIFVECTORCALL_NARGS(_nargsf);
@@ -138,7 +147,7 @@ AlifObject* alifObject_makeTpCall(AlifThread* _thread, AlifObject* _callable,
 	}
 	else {
 		if (ALIFTUPLE_GET_SIZE(_keywords)) {
-			kWDict = alifStack_asDict(_args + _nargs, _keywords);
+			kWDict = _alifStack_asDict(_args + _nargs, _keywords);
 			if (kWDict == nullptr) {
 				ALIF_DECREF(argsTuple);
 				return nullptr;
@@ -222,7 +231,7 @@ AlifObject* alifVectorCall_call(AlifObject* _callable,
 AlifObject* alifObject_vectorCall(AlifObject* _callable, AlifObject* const* _args,
 	AlifUSizeT _nArgsF, AlifObject* _kwNames) { // 322
 	AlifThread* thread = _alifThread_get();
-	return alifObject_vectorCallThread(thread, _callable,
+	return _alifObject_vectorCallThread(thread, _callable,
 		_args, _nArgsF, _kwNames);
 }
 
@@ -267,7 +276,7 @@ AlifObject* alifObject_callOneArg(AlifObject* _func, AlifObject* _arg) { // 386
 	args[0] = _arg;
 	AlifThread* thread = _alifThread_get();
 	AlifUSizeT nArgsF = 1 | ALIF_VECTORCALL_ARGUMENTS_OFFSET;
-	return alifObject_vectorCallThread(thread, _func, args, nArgsF, nullptr);
+	return _alifObject_vectorCallThread(thread, _func, args, nArgsF, nullptr);
 }
 
 
@@ -278,10 +287,10 @@ AlifObject* alifFunction_vectorCall(AlifObject* _func, AlifObject* const* _stack
 	AlifSizeT nArgs = ALIFVECTORCALL_NARGS(_nArgsF);
 	AlifThread* tstate = _alifThread_get();
 	if (((AlifCodeObject*)f_->code)->flags & CO_OPTIMIZED) {
-		return alifEval_vector(tstate, f_, nullptr, _stack, nArgs, _kwNames);
+		return _alifEval_vector(tstate, f_, nullptr, _stack, nArgs, _kwNames);
 	}
 	else {
-		return alifEval_vector(tstate, f_, f_->globals, _stack, nArgs, _kwNames);
+		return _alifEval_vector(tstate, f_, f_->globals, _stack, nArgs, _kwNames);
 	}
 }
 
@@ -355,13 +364,13 @@ static AlifObject* alifObject_callFunctionVa(AlifThread* _thread, AlifObject* _c
 	}
 	if (nargs == 1 and ALIFTUPLE_CHECK(stack[0])) {
 		AlifObject* args = stack[0];
-		result = alifObject_vectorCallThread(_thread, _callable,
+		result = _alifObject_vectorCallThread(_thread, _callable,
 			ALIFTUPLE_ITEMS(args),
 			ALIFTUPLE_GET_SIZE(args),
 			nullptr);
 	}
 	else {
-		result = alifObject_vectorCallThread(_thread, _callable,
+		result = _alifObject_vectorCallThread(_thread, _callable,
 			stack, nargs, nullptr);
 	}
 
@@ -399,7 +408,7 @@ AlifObject* alifObject_callFunction(AlifObject* _callable, const char* _format, 
 static AlifObject* call_method(AlifThread* _tstate, AlifObject* _callable, const char* _format, va_list _va) { // 616
 	if (!alifCallable_check(_callable)) {
 		_alifErr_format(_tstate, _alifExcTypeError_,
-			"الخاصية من نوع '%.200s' غير قابلة للإستدعاء",
+			"الصفة من نوع '%.200s' غير قابلة للإستدعاء",
 			ALIF_TYPE(_callable)->name);
 		return nullptr;
 	}
@@ -500,7 +509,7 @@ static AlifObject* object_vacall(AlifThread* _thread, AlifObject* _base,
 	}
 
 	/* Call the function */
-	result = alifObject_vectorCallThread(_thread, _callable, stack, nargs, nullptr);
+	result = _alifObject_vectorCallThread(_thread, _callable, stack, nargs, nullptr);
 
 	if (stack != small_stack) {
 		alifMem_dataFree(stack);
@@ -528,7 +537,7 @@ AlifObject* alifObject_vectorCallMethod(AlifObject* _name, AlifObject* const* _a
 		_args++;
 		_nargsf--;
 	}
-	AlifObject* result = alifObject_vectorCallThread(thread, callable,
+	AlifObject* result = _alifObject_vectorCallThread(thread, callable,
 		_args, _nargsf, _kwnames);
 	ALIF_DECREF(callable);
 	return result;
@@ -572,7 +581,7 @@ AlifObject* alifObject_callFunctionObjArgs(AlifObject* _callable, ...) { // 918
 
 
 
-AlifObject* alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {  // 936
+AlifObject* _alifStack_asDict(AlifObject* const* _values, AlifObject* _kwNames) {  // 936
 	AlifSizeT nkwargs{};
 
 	nkwargs = ALIFTUPLE_GET_SIZE(_kwNames);

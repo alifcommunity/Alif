@@ -56,7 +56,7 @@ public:
 typedef AlifInstructionSequence InstrSequence; //* alif
 typedef AlifSourceLocation Location; //* alif
 
-AlifObject* _alifInstructionSequence_new(); // 54
+ALIFAPI_FUNC(AlifObject*) _alifInstructionSequence_new(); // 59
 AlifIntT _alifInstructionSequence_useLabel(InstrSequence*, AlifIntT); // 56
 AlifIntT _alifInstructionSequence_addOp(InstrSequence*, AlifIntT, AlifIntT, Location); // 57
 

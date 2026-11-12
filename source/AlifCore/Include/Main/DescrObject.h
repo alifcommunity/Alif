@@ -15,15 +15,17 @@ public:
 };
 
 
-extern AlifTypeObject _alifClassMethodDescrType_; // 19
-extern AlifTypeObject _alifGetSetDescrType_;
-extern AlifTypeObject _alifMemberDescrType_; // 21
-extern AlifTypeObject _alifWrapperDescrType_; // 23
+ALIFAPI_DATA(AlifTypeObject) _alifClassMethodDescrType_; // 19
+ALIFAPI_DATA(AlifTypeObject) _alifGetSetDescrType_;
+ALIFAPI_DATA(AlifTypeObject) _alifMemberDescrType_; // 21
+ALIFAPI_DATA(AlifTypeObject) _alifWrapperDescrType_; // 23
 
-AlifObject* alifDescr_newMethod(AlifTypeObject*, AlifMethodDef*); // 27
-AlifObject* alifDescr_newClassMethod(AlifTypeObject*, AlifMethodDef*); // 28
-AlifObject* alifDescr_newMember(AlifTypeObject*, AlifMemberDef*); // 29
-AlifObject* alifDescr_newGetSet(AlifTypeObject*, AlifGetSetDef*); // 30
+ALIFAPI_DATA(AlifTypeObject) _alifPropertyType_; // 25
+
+ALIFAPI_FUNC(AlifObject*) alifDescr_newMethod(AlifTypeObject*, AlifMethodDef*); // 27
+ALIFAPI_FUNC(AlifObject*) alifDescr_newClassMethod(AlifTypeObject*, AlifMethodDef*); // 28
+ALIFAPI_FUNC(AlifObject*) alifDescr_newMember(AlifTypeObject*, AlifMemberDef*); // 29
+ALIFAPI_FUNC(AlifObject*) alifDescr_newGetSet(AlifTypeObject*, AlifGetSetDef*); // 30
 
 class AlifMemberDef { // 41
 public:
@@ -70,8 +72,8 @@ public:
 #define ALIF_RELATIVE_OFFSET  8 //86
 
 
-AlifObject* alifMember_getOne(const char*, AlifMemberDef*); // 88
-AlifIntT alifMember_setOne(char*, AlifMemberDef*, AlifObject*); //89
+ALIFAPI_FUNC(AlifObject*) alifMember_getOne(const char*, AlifMemberDef*); // 88
+ALIFAPI_FUNC(AlifIntT) alifMember_setOne(char*, AlifMemberDef*, AlifObject*); //89
 
 
 
@@ -138,6 +140,6 @@ public:
 	void* wrapped{}; /* This can be any function pointer */
 };
 
-AlifObject* alifDescr_newWrapper(AlifTypeObject*, WrapperBase*, void*); // 60
+ALIFAPI_FUNC(AlifObject*) alifDescr_newWrapper(AlifTypeObject*, WrapperBase*, void*); // 60
 
-AlifIntT alifDescr_isData(AlifObject*); // 62
+ALIFAPI_FUNC(AlifIntT) alifDescr_isData(AlifObject*); // 62

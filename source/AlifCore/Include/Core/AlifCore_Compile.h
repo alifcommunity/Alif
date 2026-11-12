@@ -16,7 +16,7 @@
 
 
 
-AlifCodeObject* _alifAST_compile(Module*, AlifObject*,
+ALIFAPI_FUNC(AlifCodeObject*) _alifAST_compile(Module*, AlifObject*,
 	AlifCompilerFlags*, AlifIntT, AlifASTMem*);
 
 
@@ -143,7 +143,7 @@ AlifCompileCodeUnitMetadata* _alifCompiler_metadata(AlifCompiler*);
 AlifObject* _alifCompiler_staticAttributesTuple(AlifCompiler*);
 
 AlifSymTable* _alifCompiler_symTable(AlifCompiler*);
-SymTableEntry* _alifCompiler_symTableEntry(AlifCompiler*);
+AlifSTEntryObject* _alifCompiler_symTableEntry(AlifCompiler*);
 
 enum ScopeType_ {
 	Compiler_Scope_Module,
@@ -164,7 +164,7 @@ public:
 	AlifJumpTargetLabel cleanup{};
 };
 AlifIntT _alifCompiler_tweakInlinedComprehensionScopes(AlifCompiler*,
-	AlifSourceLocation, SymTableEntry*, AlifCompilerInlinedComprehensionState*);
+	AlifSourceLocation, AlifSTEntryObject*, AlifCompilerInlinedComprehensionState*);
 
 AlifIntT _alifCompiler_revertInlinedComprehensionScopes(AlifCompiler*,
 	AlifSourceLocation, AlifCompilerInlinedComprehensionState*);

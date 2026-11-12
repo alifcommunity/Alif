@@ -84,7 +84,7 @@ public:
 static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 
 	// --- Public options -----------
-	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("argv")),
+	SPEC(argv, argv, WSTR_LIST, PUBLIC, SYS_ATTR("مدخلات_التشغيل")),
 	SPEC(سابقة_اساسية_تنفيذي, baseExecPrefix, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecPrefix")),
 	SPEC(تنفيذي_اساسي, baseExecutable, WSTR_OPT, PUBLIC, SYS_ATTR("baseExecutable")),
 	SPEC(سابقة_اساسية, basePrefix, WSTR_OPT, PUBLIC, SYS_ATTR("basePrefix")),
@@ -121,6 +121,9 @@ static const AlifConfigSpec _alifConfigSpec_[] = { // 95 //* todo //* important
 	SPEC(devMode, devMode, BOOL, READ_ONLY, NO_SYS),  // sys.flags.devMode
 	SPEC(dumpRefs, dumpRefs, BOOL, READ_ONLY, NO_SYS),
 	SPEC(dumpRefsFile, dumpRefsFile, WSTR_OPT, READ_ONLY, NO_SYS),
+
+	SPEC(tlbcEnabled, tlbcEnabled, INT, READ_ONLY, NO_SYS), // thread-local bytecode
+
 	SPEC(faultHandler, faultHandler, BOOL, READ_ONLY, NO_SYS),
 	SPEC(fileSystemEncoding, fileSystemEncoding, WSTR, READ_ONLY, NO_SYS),
 	SPEC(fileSystemErrors, fileSystemErrors, WSTR, READ_ONLY, NO_SYS),
@@ -196,7 +199,7 @@ static const char usageHelp[] = "\
 -ك : تشغيل مكتبة\n\
 ملف : تشغيل البرنامج من ملف\n\
 - : يتم تشغيل البرنامج من الطرفية\n\
-وسيط ...: وسيطات يتم تمريرها الى sys.argv[1:]\n\
+وسيط ...: وسيطات يتم تمريرها الى النظام.مدخلات_التشغيل[1:]\n\
 -م : طباعة رسالة المساعدة (--مساعدة)\n\
 -ن : طباعة نسخة ألف الحالية (--نسخة)\n\
 ";
@@ -522,6 +525,8 @@ void _alifConfig_initCompatConfig(AlifConfig* _config) { // 934
 	_config->isAlifBuild = 0;
 	_config->codeDebugRanges = 1;
 	_config->cpuCount = -1;
+
+	_config->tlbcEnabled = 1;
 }
 
 
@@ -1056,7 +1061,8 @@ static void config_setGlobalVars(const AlifConfig* _config) { // 1555
 	ALIF_COMP_DIAG_POP
 }
 
-static const wchar_t* config_getXOption(const AlifConfig* _config, const wchar_t* _name) { // 1597
+static const wchar_t* config_getXOption(const AlifConfig* _config,
+	const wchar_t* _name) { // 1597
 	return _alif_getXOption(&_config->xoptions, _name);
 }
 
@@ -1069,6 +1075,31 @@ static const wchar_t* config_getXOptionValue(const AlifConfig* _config,
 	const wchar_t* sep = wcschr(xoption, L'=');
 	return sep ? sep + 1 : L"";
 }
+
+
+//static AlifStatus config_initTlbc(AlifConfig* config) { // 1875 // thread-local bytecode
+//	const char *env = config_getEnv(config, "ALIF_TLBC");
+//	if (env) {
+//		AlifIntT enabled{};
+//		if (_alif_strToInt(env, &enabled) < 0 or (enabled < 0) or (enabled > 1)) {
+//			return ALIFSTATUS_ERR(
+//				"ALIF_TLBC=N: N is missing or invalid");
+//		}
+//		config->tlbcEnabled = enabled;
+//	}
+//
+//	const wchar_t *xoption = config_getXOption(config, L"tlbc");
+//	if (xoption) {
+//		int enabled;
+//		const wchar_t *sep = wcschr(xoption, L'=');
+//		if (!sep or (config_wstrToInt(sep + 1, &enabled) < 0) || (enabled < 0) || (enabled > 1)) {
+//			return ALIFSTATUS_ERR(
+//				"-X tlbc=n: n is missing or invalid");
+//		}
+//		config->tlbcEnabled = enabled;
+//	}
+//	return ALIFSTATUS_OK();
+//}
 
 
 static AlifStatus config_initIntMaxStrDigits(AlifConfig* _config) { // 1944
@@ -1094,6 +1125,10 @@ static AlifStatus config_readComplexOptions(AlifConfig* _config) { // 2049
 		}
 	}
 
+	//status = config_initTlbc(_config);
+	//if (ALIFSTATUS_EXCEPTION(status)) {
+	//	return status;
+	//}
 
 	return ALIFSTATUS_OK();
 }

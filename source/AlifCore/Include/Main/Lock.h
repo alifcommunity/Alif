@@ -16,8 +16,8 @@ public:
 };
 
 
-void alifMutex_lock(AlifMutex*); // 34
-void alifMutex_unlock(AlifMutex*); // 37
+ALIFAPI_FUNC(void) alifMutex_lock(AlifMutex*); // 34
+ALIFAPI_FUNC(void) alifMutex_unlock(AlifMutex*); // 37
 
 static inline void _alifMutex_lock(AlifMutex* m) { // 44
 	uint8_t expected = ALIF_UNLOCKED;

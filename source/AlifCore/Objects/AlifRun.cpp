@@ -81,7 +81,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	AlifObject* v{};
 	//AlifIntT alifc{};
 
-	AlifObject* mainModule = alifImport_addModuleRef("__main__");
+	AlifObject* mainModule = alifImport_addModuleRef("__الرئيسية__");
 	if (mainModule == nullptr)	return -1;
 	AlifObject* dict = alifModule_getDict(mainModule);  // borrowed ref
 
@@ -111,14 +111,14 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 	//		fclose(_fp);
 	//	}
 
-	//	alifcFP = alif_fOpenObj(_filename, "rb");
+	//	alifcFP = _alif_fOpenObj(_filename, "rb");
 	//	if (alifcFP == nullptr) {
 	//		fprintf(stderr, "alif: Can't reopen .alifc file\n");
 	//		goto done;
 	//	}
 
 	//	if (set_mainLoader(dict, _filename, "SourcelessFileLoader") < 0) {
-	//		fprintf(stderr, "alif: failed to set __main__.__loader__\n");
+	//		fprintf(stderr, "alif: failed to set __الرئيسية__.__محمل__\n");
 	//		ret = -1;
 	//		fclose(alifcFP);
 	//		goto done;
@@ -129,7 +129,7 @@ AlifIntT alifRun_simpleFileObject(FILE* _fp, AlifObject* _filename,
 		//if ((!ALIFUSTR_CHECK(_filename)
 		//	or !alifUStr_equalToUTF8(_filename, "<stdin>"))
 		//	and set_mainLoader(dict, _filename, "SourceFileLoader") < 0) {
-		//	fprintf(stderr, "alif: failed to set __main__.__loader__\n");
+		//	fprintf(stderr, "alif: failed to set __الرئيسية__.__محمل__\n");
 		//	ret = -1;
 		//	goto done;
 		//}
@@ -161,7 +161,7 @@ done:
 
 AlifIntT _alifRun_simpleStringFlagsWithName(const char* _command,
 	const char* _name, AlifCompilerFlags* _flags) { // 530
-	AlifObject* mainModule = alifImport_addModuleRef("__main__");
+	AlifObject* mainModule = alifImport_addModuleRef("__الرئيسية__");
 	if (mainModule == nullptr) {
 		return -1;
 	}
@@ -212,14 +212,14 @@ static AlifIntT parse_exitCode(AlifObject* _code, AlifIntT* _exitcodeP) { // 567
 }
 
 AlifIntT _alif_handleSystemExit(AlifIntT* _exitcodeP) { // 591
-	AlifIntT inspect = alif_getConfig()->inspect;
+	AlifIntT inspect = _alif_getConfig()->inspect;
 	if (inspect) {
 		return 0;
 	}
 
-	//if (!alifErr_exceptionMatches(_alifExcSystemExit_)) { //* todo
-	//	return 0;
-	//}
+	if (!alifErr_exceptionMatches(_alifExcSystemExit_)) {
+		return 0;
+	}
 
 	fflush(stdout);
 
@@ -270,7 +270,7 @@ static void handle_systemExit(void) { // 630
 
 static void _alifErr_printEx(AlifThread* _thread, AlifIntT _setSysLastVars) { // 640
 	AlifObject* typ{}, * tb{};
-	//handle_systemExit(); //* todo
+	handle_systemExit();
 
 	AlifObject* exc = _alifErr_getRaisedException(_thread);
 	if (exc == nullptr) {
@@ -394,7 +394,7 @@ static AlifIntT printException_fileAndLine(ExceptionPrintContext* ctx,
 	}
 	if (v == ALIF_NONE) {
 		ALIF_DECREF(v);
-		ALIF_DECLARE_STR(anon_string, "<string>");
+		ALIF_DECLARE_STR(anon_string, "<نص>");
 		filename = ALIF_NEWREF(&ALIF_STR(AnonString));
 	}
 	else {
@@ -428,7 +428,7 @@ static AlifIntT printException_message(ExceptionPrintContext* ctx, AlifObject* t
 	//	return -1;
 	//}
 
-	AlifObject* modulename = alifObject_getAttr(type, &ALIF_ID(__module__));
+	AlifObject* modulename = alifObject_getAttr(type, &ALIF_STR(__module__));
 	if (modulename == nullptr or !ALIFUSTR_CHECK(modulename)) {
 		ALIF_XDECREF(modulename);
 		alifErr_clear();
@@ -437,8 +437,8 @@ static AlifIntT printException_message(ExceptionPrintContext* ctx, AlifObject* t
 		}
 	}
 	else {
-		if (!_alifUStr_equal(modulename, &ALIF_ID(Builtins)) and
-			!_alifUStr_equal(modulename, &ALIF_ID(__main__)))
+		if (!_alifUStr_equal(modulename, &ALIF_STR(Builtins)) and
+			!_alifUStr_equal(modulename, &ALIF_STR(__main__)))
 		{
 			AlifIntT res = alifFile_writeObject(modulename, f, ALIF_PRINT_RAW);
 			ALIF_DECREF(modulename);
@@ -533,6 +533,63 @@ error:
 	return -1;
 }
 
+// 959
+static const char _causeMessage_[] =
+"الخطأ في الأعلى يعتبر سبب مباشر "
+"لهذا الخطأ:\n";
+
+static const char _contextMessage_[] =
+"بينما يتم التعامل مع الخطأ في الأعلى, "
+"حدث خطأ آخر:\n";
+
+static AlifIntT printException_recursive(ExceptionPrintContext*, AlifObject*); // 967
+
+static AlifIntT print_chained(ExceptionPrintContext* _ctx, AlifObject* _value,
+	const char* _message, const char* _tag) { // 970
+	AlifObject* f = _ctx->file;
+	if (_alif_enterRecursiveCall(" في print_chained")) {
+		return -1;
+	}
+	AlifIntT res = printException_recursive(_ctx, _value);
+	_alif_leaveRecursiveCall();
+	if (res < 0) {
+		return -1;
+	}
+
+	if (alifFile_writeString("\n", f) < 0) {
+		return -1;
+	}
+	if (alifFile_writeString(_message, f) < 0) {
+		return -1;
+	}
+	if (alifFile_writeString("\n", f) < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static bool printException_seenLookup(ExceptionPrintContext* _ctx,
+	AlifObject* _value) { // 1002
+	AlifObject* checkID = alifLong_fromVoidPtr(_value);
+	if (checkID == nullptr) {
+		alifErr_clear();
+		return true;
+	}
+
+	AlifIntT inSeen = alifSet_contains(_ctx->seen, checkID);
+	ALIF_DECREF(checkID);
+	if (inSeen == -1) {
+		alifErr_clear();
+		return true;
+	}
+
+	if (inSeen == 1) {
+		/* value is in seen */
+		return true;
+	}
+	return false;
+}
+
 static AlifIntT printException_causeAndContext(ExceptionPrintContext* ctx,
 	AlifObject* value) { // 1011
 	AlifObject* value_id = alifLong_fromVoidPtr(value);
@@ -547,31 +604,32 @@ static AlifIntT printException_causeAndContext(ExceptionPrintContext* ctx,
 		return 0;
 	}
 
-	//AlifObject* cause = alifException_getCause(value);
-	//if (cause) {
-	//	int err = 0;
-	//	if (!printException_seenLookup(ctx, cause)) {
-	//		err = print_chained(ctx, cause, _causeMessage_, "cause");
-	//	}
-	//	ALIF_DECREF(cause);
-	//	return err;
-	//}
-	//if (((AlifBaseExceptionObject*)value)->suppressContext) {
-	//	return 0;
-	//}
-	//AlifObject* context = alifException_getContext(value);
-	//if (context) {
-	//	AlifIntT err = 0;
-	//	if (!printException_seenLookup(ctx, context)) {
-	//		err = print_chained(ctx, context, _contextMessage_, "context");
-	//	}
-	//	ALIF_DECREF(context);
-	//	return err;
-	//}
+	AlifObject* cause = alifException_getCause(value);
+	if (cause) {
+		AlifIntT err = 0;
+		if (!printException_seenLookup(ctx, cause)) {
+			err = print_chained(ctx, cause, _causeMessage_, "cause");
+		}
+		ALIF_DECREF(cause);
+		return err;
+	}
+	if (((AlifBaseExceptionObject*)value)->suppressContext) {
+		return 0;
+	}
+	AlifObject* context = alifException_getContext(value);
+	if (context) {
+		AlifIntT err = 0;
+		if (!printException_seenLookup(ctx, context)) {
+			err = print_chained(ctx, context, _contextMessage_, "context");
+		}
+		ALIF_DECREF(context);
+		return err;
+	}
 	return 0;
 }
 
-static AlifIntT printException_recursive(ExceptionPrintContext* ctx, AlifObject* value) { // 1051
+static AlifIntT printException_recursive(ExceptionPrintContext* ctx,
+	AlifObject* value) { // 1051
 	if (_alif_enterRecursiveCall(" في دالة printException_recursive")) {
 		return -1;
 	}
@@ -687,7 +745,7 @@ static AlifObject* _alifRun_stringFlagsWithName(const char* _str, AlifObject* _n
 		return nullptr;
 
 	AlifObject* source = nullptr;
-	ALIF_DECLARE_STR(AnonString, "<string>");
+	ALIF_DECLARE_STR(AnonString, "<نص>");
 
 	if (_name) {
 		source = alifUStr_fromString(_str);
@@ -786,7 +844,7 @@ static void flush_io(void) { // 1279
 	AlifThread* thread = _alifThread_get();
 	AlifObject* exc = _alifErr_getRaisedException(thread);
 	flush_ioStream(thread, &ALIF_ID(Stderr));
-	flush_ioStream(thread, &ALIF_ID(Stdout));
+	flush_ioStream(thread, &ALIF_STR(Stdout));
 	_alifErr_setRaisedException(thread, exc);
 }
 
@@ -912,4 +970,57 @@ AlifObject* alif_compileStringExFlags(const char* _str, const char* _filenameStr
 	co = alif_compileStringObject(_str, filename, _start, _flags, _optimize);
 	ALIF_DECREF(filename);
 	return co;
+}
+
+
+
+
+
+
+const char* _alif_sourceAsString(AlifObject* _cmd, const char* _funcName,
+	const char* _what, AlifCompilerFlags* _cf,
+	AlifObject** _cmdCopy) {
+	const char* str{};
+	AlifSizeT size{};
+	AlifBuffer view{};
+
+	*_cmdCopy = nullptr;
+	if (ALIFUSTR_CHECK(_cmd)) {
+		_cf->flags |= ALIFCF_IGNORE_COOKIE;
+		str = alifUStr_asUTF8AndSize(_cmd, &size);
+		if (str == nullptr)
+			return nullptr;
+	}
+	else if (ALIFBYTES_CHECK(_cmd)) {
+		str = ALIFBYTES_AS_STRING(_cmd);
+		size = ALIFBYTES_GET_SIZE(_cmd);
+	}
+	else if (ALIFBYTEARRAY_CHECK(_cmd)) {
+		str = ALIFBYTEARRAY_AS_STRING(_cmd);
+		size = ALIFBYTEARRAY_GET_SIZE(_cmd);
+	}
+	else if (alifObject_getBuffer(_cmd, &view, ALIFBUF_SIMPLE) == 0) {
+		*_cmdCopy = alifBytes_fromStringAndSize(
+			(const char*)view.buf, view.len);
+		alifBuffer_release(&view);
+		if (*_cmdCopy == nullptr) {
+			return nullptr;
+		}
+		str = ALIFBYTES_AS_STRING(*_cmdCopy);
+		size = ALIFBYTES_GET_SIZE(*_cmdCopy);
+	}
+	else {
+		alifErr_format(_alifExcTypeError_,
+			"%s() المعامل الأول يجب أن يكون كائن %s",
+			_funcName, _what);
+		return nullptr;
+	}
+
+	if (strlen(str) != (size_t)size) {
+		alifErr_setString(_alifExcSyntaxError_,
+			"الشيفرة المصدرية لا يجب أن تحتوي على محارف فارغة");
+		ALIF_CLEAR(*_cmdCopy);
+		return nullptr;
+	}
+	return str;
 }

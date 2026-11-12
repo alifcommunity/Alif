@@ -4,7 +4,9 @@
 class Module; // 11
 
 enum BlockType_ { // 13
-	Function_Block, Class_Block, Module_Block,
+	Function_Block,
+	Class_Block,
+	Module_Block,
 	Annotation_Block,
 	Type_Alias_Block,
 	Type_Parameters_Block,
@@ -41,13 +43,13 @@ public:
 	AlifSourceLocation location{};
 };
 
-class SymTableEntry; // 68
+class AlifSTEntryObject; // 68
 
 class AlifSymTable { // 70
 public:
 	AlifObject* fileName{};
-	SymTableEntry* cur{}; 
-	SymTableEntry* top{};
+	AlifSTEntryObject* cur{}; 
+	AlifSTEntryObject* top{};
 	AlifObject* blocks{};
 	AlifObject* stack{};
 	AlifObject* global{};
@@ -58,7 +60,7 @@ public:
 	AlifIntT recursionLimit{};
 };
 
-class SymTableEntry { // 89
+class AlifSTEntryObject { // 89
 public:
 	ALIFOBJECT_HEAD;
 	AlifObject* id{};
@@ -91,22 +93,22 @@ public:
 
 	AlifIntT compIterExpr{};
 	AlifSourceLocation loc{};
-	SymTableEntry* annotationBlock{};
+	AlifSTEntryObject* annotationBlock{};
 	AlifSymTable* table{};
 };
 
 extern AlifTypeObject _alifSTEntryType_; // 132
 
-extern long _alifST_getSymbol(SymTableEntry*, AlifObject*); // 136
-extern AlifIntT alifST_getScope(SymTableEntry*, AlifObject*); // 137
-extern AlifIntT alifST_isFunctionLike(SymTableEntry* ); // 138
+extern long _alifST_getSymbol(AlifSTEntryObject*, AlifObject*); // 136
+extern AlifIntT alifST_getScope(AlifSTEntryObject*, AlifObject*); // 137
+extern AlifIntT alifST_isFunctionLike(AlifSTEntryObject* ); // 138
 extern AlifSymTable* alifSymtable_build(Module*, AlifObject*, AlifFutureFeatures*); // 140
 
-extern SymTableEntry* _alifSymtable_lookup(AlifSymTable*, void*); // 144
+extern AlifSTEntryObject* _alifSymtable_lookup(AlifSymTable*, void*); // 144
 
 extern void alifSymtable_free(AlifSymTable*); // 147
 
-extern AlifObject* alif_maybeMangle(AlifObject*, SymTableEntry*, AlifObject*); // 149
+extern AlifObject* alif_maybeMangle(AlifObject*, AlifSTEntryObject*, AlifObject*); // 149
 extern AlifObject* alif_mangle(AlifObject*, AlifObject*); // 150
 // 154
 #define DEF_GLOBAL 1            

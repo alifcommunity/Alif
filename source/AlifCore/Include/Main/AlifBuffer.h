@@ -19,17 +19,19 @@ public:
 typedef AlifIntT(*GetBufferProc)(AlifObject*, AlifBuffer*, AlifIntT); // 35
 typedef void (*ReleaseBufferProc)(AlifObject*, AlifBuffer*);
 
-AlifIntT alifObject_checkBuffer(AlifObject*); // 39
+ALIFAPI_FUNC(AlifIntT) alifObject_checkBuffer(AlifObject*); // 39
 
-AlifIntT alifObject_getBuffer(AlifObject*, AlifBuffer*, AlifIntT); // 46
+ALIFAPI_FUNC(AlifIntT) alifObject_getBuffer(AlifObject*, AlifBuffer*, AlifIntT); // 46
 
-AlifIntT alifBuffer_isContiguous(const AlifBuffer*, char); // 80
+ALIFAPI_FUNC(AlifIntT) alifBuffer_toContiguous(void*, const AlifBuffer*, AlifSizeT, char); // 58
 
-AlifIntT alifBuffer_fillInfo(AlifBuffer*, AlifObject*, void*,
+ALIFAPI_FUNC(AlifIntT) alifBuffer_isContiguous(const AlifBuffer*, char); // 80
+
+ALIFAPI_FUNC(AlifIntT) alifBuffer_fillInfo(AlifBuffer*, AlifObject*, void*,
 	AlifSizeT, AlifIntT, AlifIntT); // 97
 
 
-void alifBuffer_release(AlifBuffer*); // 102
+ALIFAPI_FUNC(void) alifBuffer_release(AlifBuffer*); // 102
 
 
 #define ALIFBUF_MAX_NDIM 64 // 105

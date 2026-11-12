@@ -80,7 +80,7 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* _m,
 			}
 		}
 
-		int ret = alifParkingLot_park(&_m->bits, &newv, sizeof(newv), _timeout,
+		int ret = _alifParkingLot_park(&_m->bits, &newv, sizeof(newv), _timeout,
 			&entry, (_flags & AlifLockFlags_::Alif_Lock_Detach) != 0);
 
 		if (ret == Alif_Park_Ok) {
@@ -99,7 +99,7 @@ AlifLockStatus_ alifMutex_lockTimed(AlifMutex* _m,
 		}
 
 		if (_timeout > 0) {
-			_timeout = alifDeadline_get(endtime);
+			_timeout = _alifDeadline_get(endtime);
 			if (_timeout <= 0) {
 				_timeout = 0;
 			}
@@ -134,7 +134,7 @@ AlifIntT alifMutex_tryUnlock(AlifMutex* _m) { // 158
 			return -1;
 		}
 		else if ((v & ALIF_HAS_PARKED)) {
-			alifParkingLot_unpark(&_m->bits, (AlifUnparkFnT*)mutex_unpark, _m);
+			_alifParkingLot_unpark(&_m->bits, (AlifUnparkFnT*)mutex_unpark, _m);
 			return 0;
 		}
 		else if (alifAtomic_compareExchangeUint8(&_m->bits, &v, ALIF_UNLOCKED)) {
@@ -158,7 +158,7 @@ public:
 
 void alifRawMutex_lockSlow(AlifRawMutex* m) { // 186
 	RawMutexEntry waiter;
-	alifSemaphore_init(&waiter.sema);
+	_alifSemaphore_init(&waiter.sema);
 
 	uintptr_t v = alifAtomic_loadUintptr(&m->v);
 	for (;;) {
@@ -175,10 +175,10 @@ void alifRawMutex_lockSlow(AlifRawMutex* m) { // 186
 			continue;
 		}
 
-		alifSemaphore_wait(&waiter.sema, -1, /*detach=*/0);
+		_alifSemaphore_wait(&waiter.sema, -1, /*detach=*/0);
 	}
 
-	alifSemaphore_destroy(&waiter.sema);
+	_alifSemaphore_destroy(&waiter.sema);
 }
 
 
@@ -196,7 +196,7 @@ void alifRawMutex_unlockSlow(AlifRawMutex* _m) { // 217
 		if (waiter) {
 			uintptr_t next_waiter = (uintptr_t)waiter->next;
 			if (alifAtomic_compareExchangeUintptr(&_m->v, &v, next_waiter)) {
-				alifSemaphore_wakeup(&waiter->sema);
+				_alifSemaphore_wakeup(&waiter->sema);
 				return;
 			}
 		}
@@ -224,7 +224,7 @@ AlifIntT alifEvent_waitTimed(AlifEvent* _evt, AlifTimeT _timeoutNS, AlifIntT _de
 		}
 
 		uint8_t expected = ALIF_HAS_PARKED;
-		(void)alifParkingLot_park(&_evt->v_, &expected, sizeof(_evt->v_),
+		(void)_alifParkingLot_park(&_evt->v_, &expected, sizeof(_evt->v_),
 			_timeoutNS, nullptr, _detach);
 
 		return alifAtomic_loadUint8(&_evt->v_) == ALIF_LOCKED;
@@ -248,7 +248,7 @@ static AlifIntT unlock_once(AlifOnceFlag* _o, AlifIntT _res) { // 297
 
 	uint8_t old_value = alifAtomic_exchangeUint8(&_o->v, newValue);
 	if ((old_value & ALIF_HAS_PARKED) != 0) {
-		alifParkingLot_unparkAll(&_o->v);
+		_alifParkingLot_unparkAll(&_o->v);
 	}
 	return _res;
 }
@@ -281,7 +281,7 @@ AlifIntT _alifOnceFlag_callOnceSlow(AlifOnceFlag* _flag, AlifOnceFnT* _fn, void*
 		}
 
 		// Wait for initialization to finish.
-		alifParkingLot_park(&_flag->v, &v, sizeof(v), -1, nullptr, 1);
+		_alifParkingLot_park(&_flag->v, &v, sizeof(v), -1, nullptr, 1);
 		v = alifAtomic_loadUint8(&_flag->v);
 	}
 }
@@ -302,7 +302,7 @@ static uintptr_t rwMutexSet_parkedAndWait(AlifRWMutex* _rwMutex, uintptr_t _bits
 		_bits = newval;
 	}
 
-	alifParkingLot_park(&_rwMutex->bits, &_bits, sizeof(_bits), -1, nullptr, 1);
+	_alifParkingLot_park(&_rwMutex->bits, &_bits, sizeof(_bits), -1, nullptr, 1);
 	return alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
 }
 
@@ -310,7 +310,7 @@ static uintptr_t rwMutex_readerCount(uintptr_t _bits) { // 419
 	return _bits >> ALIFRWMUTEX_READER_SHIFT;
 }
 
-void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
+void _alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
 	uintptr_t bits = alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
 	for (;;) {
 		if ((bits & ALIF_WRITE_LOCKED)) {
@@ -336,18 +336,18 @@ void alifRWMutex_rLock(AlifRWMutex* _rwMutex) { // 425
 
 
 
-void alifRWMutex_rUnlock(AlifRWMutex* _rwMutex) { // 456
+void _alifRWMutex_rUnlock(AlifRWMutex* _rwMutex) { // 456
 	uintptr_t bits = alifAtomic_addUintptr(&_rwMutex->bits, -(1 << ALIFRWMUTEX_READER_SHIFT));
 	bits -= (1 << ALIFRWMUTEX_READER_SHIFT);
 
 	if (rwMutex_readerCount(bits) == 0 and (bits & ALIF_HAS_PARKED)) {
-		alifParkingLot_unparkAll(&_rwMutex->bits);
+		_alifParkingLot_unparkAll(&_rwMutex->bits);
 		return;
 	}
 }
 
 
-void alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
+void _alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
 	uintptr_t bits = alifAtomic_loadUintptrRelaxed(&_rwMutex->bits);
 	for (;;) {
 		if ((bits & ~ALIF_HAS_PARKED) == 0) {
@@ -367,11 +367,11 @@ void alifRWMutex_lock(AlifRWMutex* _rwMutex) { // 469
 
 
 
-void alifRWMutex_unlock(AlifRWMutex* _rwMutex) { // 490
+void _alifRWMutex_unlock(AlifRWMutex* _rwMutex) { // 490
 	uintptr_t oldBits = alifAtomic_exchangeUintptr(&_rwMutex->bits, 0);
 
 	if ((oldBits & ALIF_HAS_PARKED) != 0) {
-		alifParkingLot_unparkAll(&_rwMutex->bits);
+		_alifParkingLot_unparkAll(&_rwMutex->bits);
 	}
 }
 
@@ -380,7 +380,7 @@ void alifRWMutex_unlock(AlifRWMutex* _rwMutex) { // 490
 
 
 
-uint32_t alifSeqLock_beginRead(AlifSeqLock* _seqLock) { // 540
+uint32_t _alifSeqLock_beginRead(AlifSeqLock* _seqLock) { // 540
 	uint32_t sequence = alifAtomic_loadUint32Acquire(&_seqLock->sequence);
 	while (SEQLOCK_IS_UPDATING(sequence)) {
 		alif_yield();
@@ -390,7 +390,7 @@ uint32_t alifSeqLock_beginRead(AlifSeqLock* _seqLock) { // 540
 	return sequence;
 }
 
-AlifIntT alifSeqLock_endRead(AlifSeqLock* _seqLock, uint32_t _previous) { // 552
+AlifIntT _alifSeqLock_endRead(AlifSeqLock* _seqLock, uint32_t _previous) { // 552
 	alifAtomic_fenceAcquire();
 
 	if (alifAtomic_loadUint32Relaxed(&_seqLock->sequence) == _previous) {

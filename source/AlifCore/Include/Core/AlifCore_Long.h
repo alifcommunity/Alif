@@ -21,27 +21,33 @@ static inline AlifObject* _alifLong_getOne(void) { // 73
 	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS + 1];
 }
 
-double _alifLong_frexp(AlifLongObject* , int64_t* ); // 88
+static inline AlifObject* _alifLong_fromUnsignedChar(unsigned char i) { // 76
+	return (AlifObject*)&ALIFLONG_SMALL_INTS[ALIF_NSMALLNEGINTS+i];
+}
+
+ALIFAPI_DATA(double) _alifLong_frexp(AlifLongObject*, int64_t*); // 88
 
 
 extern AlifObject* _alifLong_fromBytes(const char*, AlifSizeT, AlifIntT); // 91
 
-extern AlifObject* _alifLong_format(AlifObject*, AlifIntT); // 104
+ALIFAPI_DATA(AlifObject*) _alifLong_format(AlifObject*, AlifIntT, AlifIntT); // 104
 
-extern AlifObject* _alifLong_rShift(AlifObject*, int64_t); // 107
+ALIFAPI_DATA(AlifObject*) _alifLong_rShift(AlifObject*, int64_t); // 107
 
-extern AlifObject* _alifLong_lShift(AlifObject*, int64_t); // 111
+ALIFAPI_DATA(AlifObject*) _alifLong_lShift(AlifObject*, int64_t); // 111
 
-extern AlifIntT _alifLong_formatWriter(AlifUStrWriter*, AlifObject*, AlifIntT, AlifIntT); // 128
 
-AlifObject* _alifLong_add(AlifLongObject*, AlifLongObject*); // 113
+ALIFAPI_FUNC(AlifObject*) _alifLong_add(AlifLongObject*, AlifLongObject*); // 112
+ALIFAPI_FUNC(AlifObject*) _alifLong_multiply(AlifLongObject*, AlifLongObject*); // 113
+ALIFAPI_FUNC(AlifObject*) _alifLong_subtract(AlifLongObject*, AlifLongObject*); // 114
 
-extern unsigned char _alifLongDigitValue_[256]; // 118
+ALIFAPI_DATA(unsigned char) _alifLongDigitValue_[256]; // 118
 
 
 extern AlifIntT _alifLong_formatAdvancedWriter(AlifUStrWriter*,
 	AlifObject*, AlifObject*, AlifSizeT, AlifSizeT); // 121
 
+extern AlifIntT _alifLong_formatWriter(AlifUStrWriter*, AlifObject*, AlifIntT, AlifIntT); // 128
 
 
 
@@ -73,7 +79,7 @@ static inline bool _alifLong_isPositive(const AlifLongObject* op) { // 217
 	return (op->longValue.tag & SIGN_MASK) == 0;
 }
 
-static inline AlifSizeT alifLong_digitCount(const AlifLongObject* _op) { // 223
+static inline AlifSizeT _alifLong_digitCount(const AlifLongObject* _op) { // 223
 	return (AlifSizeT)(_op->longValue.tag >> NON_SIZE_BITS);
 }
 

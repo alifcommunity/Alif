@@ -3,17 +3,17 @@
 
 
 
-extern AlifTypeObject _alifByteArrayType_; // 20
-extern AlifTypeObject _alifByteArrayIterType_;
+ALIFAPI_DATA(AlifTypeObject) _alifByteArrayType_; // 20
+ALIFAPI_DATA(AlifTypeObject) _alifByteArrayIterType_;
 
 
 #define ALIFBYTEARRAY_CHECK(_self) ALIFOBJECT_TYPECHECK((_self), &_alifByteArrayType_)
 #define ALIFBYTEARRAY_CHECKEXACT(_self) ALIF_IS_TYPE((_self), &_alifByteArrayType_)
 
 
-AlifObject* alifByteArray_fromStringAndSize(const char*, AlifSizeT); // 30
+ALIFAPI_FUNC(AlifObject*) alifByteArray_fromStringAndSize(const char*, AlifSizeT); // 30
 
-AlifIntT alifByteArray_resize(AlifObject*, AlifSizeT); // 33
+ALIFAPI_FUNC(AlifIntT) alifByteArray_resize(AlifObject*, AlifSizeT); // 33
 
 
 
@@ -29,7 +29,7 @@ public:
 	AlifSizeT exports{}; /* How many buffer exports */
 };
 
-extern char _alifByteArrayEmptyString_[]; // 14
+ALIFAPI_DATA(char) _alifByteArrayEmptyString_[]; // 14
 
 /* Macros and static inline functions, trading safety for speed */
 #define ALIFBYTEARRAY_CAST(op) ALIF_CAST(AlifByteArrayObject*, op)

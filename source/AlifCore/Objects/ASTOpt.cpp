@@ -121,7 +121,6 @@ static AlifIntT fold_unaryOp(ExprTy _node,
 		unary_not,					// [UnaryOp_::Not] 
 		alifNumber_positive,		// [UnaryOp_::UAdd] 
 		alifNumber_negative,		// [UnaryOp_::USub] 
-		alifNumber_sqrt,			// [UnaryOp_::Sqrt]  //* alif
 	};
 	AlifObject* newval = ops[_node->V.unaryOp.op](arg->V.constant.val);
 	return make_const(_node, newval, _astMem);
@@ -583,6 +582,7 @@ static AlifIntT astFold_arguments(ArgumentsTy, AlifASTMem*, AlifASTOptimizeState
 static AlifIntT astFold_comprehension(ComprehensionTy, AlifASTMem*, AlifASTOptimizeState*); // 648
 static AlifIntT astFold_keyword(KeywordTy, AlifASTMem*, AlifASTOptimizeState*); //  649
 static AlifIntT astFold_arg(ArgTy, AlifASTMem*, AlifASTOptimizeState*); // 650
+static AlifIntT astFold_withItem(WithItemTy, AlifASTMem*, AlifASTOptimizeState*); // 652
 static AlifIntT astFold_exceptHandler(ExcepthandlerTy, AlifASTMem*, AlifASTOptimizeState*); // 653
 static AlifIntT astFold_typeParam(TypeParamTy, AlifASTMem*, AlifASTOptimizeState*); // 655
 
@@ -665,7 +665,7 @@ static AlifIntT astfold_mod(ModuleTy _node,
 	//	CALL(astFold_expr, ExprTy, _node->V.expression.body);
 	//	break;
 		// The following top level nodes don't participate in constant folding
-	case ModK_::FunctionK:
+	case ModK_::FunctionTypeK:
 		break;
 		// No default case, so the compiler will emit a warning if new top level
 		// compilation nodes are added without being handled here
@@ -770,7 +770,7 @@ static AlifIntT astFold_expr(ExprTy _node,
 		break;
 	case ExprK_::NameK:
 		if (_node->V.name.ctx == ExprContext_::Load and
-			alifUStr_equalToASCIIString(_node->V.name.name, "__debug__")) {
+			_alifUStr_equalToASCIIString(_node->V.name.name, "__debug__")) {
 			LEAVE_RECURSIVE(_state);
 			return make_const(_node, alifBool_fromLong(!_state->optimize), _ctx);
 		}
@@ -832,26 +832,26 @@ static AlifIntT astFold_stmt(StmtTy _node,
 		CALL_SEQ(astFold_typeParam, TypeParam, _node->V.functionDef.typeParams);
 		CALL(astFold_arguments, ArgumentsTy, _node->V.functionDef.args);
 		CALL(astFold_body, ASDLSeq, _node->V.functionDef.body);
-		//CALL_SEQ(astFold_expr, Expr, _node->V.functionDef.decoratorList);
+		CALL_SEQ(astFold_expr, Expr, _node->V.functionDef.decoratorList);
 		if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
 			CALL_OPT(astFold_expr, ExprTy, _node->V.functionDef.returns);
 		}
 		break;
-	//case StmtK_::AsyncFunctionDefK:
-	//	CALL_SEQ(astfold_typeParam, TypeParam, _node->V.asyncFunctionDef.typeParams);
-	//	CALL(astFold_arguments, ArgumentsTy, _node->V.asyncFunctionDef.args);
-	//	CALL(astFold_body, ASDLSeq, _node->V.asyncFunctionDef.body);
-	//	CALL_SEQ(astFold_expr, Expr, _node->V.asyncFunctionDef.decoratorList);
-	//	if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
-	//		CALL_OPT(astFold_expr, ExprTy, _node->V.asyncFunctionDef.returns);
-	//	}
-	//	break;
+	case StmtK_::AsyncFunctionDefK:
+		CALL_SEQ(astFold_typeParam, TypeParam, _node->V.asyncFunctionDef.typeParams);
+		CALL(astFold_arguments, ArgumentsTy, _node->V.asyncFunctionDef.args);
+		CALL(astFold_body, ASDLSeq, _node->V.asyncFunctionDef.body);
+		CALL_SEQ(astFold_expr, Expr, _node->V.asyncFunctionDef.decoratorList);
+		if (!(_state->features & CO_FUTURE_ANNOTATIONS)) {
+			//CALL_OPT(astFold_expr, ExprTy, _node->V.asyncFunctionDef.returns);
+		}
+		break;
 	case StmtK_::ClassDefK:
 		CALL_SEQ(astFold_typeParam, TypeParam, _node->V.classDef.typeParams);
 		CALL_SEQ(astFold_expr, Expr, _node->V.classDef.bases);
 		CALL_SEQ(astFold_keyword, Keyword, _node->V.classDef.keywords);
 		CALL(astFold_body, asdl_seq, _node->V.classDef.body);
-		//CALL_SEQ(astFold_expr, Expr, _node->V.classDef.decoratorList);
+		CALL_SEQ(astFold_expr, Expr, _node->V.classDef.decoratorList);
 		break;
 	case StmtK_::ReturnK:
 		CALL_OPT(astFold_expr, ExprTy, _node->V.return_.val);
@@ -876,7 +876,7 @@ static AlifIntT astFold_stmt(StmtTy _node,
 		CALL(astFold_expr, ExprTy, _node->V.for_.target);
 		CALL(astFold_expr, ExprTy, _node->V.for_.iter);
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.for_.body);
-		//CALL_SEQ(astFold_stmt, Stmt, _node->V.for_.else_);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.for_.then);
 
 		CALL(fold_iter, ExprTy, _node->V.for_.iter);
 		break;
@@ -884,26 +884,26 @@ static AlifIntT astFold_stmt(StmtTy _node,
 		CALL(astFold_expr, ExprTy, _node->V.asyncFor.target);
 		CALL(astFold_expr, ExprTy, _node->V.asyncFor.iter);
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.asyncFor.body);
-		//CALL_SEQ(astFold_stmt, Stmt, _node->V.asyncFor.else_);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.asyncFor.then);
 		break;
 	case StmtK_::WhileK:
 		CALL(astFold_expr, ExprTy, _node->V.while_.condition);
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.while_.body);
-		//CALL_SEQ(astFold_stmt, Stmt, _node->V.while_.);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.while_.then);
 		break;
 	case StmtK_::IfK:
 		CALL(astFold_expr, ExprTy, _node->V.if_.condition);
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.if_.body);
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.if_.else_);
 		break;
-	//case StmtK_::WithK:
-	//	CALL_SEQ(astFold_withItem, WithItem, _node->V.with_.items);
-	//	CALL_SEQ(astFold_stmt, Stmt, _node->V.with_.body);
-	//	break;
-	//case StmtK_::AsyncWithK:
-	//	CALL_SEQ(astFold_withItem, withitem, _node->V.asyncWith.items);
-	//	CALL_SEQ(astFold_stmt, stmt, _node->v.AsyncWith.body);
-	//	break;
+	case StmtK_::WithK:
+		CALL_SEQ(astFold_withItem, WithItem, _node->V.with_.items);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.with_.body);
+		break;
+	case StmtK_::AsyncWithK:
+		CALL_SEQ(astFold_withItem, WithItem, _node->V.asyncWith.items);
+		CALL_SEQ(astFold_stmt, Stmt, _node->V.asyncWith.body);
+		break;
 	case StmtK_::TryK:
 		CALL_SEQ(astFold_stmt, Stmt, _node->V.try_.body);
 		CALL_SEQ(astFold_exceptHandler, Excepthandler, _node->V.try_.handlers);
@@ -950,7 +950,12 @@ static AlifIntT astFold_exceptHandler(ExcepthandlerTy _node,
 }
 
 
-
+static AlifIntT astFold_withItem(WithItemTy _node, AlifASTMem* _ctx,
+	AlifASTOptimizeState* _state) { // 1047
+	CALL(astFold_expr, ExprTy, _node->contextExpr);
+	CALL_OPT(astFold_expr, ExprTy, _node->optionalVars);
+	return 1;
+}
 
 
 

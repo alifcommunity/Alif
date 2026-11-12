@@ -3,17 +3,20 @@
 
 #include "AlifCore_Code.h"
 #include "AlifCore_Frame.h"
+#include "AlifCore_IndexPool.h"
 #include "AlifCore_InitConfig.h"
 #include "AlifCore_Object.h"
+#include "AlifCore_ObjectStack.h"
 #include "AlifCore_OpcodeUtils.h"
 #include "AlifCore_OpcodeMetaData.h"
+#include "AlifCore_Memory.h"
 #include "AlifCore_State.h"
 #include "AlifCore_SetObject.h"
 #include "AlifCore_Tuple.h"
 #include "AlifCore_UniqueID.h"
 
 
-
+#define INITIAL_SPECIALIZED_CODE_SIZE 16 // 23
 
 
 static const char* code_eventName(AlifCodeEvent _event) { // 20
@@ -63,7 +66,7 @@ static AlifIntT intern_strings(AlifObject* _tuple) { // 137
 				"تم العثور على نوع غير-نصي في خانة الشيفرة");
 			return -1;
 		}
-		alifUStr_internImmortal(interp, &ALIFTUPLE_ITEMS(_tuple)[i]);
+		_alifUStr_internImmortal(interp, &ALIFTUPLE_ITEMS(_tuple)[i]);
 	}
 	return 0;
 }
@@ -77,7 +80,7 @@ static AlifIntT intern_constants(AlifObject* _tuple, AlifIntT* _modified) { // 1
 			//if (should_internString(v)) { //* alif
 			// The free-threaded build interns (and immortalizes) all string constants
 			AlifObject* w = v;
-			alifUStr_internMortal(interp, &v);
+			_alifUStr_internMortal(interp, &v);
 			if (w != v) {
 				ALIFTUPLE_SET_ITEM(_tuple, i, v);
 				if (_modified) {
@@ -281,9 +284,11 @@ AlifIntT _alifCode_validate(AlifCodeConstructor* _con) { // 392
 	return 0;
 }
 
+extern void _alifCode_quicken(AlifCodeUnit*, AlifSizeT, AlifObject*, AlifIntT); // 449
+static AlifCodeArray* _alifCodeArray_new(AlifSizeT); // 453
 
 
-static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
+static AlifIntT init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 	AlifIntT nlocalsplus = (AlifIntT)ALIFTUPLE_GET_SIZE(_con->localsPlusNames);
 	AlifIntT nlocals, ncellvars, nfreevars;
 	get_localsPlusCounts(_con->localsPlusNames, _con->localsPlusKinds,
@@ -296,9 +301,9 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 	_co->filename = ALIF_NEWREF(_con->filename);
 	_co->name = ALIF_NEWREF(_con->name);
 	_co->qualname = ALIF_NEWREF(_con->qualname);
-	alifUStr_internMortal(interp, &_co->filename);
-	alifUStr_internMortal(interp, &_co->name);
-	alifUStr_internMortal(interp, &_co->qualname);
+	_alifUStr_internMortal(interp, &_co->filename);
+	_alifUStr_internMortal(interp, &_co->name);
+	_alifUStr_internMortal(interp, &_co->qualname);
 	_co->flags = _con->flags;
 
 	_co->firstLineno = _con->firstLineno;
@@ -340,14 +345,22 @@ static void init_code(AlifCodeObject* _co, AlifCodeConstructor* _con) { // 452
 
 	memcpy(ALIFCODE_CODE(_co), ALIFBYTES_AS_STRING(_con->code),
 		ALIFBYTES_GET_SIZE(_con->code));
+	_co->coTlbc = _alifCodeArray_new(INITIAL_SPECIALIZED_CODE_SIZE);
+	if (_co->coTlbc == nullptr) {
+		return -1;
+	}
+	_co->coTlbc->entries[0] = _co->codeAdaptive;
 	AlifIntT entryPoint = 0;
 	while (entryPoint < ALIF_SIZE(_co) and
 		ALIFCODE_CODE(_co)[entryPoint].op.code != RESUME) {
 		entryPoint++;
 	}
 	_co->firstTraceable = entryPoint;
-	//alifCode_quicken(_co);
+	_alifCode_quicken(ALIFCODE_CODE(_co), ALIF_SIZE(_co), _co->consts,
+		interp->config.tlbcEnabled);
 	notify_codeWatchers(AlifCodeEvent::Alif_Code_Event_Create, _co);
+
+	return 0;
 }
 
 
@@ -424,7 +437,7 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 
 	AlifObject* replacementLocations = nullptr;
 
-	//if (!alif_getConfig()->codeDebugRanges) {
+	//if (!_alif_getConfig()->codeDebugRanges) {
 	//	replacementLocations = remove_columnInfo(_con->lineTable);
 	//	if (replacementLocations == nullptr) {
 	//		return nullptr;
@@ -440,7 +453,12 @@ AlifCodeObject* alifCode_new(AlifCodeConstructor* _con) { // 647
 		//alifErr_noMemory();
 		return nullptr;
 	}
-	init_code(co, _con);
+
+	if (init_code(co, _con) < 0) {
+		ALIF_DECREF(co);
+		return nullptr;
+	}
+
 	co->uniqueID = _alifObject_assignUniqueId((AlifObject*)co);	ALIFOBJECT_GC_TRACK(co);
 	ALIF_XDECREF(replacementLocations);
 	return co;
@@ -628,13 +646,12 @@ AlifTypeObject _alifCodeType_ = { // 2292
 };
 
 
-AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
+AlifObject* _alifCode_constantKey(AlifObject* _op) { // 2331
 	AlifObject* key_{};
 
 	if (_op == ALIF_NONE or _op == ALIF_ELLIPSIS
 		or ALIFLONG_CHECKEXACT(_op)
 		or ALIFUSTR_CHECKEXACT(_op)
-		or ALIFSLICE_CHECK(_op)
 		or ALIFCODE_CHECK(_op)) {
 		key_ = ALIF_NEWREF(_op);
 	}
@@ -680,7 +697,7 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 			AlifObject* item{}, * itemKey{};
 
 			item = ALIFTUPLE_GET_ITEM(_op, i_);
-			itemKey = alifCode_constantKey(item);
+			itemKey = _alifCode_constantKey(item);
 			if (itemKey == nullptr) {
 				ALIF_DECREF(tuple);
 				return nullptr;
@@ -705,10 +722,10 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 			return nullptr;
 
 		i_ = 0;
-		while (alifSet_nextEntry(_op, &pos_, &item, &hash)) {
+		while (_alifSet_nextEntry(_op, &pos_, &item, &hash)) {
 			AlifObject* itemKey{};
 
-			itemKey = alifCode_constantKey(item);
+			itemKey = _alifCode_constantKey(item);
 			if (itemKey == nullptr) {
 				ALIF_DECREF(tuple);
 				return nullptr;
@@ -724,6 +741,40 @@ AlifObject* alifCode_constantKey(AlifObject* _op) { // 2331
 		key_ = alifTuple_pack(2, set_, _op);
 		ALIF_DECREF(set_);
 		return key_;
+	}
+	else if (ALIFSLICE_CHECK(_op)) {
+		AlifSliceObject *slice = (AlifSliceObject*)_op;
+		AlifObject *start_key = nullptr;
+		AlifObject *stop_key = nullptr;
+		AlifObject *step_key = nullptr;
+		key_ = nullptr;
+
+		start_key = _alifCode_constantKey(slice->start);
+		if (start_key == nullptr) {
+			goto slice_exit;
+		}
+
+		stop_key = _alifCode_constantKey(slice->stop);
+		if (stop_key == nullptr) {
+			goto slice_exit;
+		}
+
+		step_key = _alifCode_constantKey(slice->step);
+		if (step_key == nullptr) {
+			goto slice_exit;
+		}
+
+		AlifObject* sliceKey; sliceKey = alifSlice_new(start_key, stop_key, step_key);
+		if (sliceKey == nullptr) {
+			goto slice_exit;
+		}
+
+		key_ = alifTuple_pack(2, sliceKey, _op);
+		ALIF_DECREF(sliceKey);
+slice_exit:
+		ALIF_XDECREF(start_key);
+		ALIF_XDECREF(stop_key);
+		ALIF_XDECREF(step_key);
 	}
 	else {
 		AlifObject* objID = alifLong_fromVoidPtr(_op);
@@ -749,7 +800,7 @@ static AlifObject* intern_oneConstant(AlifObject* _op) { // 2461
 		}
 
 
-		alif_setImmortal(_op);
+		_alif_setImmortal(_op);
 		return _op;
 	}
 	return (AlifObject*)entry->value;
@@ -784,8 +835,8 @@ static AlifIntT compare_constants(const void* _key1, const void* _key2) { // 249
 		AlifSizeT pos1 = 0, pos2 = 0;
 		AlifObject* obj1{}, * obj2{};
 		AlifHashT hash1{}, hash2{};
-		while ((alifSet_nextEntry(op1, &pos1, &obj1, &hash1)) and
-			(alifSet_nextEntry(op2, &pos2, &obj2, &hash2))) {
+		while ((_alifSet_nextEntry(op1, &pos1, &obj1, &hash1)) and
+			(_alifSet_nextEntry(op2, &pos2, &obj2, &hash2))) {
 			if (obj1 != obj2) {
 				return 0;
 			}
@@ -858,6 +909,229 @@ AlifStatus alifCode_init(AlifInterpreter* _interp) { // 2611
 
 
 
+// Thread-local bytecode (TLBC)
+//
+// Each thread specializes a thread-local copy of the bytecode, created on the
+// first RESUME, in free-threaded builds. All copies of the bytecode for a code
+// object are stored in the `coTlbc` array. Threads reserve a globally unique
+// index identifying its copy of the bytecode in all `coTlbc` arrays at thread
+// creation and release the index at thread destruction. The first entry in
+// every `coTlbc` array always points to the "main" copy of the bytecode that
+// is stored at the end of the code object. This ensures that no bytecode is
+// copied for programs that do not use threads.
+//
+// Concurrent modifications to the bytecode made by the specializing
+// interpreter and instrumentation use atomics, with specialization taking care
+// not to overwrite an instruction that was instrumented concurrently.
+
+int32_t _alif_reserveTLBCIndex(AlifInterpreter* _interp) { // 2715
+	if (_interp->config.tlbcEnabled) {
+		return _alifIndexPool_allocIndex(&_interp->tlbcIndices);
+	}
+	// All threads share the main copy of the bytecode when TLBC is disabled
+	return 0;
+}
+
+void _alif_clearTLBCIndex(AlifThreadImpl* _thread) {
+	AlifInterpreter* interp = ((AlifThread*)_thread)->interpreter;
+	if (interp->config.tlbcEnabled) {
+		_alifIndexPool_freeIndex(&interp->tlbcIndices, _thread->tlbcIndex);
+	}
+}
+
+static AlifCodeArray* _alifCodeArray_new(AlifSizeT _size) {
+	AlifCodeArray* arr = (AlifCodeArray*)alifMem_dataAlloc(offsetof(AlifCodeArray, entries) + sizeof(void *) * _size);
+	if (arr == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	arr->size = _size;
+	return arr;
+}
+
+static void copy_code(AlifCodeUnit* _dst, AlifCodeObject* _co) { // 2747
+	AlifIntT code_len = (AlifIntT)ALIF_SIZE(_co);
+	for (AlifIntT i = 0; i < code_len; i += _alifInstruction_getLength(_co, i)) {
+		_dst[i] = _alif_getBaseCodeUnit(_co, i);
+	}
+	_alifCode_quicken(_dst, code_len, _co->consts, 1);
+}
+
+static AlifSizeT getPow2_greater(AlifSizeT _initial,
+	AlifSizeT _limit) {
+	// initial must be a power of two
+	AlifSizeT res = _initial;
+	while (res and res < _limit) {
+		res <<= 1;
+	}
+	return res;
+}
+
+static AlifCodeUnit* createTlbc_lockHeld(AlifCodeObject* co,
+	AlifSizeT idx) {
+	AlifCodeArray *tlbc = co->coTlbc;
+	if (idx >= tlbc->size) {
+		AlifSizeT new_size = getPow2_greater(tlbc->size, idx + 1);
+		if (!new_size) {
+			//alifErr_noMemory();
+			return nullptr;
+		}
+		AlifCodeArray* newTlbc = _alifCodeArray_new(new_size);
+		if (newTlbc == nullptr) {
+			return nullptr;
+		}
+		memcpy(newTlbc->entries, tlbc->entries, tlbc->size * sizeof(void *));
+		alifAtomic_storePtrRelease(&co->coTlbc, newTlbc);
+		_alifMem_freeDelayed(tlbc);
+		tlbc = newTlbc;
+	}
+	char* bc = (char*)alifMem_dataAlloc(ALIFCODE_NBYTES(co));
+	if (bc == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+	copy_code((AlifCodeUnit *) bc, co);
+	tlbc->entries[idx] = bc;
+	return (AlifCodeUnit *) bc;
+}
+
+static AlifCodeUnit* getTlbc_lockHeld(AlifCodeObject* _co) {
+	AlifCodeArray *tlbc = _co->coTlbc;
+	AlifThreadImpl* tstate = (AlifThreadImpl*)alifThread_get();
+	int32_t idx = tstate->tlbcIndex;
+	if (idx < tlbc->size and tlbc->entries[idx] != nullptr) {
+		return (AlifCodeUnit *)tlbc->entries[idx];
+	}
+	return createTlbc_lockHeld(_co, idx);
+}
+
+AlifCodeUnit* _alifCode_getTLBC(AlifCodeObject* _co) {
+	AlifCodeUnit* result{};
+	ALIF_BEGIN_CRITICAL_SECTION(_co);
+	result = getTlbc_lockHeld(_co);
+	ALIF_END_CRITICAL_SECTION();
+	return result;
+}
+
+class FlagSet {
+public:
+	uint8_t* flags{};
+	AlifSizeT size{};
+};
+
+static inline AlifIntT flag_isSet(FlagSet* flags, AlifSizeT idx) {
+	return (idx < flags->size) and flags->flags[idx];
+}
+
+// Set the flag for each tlbc index in use
+static AlifIntT getIndices_inUse(AlifInterpreter* interp,
+	FlagSet* _inUse) {
+	int32_t max_index = 0;
+	for (AlifThread* p = interp->threads.head; p != nullptr; p = p->next) {
+		int32_t idx = ((AlifThreadImpl*) p)->tlbcIndex;
+		if (idx > max_index) {
+			max_index = idx;
+		}
+	}
+	_inUse->size = (size_t) max_index + 1;
+	_inUse->flags = (uint8_t*)alifMem_dataAlloc(_inUse->size * sizeof(*_inUse->flags));
+	if (_inUse->flags == nullptr) {
+		return -1;
+	}
+	for (AlifThread* p = interp->threads.head; p != nullptr; p = p->next) {
+		_inUse->flags[((AlifThreadImpl*)p)->tlbcIndex] = 1;
+	}
+	return 0;
+}
+
+class GetCodeArgs {
+public:
+	AlifObjectStack codeObjs{};
+	FlagSet indicesInUse{};
+	AlifIntT err{};
+};
+
+static void clear_getCodeArgs(GetCodeArgs* args) {
+	if (args->indicesInUse.flags != nullptr) {
+		alifMem_dataFree(args->indicesInUse.flags);
+		args->indicesInUse.flags = nullptr;
+	}
+	_alifObjectStack_clear(&args->codeObjs);
+}
+
+static inline AlifIntT is_bytecodeUnused(AlifCodeArray* _tlbc, AlifSizeT _idx,
+	FlagSet* _indicesInUse) {
+	return _tlbc->entries[_idx] != nullptr and !flag_isSet(_indicesInUse, _idx);
+}
+
+static AlifIntT getCode_withUnusedTlbc(AlifObject* obj,
+	GetCodeArgs *args) {
+	if (!ALIFCODE_CHECK(obj)) {
+		return 1;
+	}
+	AlifCodeObject* co = (AlifCodeObject*) obj;
+	AlifCodeArray *tlbc = co->coTlbc;
+	// The first index always points at the main copy of the bytecode embedded
+	// in the code object.
+	for (AlifSizeT i = 1; i < tlbc->size; i++) {
+		if (is_bytecodeUnused(tlbc, i, &args->indicesInUse)) {
+			if (_alifObjectStack_push(&args->codeObjs, obj) < 0) {
+				args->err = -1;
+				return 0;
+			}
+			return 1;
+		}
+	}
+	return 1;
+}
+
+static void free_unusedBytecode(AlifCodeObject* _co,
+	FlagSet* _indicesInUse) {
+	AlifCodeArray *tlbc = _co->coTlbc;
+	// The first index always points at the main copy of the bytecode embedded
+	// in the code object.
+	for (AlifSizeT i = 1; i < tlbc->size; i++) {
+		if (is_bytecodeUnused(tlbc, i, _indicesInUse)) {
+			alifMem_dataFree(tlbc->entries[i]);
+			tlbc->entries[i] = nullptr;
+		}
+	}
+}
+
+AlifIntT _alif_clearUnusedTLBC(AlifInterpreter* _interp) {
+	GetCodeArgs args = {
+		.codeObjs = {nullptr},
+		.indicesInUse = {nullptr, 0},
+		.err = 0,
+	};
+	_alifEval_stopTheWorld(_interp);
+	// Collect in-use tlbc indices
+	if (getIndices_inUse(_interp, &args.indicesInUse) < 0) {
+		goto err;
+	}
+	// Collect code objects that have bytecode not in use by any thread
+	//_alifGC_visitObjectsWorldStopped(
+	//	_interp, (GCVisitObjectsT)getCode_withUnusedTlbc, &args);
+	if (args.err < 0) {
+		goto err;
+	}
+	// Free unused bytecode. This must happen outside of gc_visitHeaps; it is
+	// unsafe to allocate or free any mimalloc managed memory when it's
+	// running.
+	AlifObject* obj; obj = nullptr;
+	while ((obj = _alifObjectStack_pop(&args.codeObjs)) != nullptr) {
+		free_unusedBytecode((AlifCodeObject*)obj, &args.indicesInUse);
+	}
+	_alifEval_startTheWorld(_interp);
+	clear_getCodeArgs(&args);
+	return 0;
+
+err:
+	_alifEval_startTheWorld(_interp);
+	clear_getCodeArgs(&args);
+	//alifErr_noMemory();
+	return -1;
+}
 
 
 

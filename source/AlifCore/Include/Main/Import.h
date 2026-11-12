@@ -5,23 +5,23 @@
 
 
 
-AlifObject* alifImport_getModule(AlifObject*); // 36
+ALIFAPI_FUNC(AlifObject*) alifImport_getModule(AlifObject*); // 36
 
 
-AlifObject* alifImport_addModuleRef(const char*); // 47
+ALIFAPI_FUNC(AlifObject*) alifImport_addModuleRef(const char*); // 47
 
-AlifObject* alifImport_importModule(const char*); // 51
+ALIFAPI_FUNC(AlifObject*) alifImport_importModule(const char*); // 51
 
-AlifObject* alifImport_importModuleLevelObject(AlifObject*, AlifObject*,
+ALIFAPI_FUNC(AlifObject*) alifImport_importModuleLevelObject(AlifObject*, AlifObject*,
 	AlifObject*, AlifObject*, AlifIntT); // 65
 
 
-AlifObject* alifImport_import(AlifObject*); // 78
+ALIFAPI_FUNC(AlifObject*) alifImport_import(AlifObject*); // 78
 
 /* --------------------------------------------------------------------------------------- */
 
 
-AlifObject* alifInit__imp(void); // 5
+ALIFMODINIT_FUNC alifInit__imp(void); // 5
 
 class InitTable { // 7
 public:
@@ -30,7 +30,7 @@ public:
 };
 
 
-extern class InitTable* _alifImportInitTable_; // 12
+ALIFAPI_DATA(class InitTable*) _alifImportInitTable_; // 12
 
 
 class Frozen { // 15

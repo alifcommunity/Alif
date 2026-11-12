@@ -100,11 +100,18 @@ static AlifObject* sys_excepthookImpl(AlifObject* module, AlifObject* exctype,
 	return ALIF_NONE;
 }
 
+static AlifObject* sys_exitImpl(AlifObject* _module,
+	AlifObject* _status) { // 852
+	/* Raise SystemExit so callers may catch it or clean up. */
+	alifErr_setObject(_alifExcSystemExit_, _status);
+	return nullptr;
+}
 
 
 
-static AlifMethodDef _sysMethods_[] = { // 2550
+static AlifMethodDef _sysMethods_[] = { // 2536
 	SYS_EXCEPTHOOK_METHODDEF,
+	SYS_EXIT_METHODDEF,
 	{nullptr, nullptr}  // sentinel
 };
 
@@ -175,7 +182,7 @@ static void sys_setFlag(AlifObject* _flags, AlifSizeT _pos, AlifObject* _value) 
 
 static AlifIntT setFlags_fromConfig(AlifInterpreter* _interp, AlifObject* _flags) { // 3170
 	const AlifPreConfig* preconfig = &_interp->runtime->preConfig;
-	const AlifConfig* config = alifInterpreter_getConfig(_interp);
+	const AlifConfig* config = _alifInterpreterState_getConfig(_interp);
 
 	AlifSizeT pos = 0;
 #define SetFlagObj(expr) \
@@ -264,9 +271,10 @@ static AlifStatus _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { /
 #undef COPY_SYS_ATTR
 
 	SET_SYS_FROM_STRING("version", alif_getVersion());
+	SET_SYS_FROM_STRING("منصة", alif_getPlatform());
 	/* initialize hash_info */
 
-	SET_SYS("builtin_module_names", listBuiltin_moduleNames()); //* review
+	SET_SYS("اسماء_الوحدات_الضمنية", listBuiltin_moduleNames()); //* review
 	//SET_SYS("stdlib_module_names", listStdlib_moduleNames());
 #if ALIF_BIG_ENDIAN
 	SET_SYS_FROM_STRING("byteorder", "big");
@@ -287,10 +295,10 @@ static AlifStatus _alifSys_initCore(AlifThread* tstate, AlifObject* sysdict) { /
 	SET_SYS("flags", make_flags(tstate->interpreter));
 
 
-	/* adding sys.path_hooks and sys.path_importer_cache */
-	SET_SYS("meta_path", alifList_new(0));
-	SET_SYS("path_importer_cache", alifDict_new());
-	SET_SYS("path_hooks", alifList_new(0));
+	/* adding النظام.خطافات_المسار and النظام.مخبأ_مستورد_المسار */
+	SET_SYS("مسار_التعريف", alifList_new(0)); // meta_path
+	SET_SYS("مخبأ_مستورد_المسار", alifDict_new()); // path_importer_cache
+	SET_SYS("خطافات_المسار", alifList_new(0)); // path_hooks
 
 	if (_alifErr_occurred(tstate)) {
 		goto err_occurred;
@@ -313,7 +321,7 @@ AlifIntT _alifSys_updateConfig(AlifThread* _thread) { // 3645
 	AlifObject* flags{}; //* alif
 	const wchar_t* stdlibdir{}; //* alif
 
-	const AlifConfig* config = alifInterpreter_getConfig(interp);
+	const AlifConfig* config = _alifInterpreterState_getConfig(interp);
 	AlifIntT res{};
 
 #define COPY_LIST(_key, _value) \
@@ -328,7 +336,7 @@ AlifIntT _alifSys_updateConfig(AlifThread* _thread) { // 3645
     }
 
 	if (config->moduleSearchPathsSet) {
-		COPY_LIST("Path", config->moduleSearchPaths);
+		COPY_LIST("مسار", config->moduleSearchPaths);
 	}
 
 	//COPY_WSTR("executable", config->executable);
@@ -348,7 +356,7 @@ AlifIntT _alifSys_updateConfig(AlifThread* _thread) { // 3645
 	//	}
 	//}
 
-	COPY_LIST("argv", config->argv);
+	COPY_LIST("مدخلات_التشغيل", config->argv); // argv
 	COPY_LIST("origArgv", config->origArgv);
 	//COPY_LIST("warnoptions", config->warnOptions);
 
@@ -392,6 +400,29 @@ err_occurred:
 #undef SET_SYS
 #undef SET_SYS_FROM_STRING
 
+/* Set up a preliminary stderr printer until we have enough
+infrastructure for the io module in place.
+
+ضرورية لطباعة الأخطاء وذلك قبل تهيئة نظام التبادل
+*/
+static AlifStatus _alifSys_setPreliminaryStderr(AlifObject* _sysDict) { // 3722
+	AlifObject* pstderr = alifFile_newStdPrinter(fileno(stderr));
+	if (pstderr == nullptr) {
+		goto error;
+	}
+	if (alifDict_setItem(_sysDict, &ALIF_ID(Stderr), pstderr) < 0) {
+		goto error;
+	}
+	if (alifDict_setItemString(_sysDict, "__stderr__", pstderr) < 0) {
+		goto error;
+	}
+	ALIF_DECREF(pstderr);
+	return ALIFSTATUS_OK();
+
+error:
+	ALIF_XDECREF(pstderr);
+	return ALIFSTATUS_ERR("can't set preliminary stderr");
+}
 
 AlifStatus alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 
@@ -424,14 +455,14 @@ AlifStatus alifSys_create(AlifThread* _thread, AlifObject** _sysModP) { // 3779
 	//	goto error;
 	//}
 
-	if (alifDict_setItemString(sysdict, "modules", modules) < 0) {
+	if (alifDict_setItemString(sysdict, "وحدات", modules) < 0) {
 		goto error;
 	}
 
-	//status = _alifSys_setPreliminaryStderr(sysdict);
-	//if (ALIFSTATUS_EXCEPTION(status)) {
-	//	return status;
-	//}
+	status = _alifSys_setPreliminaryStderr(sysdict);
+	if (ALIFSTATUS_EXCEPTION(status)) {
+		return status;
+	}
 
 	status = _alifSys_initCore(_thread, sysdict);
 	if (ALIFSTATUS_EXCEPTION(status)) {

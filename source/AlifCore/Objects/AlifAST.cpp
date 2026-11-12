@@ -2,6 +2,7 @@
 
 #include "AlifCore_AST.h"
 #include "AlifCore_ASTState.h"
+#include "AlifCore_Eval.h"
 #include "AlifCore_Interpreter.h"
 #include "AlifCore_State.h"
 #include "AlifCore_Memory.h"
@@ -45,7 +46,7 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->cases = alifUStr_internFromString("cases")) == nullptr) return -1;
 	if ((_state->cause = alifUStr_internFromString("cause")) == nullptr) return -1;
 	if ((_state->cls = alifUStr_internFromString("cls")) == nullptr) return -1;
-	if ((_state->colOffset = alifUStr_internFromString("col_offset")) == nullptr) return -1;
+	if ((_state->colOffset = alifUStr_internFromString("colOffset")) == nullptr) return -1;
 	if ((_state->comparators = alifUStr_internFromString("comparators")) == nullptr) return -1;
 	if ((_state->context_expr = alifUStr_internFromString("context_expr")) == nullptr) return -1;
 	if ((_state->conversion = alifUStr_internFromString("conversion")) == nullptr) return -1;
@@ -55,8 +56,8 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->defaults = alifUStr_internFromString("defaults")) == nullptr) return -1;
 	if ((_state->elt = alifUStr_internFromString("elt")) == nullptr) return -1;
 	if ((_state->elts = alifUStr_internFromString("elts")) == nullptr) return -1;
-	if ((_state->endColOffset = alifUStr_internFromString("end_col_offset")) == nullptr) return -1;
-	if ((_state->endLineNo = alifUStr_internFromString("end_lineno")) == nullptr) return -1;
+	if ((_state->endColOffset = alifUStr_internFromString("endColOffset")) == nullptr) return -1;
+	if ((_state->endLineNo = alifUStr_internFromString("endLineno")) == nullptr) return -1;
 	if ((_state->exc = alifUStr_internFromString("exc")) == nullptr) return -1;
 	if ((_state->finalbody = alifUStr_internFromString("finalbody")) == nullptr) return -1;
 	if ((_state->format_spec = alifUStr_internFromString("format_spec")) == nullptr) return -1;
@@ -90,7 +91,7 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 	if ((_state->operand = alifUStr_internFromString("operand")) == nullptr) return -1;
 	if ((_state->ops = alifUStr_internFromString("ops")) == nullptr) return -1;
 	if ((_state->optional_vars = alifUStr_internFromString("optional_vars")) == nullptr) return -1;
-	if ((_state->else_ = alifUStr_internFromString("orelse")) == nullptr) return -1;
+	if ((_state->else_ = alifUStr_internFromString("else_")) == nullptr) return -1;
 	if ((_state->pattern = alifUStr_internFromString("pattern")) == nullptr) return -1;
 	if ((_state->patterns = alifUStr_internFromString("patterns")) == nullptr) return -1;
 	if ((_state->posonlyargs = alifUStr_internFromString("posonlyargs")) == nullptr) return -1;
@@ -118,9 +119,11 @@ static AlifIntT init_identifiers(ASTState* _state) { // 286
 
 
 // 382
-GENERATE_SEQ_CONSTRUCTOR(Expr, expr, ExprTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
-GENERATE_SEQ_CONSTRUCTOR(Arg, arg, ArgTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
-GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, KeywordTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
+GENERATE_SEQ_CONSTRUCTOR(Mod, mod, ModuleTy); // هذه الماكرو تقوم بإنشاء جسم دالة عن طريق تمرير المعاملات ك نصوص لإستخدامها ضمن مولد الدالة
+GENERATE_SEQ_CONSTRUCTOR(Stmt, stmt, StmtTy);
+GENERATE_SEQ_CONSTRUCTOR(Expr, expr, ExprTy);
+GENERATE_SEQ_CONSTRUCTOR(Arg, arg, ArgTy);
+GENERATE_SEQ_CONSTRUCTOR(Keyword, keyword, KeywordTy);
 
 
 static const char* const _moduleFields_[] = { // 394
@@ -139,9 +142,9 @@ static const char* const _functionTypeFields_[] = {
 };
 static const char* const _stmtAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static AlifObject* ast2obj_stmt(ASTState*, Validator*, void*);
 static const char* const _functionDefFields_[] = {
@@ -201,25 +204,25 @@ static const char* const _forFields_[] = {
 	"target",
 	"iter",
 	"body",
-	"orelse",
+	"else_",
 	"typeComment",
 };
 static const char* const _asyncForFields_[] = {
 	"target",
 	"iter",
 	"body",
-	"orelse",
+	"else_",
 	"typeComment",
 };
 static const char* const _whileFields_[] = {
 	"test",
 	"body",
-	"orelse",
+	"else_",
 };
 static const char* const _ifFields_[] = {
 	"test",
 	"body",
-	"orelse",
+	"else_",
 };
 static const char* const _withFields_[] = {
 	"items",
@@ -242,13 +245,13 @@ static const char* const _raiseFields_[] = {
 static const char* const _tryFields_[] = {
 	"body",
 	"handlers",
-	"orelse",
+	"else_",
 	"finalbody",
 };
 static const char* const _tryStarFields_[] = {
 	"body",
 	"handlers",
-	"orelse",
+	"else_",
 	"finalbody",
 };
 static const char* const _assertFields_[] = {
@@ -274,9 +277,9 @@ static const char* const _exprFields_[] = {
 };
 static const char* const _exprAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static AlifObject* ast2obj_expr(ASTState*, Validator*, void*); // 553
 static const char* const _boolOpFields_[] = {
@@ -303,7 +306,7 @@ static const char* const _lambdaFields_[] = {
 static const char* const _ifExpFields_[] = {
 	"test",
 	"body",
-	"orelse",
+	"else_",
 };
 static const char* const _dictFields_[] = {
 	"keys",
@@ -405,9 +408,9 @@ static const char* const _comprehensionFields_[] = {
 };
 static const char* const _excepthandlerAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static AlifObject* ast2obj_exceptHandler(ASTState*, Validator*, void*); // 691
 static const char* const _exceptHandlerFields_[] = {
@@ -428,9 +431,9 @@ static const char* const _argumentsFields_[] = {
 static AlifObject* ast2obj_arg(ASTState*, Validator*, void*); // 709
 static const char* const _argAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static const char* const _argFields_[] = {
 	"arg",
@@ -440,9 +443,9 @@ static const char* const _argFields_[] = {
 static AlifObject* ast2obj_keyword(ASTState*, Validator*, void*); // 722
 static const char* const _keywordAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static const char* const _keywordFields_[] = {
 	"arg",
@@ -451,9 +454,9 @@ static const char* const _keywordFields_[] = {
 static AlifObject* ast2obj_alias(ASTState*, Validator*, void*); // 734
 static const char* const _aliasAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static const char* const _aliasFields_[] = {
 	"name",
@@ -472,9 +475,9 @@ static const char* const _matchCaseFields_[] = {
 };
 static const char* const _patternAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 //static AlifObject* ast2obj_pattern(ASTState*, Validator*, void*);
 static const char* const _MatchValueFields_[] = {
@@ -514,9 +517,9 @@ static const char* const _typeIgnoreFields_[] = {
 };
 static const char* const _typeParamAttributes_[] = {
 	"lineno",
-	"col_offset",
-	"end_lineno",
-	"end_col_offset",
+	"colOffset",
+	"endLineno",
+	"endColOffset",
 };
 static AlifObject* ast2obj_typeParam(ASTState*, Validator*, void*); // 809
 static const char* const _typeVarFields_[] = {
@@ -688,7 +691,7 @@ static AlifIntT ast_typeInit(AlifObject* self, AlifObject* args, AlifObject* kw)
 				else {
 					//if (alifErr_warnFormat(
 					//	_alifExcDeprecationWarning_, 1,
-					//	"Field '%U' is missing from %.400s._field_types. "
+					//	"Field '%U' is مفقود من %.400s._field_types. "
 					//	"This will become an error in Alif 5.0.",
 					//	name, ALIF_TYPE(self)->name
 					//) < 0) {
@@ -720,7 +723,7 @@ static AlifIntT ast_typeInit(AlifObject* self, AlifObject* args, AlifObject* kw)
 				}
 			}
 			else {
-				// simple field (e.g., identifier)
+				// simple field (e.g., Identifier)
 				//if (alifErr_warnFormat(
 				//	_alifExcDeprecationWarning_, 1,
 				//	"%.400s.__init__ missing 1 required positional argument: '%U'. "
@@ -852,7 +855,23 @@ static AlifObject* ast2obj_int(ASTState* ALIF_UNUSED(state),
 	return alifLong_fromLong(b);
 }
 
-static AlifIntT add_astFields(ASTState* state) { // 6008
+
+static AlifIntT obj2ast_int(ASTState* ALIF_UNUSED(_state), AlifObject* _obj,
+	AlifIntT* out, AlifASTMem* _astMem) { // 6015
+	AlifIntT i{};
+	if (!ALIFLONG_CHECK(_obj)) {
+		alifErr_format(_alifExcValueError_, "قيمة عدد صحيح غير صالحة: %R", _obj);
+		return -1;
+	}
+
+	i = alifLong_asInt(_obj);
+	if (i == -1 and alifErr_occurred())
+		return -1;
+	*out = i;
+	return 0;
+}
+
+static AlifIntT add_astFields(ASTState* state) { // 6030
 	AlifObject* emptyTuple{};
 	emptyTuple = alifTuple_new(0);
 	if (!emptyTuple or
@@ -903,30 +922,30 @@ static AlifIntT init_types(void* arg) { // 6049
 		"FunctionType(expr* argtypes, expr returns)");
 	if (!state->FunctionType_type) return -1;
 	state->stmt_type = make_type(state, "stmt", state->astType, nullptr, 0,
-		"stmt = FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)\n"
-		"     | AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)\n"
-		"     | ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)\n"
+		"stmt = FunctionDef(Identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, String? typeComment, type_param* type_params)\n"
+		"     | AsyncFunctionDef(Identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, String? typeComment, type_param* type_params)\n"
+		"     | ClassDef(Identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)\n"
 		"     | Return(expr? value)\n"
 		"     | Delete(expr* targets)\n"
-		"     | Assign(expr* targets, expr value, string? typeComment)\n"
+		"     | Assign(expr* targets, expr value, String? typeComment)\n"
 		"     | TypeAlias(expr name, type_param* type_params, expr value)\n"
 		"     | AugAssign(expr target, operator op, expr value)\n"
 		"     | AnnAssign(expr target, expr annotation, expr? value, AlifIntT simple)\n"
-		"     | For(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)\n"
-		"     | AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)\n"
-		"     | While(expr test, stmt* body, stmt* orelse)\n"
-		"     | If(expr test, stmt* body, stmt* orelse)\n"
-		"     | With(withitem* items, stmt* body, string? typeComment)\n"
-		"     | AsyncWith(withitem* items, stmt* body, string? typeComment)\n"
+		"     | For(expr target, expr iter, stmt* body, stmt* else_, String? typeComment)\n"
+		"     | AsyncFor(expr target, expr iter, stmt* body, stmt* else_, String? typeComment)\n"
+		"     | While(expr test, stmt* body, stmt* else_)\n"
+		"     | If(expr test, stmt* body, stmt* else_)\n"
+		"     | With(withitem* items, stmt* body, String? typeComment)\n"
+		"     | AsyncWith(withitem* items, stmt* body, String? typeComment)\n"
 		"     | Match(expr subject, match_case* cases)\n"
 		"     | Raise(expr? exc, expr? cause)\n"
-		"     | Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)\n"
-		"     | TryStar(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)\n"
+		"     | Try(stmt* body, excepthandler* handlers, stmt* else_, stmt* finalbody)\n"
+		"     | TryStar(stmt* body, excepthandler* handlers, stmt* else_, stmt* finalbody)\n"
 		"     | Assert(expr test, expr? msg)\n"
 		"     | Import(alias* names)\n"
-		"     | ImportFrom(identifier? module, alias* names, AlifIntT? level)\n"
-		"     | Global(identifier* names)\n"
-		"     | Nonlocal(identifier* names)\n"
+		"     | ImportFrom(Identifier? module, alias* names, AlifIntT? level)\n"
+		"     | Global(Identifier* names)\n"
+		"     | Nonlocal(Identifier* names)\n"
 		"     | Expr(expr value)\n"
 		"     | Pass\n"
 		"     | Break\n"
@@ -941,7 +960,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->FunctionDefType = make_type(state, "FunctionDef", state->stmt_type,
 		_functionDefFields_, 7,
-		"FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)");
+		"FunctionDef(Identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, String? typeComment, type_param* type_params)");
 	if (!state->FunctionDefType) return -1;
 	if (alifObject_setAttr(state->FunctionDefType, state->returns, ALIF_NONE) ==
 		-1)
@@ -952,7 +971,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->AsyncFunctionDef_type = make_type(state, "AsyncFunctionDef",
 		state->stmt_type,
 		_asyncFunctionDefFields_, 7,
-		"AsyncFunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, string? typeComment, type_param* type_params)");
+		"AsyncFunctionDef(Identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns, String? typeComment, type_param* type_params)");
 	if (!state->AsyncFunctionDef_type) return -1;
 	if (alifObject_setAttr(state->AsyncFunctionDef_type, state->returns, ALIF_NONE)
 		== -1)
@@ -962,7 +981,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->ClassDef_type = make_type(state, "ClassDef", state->stmt_type,
 		_classDefFields_, 6,
-		"ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)");
+		"ClassDef(Identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list, type_param* type_params)");
 	if (!state->ClassDef_type) return -1;
 	state->ReturnType = make_type(state, "Return", state->stmt_type,
 		_returnFields_, 1,
@@ -976,7 +995,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->DeleteType) return -1;
 	state->AssignType = make_type(state, "Assign", state->stmt_type,
 		_assignFields_, 3,
-		"Assign(expr* targets, expr value, string? typeComment)");
+		"Assign(expr* targets, expr value, String? typeComment)");
 	if (!state->AssignType) return -1;
 	if (alifObject_setAttr(state->AssignType, state->typeComment, ALIF_NONE) ==
 		-1)
@@ -996,33 +1015,33 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->AnnAssign_type, state->value, ALIF_NONE) == -1)
 		return -1;
 	state->For_type = make_type(state, "For", state->stmt_type, _forFields_, 5,
-		"For(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)");
+		"For(expr target, expr iter, stmt* body, stmt* else_, String? typeComment)");
 	if (!state->For_type) return -1;
 	if (alifObject_setAttr(state->For_type, state->typeComment, ALIF_NONE) == -1)
 		return -1;
 	state->AsyncFor_type = make_type(state, "AsyncFor", state->stmt_type,
 		_asyncForFields_, 5,
-		"AsyncFor(expr target, expr iter, stmt* body, stmt* orelse, string? typeComment)");
+		"AsyncFor(expr target, expr iter, stmt* body, stmt* else_, String? typeComment)");
 	if (!state->AsyncFor_type) return -1;
 	if (alifObject_setAttr(state->AsyncFor_type, state->typeComment, ALIF_NONE) ==
 		-1)
 		return -1;
 	state->While_type = make_type(state, "While", state->stmt_type,
 		_whileFields_, 3,
-		"While(expr test, stmt* body, stmt* orelse)");
+		"While(expr test, stmt* body, stmt* else_)");
 	if (!state->While_type) return -1;
 	state->If_type = make_type(state, "If", state->stmt_type, _ifFields_, 3,
-		"If(expr test, stmt* body, stmt* orelse)");
+		"If(expr test, stmt* body, stmt* else_)");
 	if (!state->If_type) return -1;
 	state->With_type = make_type(state, "With", state->stmt_type, _withFields_,
 		3,
-		"With(withitem* items, stmt* body, string? typeComment)");
+		"With(withitem* items, stmt* body, String? typeComment)");
 	if (!state->With_type) return -1;
 	if (alifObject_setAttr(state->With_type, state->typeComment, ALIF_NONE) == -1)
 		return -1;
 	state->AsyncWith_type = make_type(state, "AsyncWith", state->stmt_type,
 		_asyncWithFields_, 3,
-		"AsyncWith(withitem* items, stmt* body, string? typeComment)");
+		"AsyncWith(withitem* items, stmt* body, String? typeComment)");
 	if (!state->AsyncWith_type) return -1;
 	if (alifObject_setAttr(state->AsyncWith_type, state->typeComment, ALIF_NONE)
 		== -1)
@@ -1040,11 +1059,11 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->Raise_type, state->cause, ALIF_NONE) == -1)
 		return -1;
 	state->Try_type = make_type(state, "Try", state->stmt_type, _tryFields_, 4,
-		"Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)");
+		"Try(stmt* body, excepthandler* handlers, stmt* else_, stmt* finalbody)");
 	if (!state->Try_type) return -1;
 	state->TryStar_type = make_type(state, "TryStar", state->stmt_type,
 		_tryStarFields_, 4,
-		"TryStar(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)");
+		"TryStar(stmt* body, excepthandler* handlers, stmt* else_, stmt* finalbody)");
 	if (!state->TryStar_type) return -1;
 	state->Assert_type = make_type(state, "Assert", state->stmt_type,
 		_assertFields_, 2,
@@ -1058,7 +1077,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->Import_type) return -1;
 	state->ImportFrom_type = make_type(state, "ImportFrom", state->stmt_type,
 		_importFromFields_, 3,
-		"ImportFrom(identifier? module, alias* names, AlifIntT? level)");
+		"ImportFrom(Identifier? module, alias* names, AlifIntT? level)");
 	if (!state->ImportFrom_type) return -1;
 	if (alifObject_setAttr(state->ImportFrom_type, state->module, ALIF_NONE) == -1)
 		return -1;
@@ -1066,11 +1085,11 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->Global_type = make_type(state, "Global", state->stmt_type,
 		_globalFields_, 1,
-		"Global(identifier* names)");
+		"Global(Identifier* names)");
 	if (!state->Global_type) return -1;
 	state->Nonlocal_type = make_type(state, "Nonlocal", state->stmt_type,
 		_nonlocalFields_, 1,
-		"Nonlocal(identifier* names)");
+		"Nonlocal(Identifier* names)");
 	if (!state->Nonlocal_type) return -1;
 	state->ExprType = make_type(state, "Expr", state->stmt_type, _exprFields_,
 		1,
@@ -1092,7 +1111,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		"     | BinOp(expr left, operator op, expr right)\n"
 		"     | UnaryOp(unaryop op, expr operand)\n"
 		"     | Lambda(arguments args, expr body)\n"
-		"     | IfExp(expr test, expr body, expr orelse)\n"
+		"     | IfExp(expr test, expr body, expr else_)\n"
 		"     | Dict(expr* keys, expr* values)\n"
 		"     | Set(expr* elts)\n"
 		"     | ListComp(expr elt, comprehension* generators)\n"
@@ -1106,11 +1125,11 @@ static AlifIntT init_types(void* arg) { // 6049
 		"     | Call(expr func, expr* args, keyword* keywords)\n"
 		"     | FormattedValue(expr value, AlifIntT conversion, expr? format_spec)\n"
 		"     | JoinedStr(expr* values)\n"
-		"     | Constant(constant value, string? kind)\n"
-		"     | Attribute(expr value, identifier attr, expr_context ctx)\n"
+		"     | Constant(constant value, String? kind)\n"
+		"     | Attribute(expr value, Identifier attr, expr_context ctx)\n"
 		"     | Subscript(expr value, expr slice, expr_context ctx)\n"
 		"     | Starred(expr value, expr_context ctx)\n"
-		"     | Name(identifier id, expr_context ctx)\n"
+		"     | Name(Identifier id, expr_context ctx)\n"
 		"     | List(expr* elts, expr_context ctx)\n"
 		"     | Tuple(expr* elts, expr_context ctx)\n"
 		"     | Slice(expr? lower, expr? upper, expr? step)");
@@ -1144,7 +1163,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->Lambda_type) return -1;
 	state->IfExp_type = make_type(state, "IfExp", state->expr_type,
 		_ifExpFields_, 3,
-		"IfExp(expr test, expr body, expr orelse)");
+		"IfExp(expr test, expr body, expr else_)");
 	if (!state->IfExp_type) return -1;
 	state->Dict_type = make_type(state, "Dict", state->expr_type, _dictFields_,
 		2,
@@ -1206,13 +1225,13 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->JoinedStr_type) return -1;
 	state->Constant_type = make_type(state, "Constant", state->expr_type,
 		_constantFields_, 2,
-		"Constant(constant value, string? kind)");
+		"Constant(constant value, String? kind)");
 	if (!state->Constant_type) return -1;
 	if (alifObject_setAttr(state->Constant_type, state->kind, ALIF_NONE) == -1)
 		return -1;
 	state->Attribute_type = make_type(state, "Attribute", state->expr_type,
 		_attributeFields_, 3,
-		"Attribute(expr value, identifier attr, expr_context ctx)");
+		"Attribute(expr value, Identifier attr, expr_context ctx)");
 	if (!state->Attribute_type) return -1;
 	state->Subscript_type = make_type(state, "Subscript", state->expr_type,
 		_subScriptFields_, 3,
@@ -1224,7 +1243,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->Starred_type) return -1;
 	state->Name_type = make_type(state, "Name", state->expr_type, _nameFields_,
 		2,
-		"Name(identifier id, expr_context ctx)");
+		"Name(Identifier id, expr_context ctx)");
 	if (!state->Name_type) return -1;
 	state->List_type = make_type(state, "List", state->expr_type, _listFields_,
 		2,
@@ -1483,7 +1502,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		-1;
 	state->excepthandler_type = make_type(state, "excepthandler",
 		state->astType, nullptr, 0,
-		"excepthandler = ExceptHandler(expr? type, identifier? name, stmt* body)");
+		"excepthandler = ExceptHandler(expr? type, Identifier? name, stmt* body)");
 	if (!state->excepthandler_type) return -1;
 	if (add_attributes(state, state->excepthandler_type,
 		_excepthandlerAttributes_, 4) < 0) return -1;
@@ -1496,7 +1515,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->ExceptHandler_type = make_type(state, "ExceptHandler",
 		state->excepthandler_type,
 		_exceptHandlerFields_, 3,
-		"ExceptHandler(expr? type, identifier? name, stmt* body)");
+		"ExceptHandler(expr? type, Identifier? name, stmt* body)");
 	if (!state->ExceptHandler_type) return -1;
 	if (alifObject_setAttr(state->ExceptHandler_type, state->type, ALIF_NONE) == -1)
 		return -1;
@@ -1512,7 +1531,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (alifObject_setAttr(state->arguments_type, state->kwarg, ALIF_NONE) == -1)
 		return -1;
 	state->arg_type = make_type(state, "arg", state->astType, _argFields_, 3,
-		"arg(identifier arg, expr? annotation, string? typeComment)");
+		"arg(Identifier arg, expr? annotation, String? typeComment)");
 	if (!state->arg_type) return -1;
 	if (add_attributes(state, state->arg_type, _argAttributes_, 4) < 0) return
 		-1;
@@ -1526,7 +1545,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->keywordType = make_type(state, "keyword", state->astType,
 		_keywordFields_, 2,
-		"keyword(identifier? arg, expr value)");
+		"keyword(Identifier? arg, expr value)");
 	if (!state->keywordType) return -1;
 	if (add_attributes(state, state->keywordType, _keywordAttributes_, 4) < 0)
 		return -1;
@@ -1539,7 +1558,7 @@ static AlifIntT init_types(void* arg) { // 6049
 		return -1;
 	state->alias_type = make_type(state, "alias", state->astType,
 		_aliasFields_, 2,
-		"alias(identifier name, identifier? asname)");
+		"alias(Identifier name, Identifier? asname)");
 	if (!state->alias_type) return -1;
 	if (add_attributes(state, state->alias_type, _aliasAttributes_, 4) < 0)
 		return -1;
@@ -1569,10 +1588,10 @@ static AlifIntT init_types(void* arg) { // 6049
 		"pattern = MatchValue(expr value)\n"
 		"        | MatchSingleton(constant value)\n"
 		"        | MatchSequence(pattern* patterns)\n"
-		"        | MatchMapping(expr* keys, pattern* patterns, identifier? rest)\n"
-		"        | MatchClass(expr cls, pattern* patterns, identifier* kwd_attrs, pattern* kwd_patterns)\n"
-		"        | MatchStar(identifier? name)\n"
-		"        | MatchAs(pattern? pattern, identifier? name)\n"
+		"        | MatchMapping(expr* keys, pattern* patterns, Identifier? rest)\n"
+		"        | MatchClass(expr cls, pattern* patterns, Identifier* kwd_attrs, pattern* kwd_patterns)\n"
+		"        | MatchStar(Identifier? name)\n"
+		"        | MatchAs(pattern? pattern, Identifier? name)\n"
 		"        | MatchOr(pattern* patterns)");
 	if (!state->pattern_type) return -1;
 	if (add_attributes(state, state->pattern_type, _patternAttributes_, 4) < 0)
@@ -1595,24 +1614,24 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->MatchMapping_type = make_type(state, "MatchMapping",
 		state->pattern_type,
 		_matchMappingFields_, 3,
-		"MatchMapping(expr* keys, pattern* patterns, identifier? rest)");
+		"MatchMapping(expr* keys, pattern* patterns, Identifier? rest)");
 	if (!state->MatchMapping_type) return -1;
 	if (alifObject_setAttr(state->MatchMapping_type, state->rest, ALIF_NONE) == -1)
 		return -1;
 	state->MatchClass_type = make_type(state, "MatchClass",
 		state->pattern_type, _matchClassFields_,
 		4,
-		"MatchClass(expr cls, pattern* patterns, identifier* kwd_attrs, pattern* kwd_patterns)");
+		"MatchClass(expr cls, pattern* patterns, Identifier* kwd_attrs, pattern* kwd_patterns)");
 	if (!state->MatchClass_type) return -1;
 	state->MatchStar_type = make_type(state, "MatchStar", state->pattern_type,
 		_matchStarFields_, 1,
-		"MatchStar(identifier? name)");
+		"MatchStar(Identifier? name)");
 	if (!state->MatchStar_type) return -1;
 	if (alifObject_setAttr(state->MatchStar_type, state->name, ALIF_NONE) == -1)
 		return -1;
 	state->MatchAs_type = make_type(state, "MatchAs", state->pattern_type,
 		_matchAsFields_, 2,
-		"MatchAs(pattern? pattern, identifier? name)");
+		"MatchAs(pattern? pattern, Identifier? name)");
 	if (!state->MatchAs_type) return -1;
 	if (alifObject_setAttr(state->MatchAs_type, state->pattern, ALIF_NONE) == -1)
 		return -1;
@@ -1624,25 +1643,25 @@ static AlifIntT init_types(void* arg) { // 6049
 	if (!state->MatchOr_type) return -1;
 	state->type_ignore_type = make_type(state, "type_ignore", state->astType,
 		nullptr, 0,
-		"type_ignore = TypeIgnore(AlifIntT lineno, string tag)");
+		"type_ignore = TypeIgnore(AlifIntT lineno, String tag)");
 	if (!state->type_ignore_type) return -1;
 	if (add_attributes(state, state->type_ignore_type, nullptr, 0) < 0) return -1;
 	state->TypeIgnore_type = make_type(state, "TypeIgnore",
 		state->type_ignore_type,
 		_typeIgnoreFields_, 2,
-		"TypeIgnore(AlifIntT lineno, string tag)");
+		"TypeIgnore(AlifIntT lineno, String tag)");
 	if (!state->TypeIgnore_type) return -1;
 	state->type_param_type = make_type(state, "type_param", state->astType,
 		nullptr, 0,
-		"type_param = TypeVar(identifier name, expr? bound, expr? default_value)\n"
-		"           | ParamSpec(identifier name, expr? default_value)\n"
-		"           | TypeVarTuple(identifier name, expr? default_value)");
+		"type_param = TypeVar(Identifier name, expr? bound, expr? default_value)\n"
+		"           | ParamSpec(Identifier name, expr? default_value)\n"
+		"           | TypeVarTuple(Identifier name, expr? default_value)");
 	if (!state->type_param_type) return -1;
 	if (add_attributes(state, state->type_param_type, _typeParamAttributes_, 4)
 		< 0) return -1;
 	state->TypeVar_type = make_type(state, "TypeVar", state->type_param_type,
 		_typeVarFields_, 3,
-		"TypeVar(identifier name, expr? bound, expr? default_value)");
+		"TypeVar(Identifier name, expr? bound, expr? default_value)");
 	if (!state->TypeVar_type) return -1;
 	if (alifObject_setAttr(state->TypeVar_type, state->bound, ALIF_NONE) == -1)
 		return -1;
@@ -1652,7 +1671,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->ParamSpecType = make_type(state, "ParamSpec",
 		state->type_param_type, _paramSpecFields_,
 		2,
-		"ParamSpec(identifier name, expr? default_value)");
+		"ParamSpec(Identifier name, expr? default_value)");
 	if (!state->ParamSpecType) return -1;
 	if (alifObject_setAttr(state->ParamSpecType, state->default_value, ALIF_NONE)
 		== -1)
@@ -1660,7 +1679,7 @@ static AlifIntT init_types(void* arg) { // 6049
 	state->TypeVarTuple_type = make_type(state, "TypeVarTuple",
 		state->type_param_type,
 		_typeVarTupleFields_, 2,
-		"TypeVarTuple(identifier name, expr? default_value)");
+		"TypeVarTuple(Identifier name, expr? default_value)");
 	if (!state->TypeVarTuple_type) return -1;
 	if (alifObject_setAttr(state->TypeVarTuple_type, state->default_value,
 		ALIF_NONE) == -1)
@@ -1677,7 +1696,7 @@ ModuleTy alifAST_module(ASDLStmtSeq* _body, AlifASTMem* _astMem) { // 6673
 	ModuleTy p{};
 	p = (ModuleTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p) return nullptr;
-	p->type = ModuleK;
+	p->type = ModK_::ModuleK;
 	p->V.module.body = _body;
 	return p;
 }
@@ -1686,8 +1705,40 @@ ModuleTy alifAST_interactive(ASDLStmtSeq* _body, AlifASTMem* _astMem) { // 6687
 	ModuleTy p{};
 	p = (ModuleTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p) return nullptr;
-	p->type = InteractiveK;
+	p->type = ModK_::InteractiveK;
 	p->V.interactive.body = _body;
+	return p;
+}
+
+ModuleTy alifAST_expression(ExprTy _body, AlifASTMem* _astMem) { // 6920
+	ModuleTy p{};
+	if (!_body) {
+		alifErr_setString(_alifExcValueError_,
+			"المجال 'الجسم' مطلوب للتعبير");
+		return nullptr;
+	}
+	p = (ModuleTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = ModK_::ExpressionK;
+	p->V.expression.body = _body;
+	return p;
+}
+
+ModuleTy alifAST_functionType(ASDLExprSeq* _argtypes,
+	ExprTy _returns, AlifASTMem* _astMem) { // 6937
+	ModuleTy p{};
+	if (!_returns) {
+		alifErr_setString(_alifExcValueError_,
+			"المجال 'ارجع' مطلوب لـ نوع_الدالة");
+		return nullptr;
+	}
+	p = (ModuleTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = ModK_::FunctionTypeK;
+	p->V.functionType.argTypes = _argtypes;
+	p->V.functionType.returns = _returns;
 	return p;
 }
 
@@ -1755,7 +1806,7 @@ ExprTy alifAST_constant(AlifObject* _val, AlifObject* _type,
 }
 
 StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
-	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset,
+	ASDLStmtSeq* _body, ASDLExprSeq* _decoratorList, ExprTy _returns, AlifIntT _lineNo, AlifIntT _colOffset,
 	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6770
 
 	StmtTy p_{};
@@ -1773,9 +1824,11 @@ StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
 	if (!p_) return nullptr;
 
 	p_->type = StmtK_::AsyncFunctionDefK;
-	p_->V.functionDef.name = _name;
-	p_->V.functionDef.args = _args;
-	p_->V.functionDef.body = _body;
+	p_->V.asyncFunctionDef.name = _name;
+	p_->V.asyncFunctionDef.args = _args;
+	p_->V.asyncFunctionDef.body = _body;
+	p_->V.asyncFunctionDef.decoratorList = _decoratorList;
+	p_->V.asyncFunctionDef.returns = _returns;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -1785,7 +1838,7 @@ StmtTy alifAST_asyncFunctionDef(AlifObject* _name, Arguments* _args,
 }
 
 StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args,
-	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset,
+	ASDLStmtSeq* _body, ASDLExprSeq* _decoratorList, ExprTy _returns, AlifIntT _lineNo, AlifIntT _colOffset,
 	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6734
 
 	StmtTy p_{};
@@ -1806,6 +1859,8 @@ StmtTy alifAST_functionDef(AlifObject* _name, Arguments* _args,
 	p_->V.asyncFunctionDef.name = _name;
 	p_->V.asyncFunctionDef.args = _args;
 	p_->V.asyncFunctionDef.body = _body;
+	p_->V.functionDef.decoratorList = _decoratorList;
+	p_->V.functionDef.returns = _returns;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -1853,8 +1908,8 @@ StmtTy alifAST_delete(ASDLExprSeq* _targets,
 }
 
 StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases,
-	ASDLKeywordSeq* _keywords, ASDLStmtSeq* _body, AlifIntT _lineNo,
-	AlifIntT _colOffset, AlifIntT _endLineNo,
+	ASDLKeywordSeq* _keywords, ASDLStmtSeq* _body, ASDLExprSeq* _decoratorList,
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6806
 
 	StmtTy p_{};
@@ -1871,6 +1926,7 @@ StmtTy alifAST_classDef(AlifObject* _name, ASDLExprSeq* _bases,
 	p_->V.classDef.bases = _bases;
 	p_->V.classDef.keywords = _keywords;
 	p_->V.classDef.body = _body;
+	p_->V.classDef.decoratorList = _decoratorList;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -1912,7 +1968,7 @@ StmtTy alifAST_augAssign(ExprTy _target, Operator_ _op, ExprTy _val,
 }
 
 StmtTy alifAST_for(ExprTy _target, ExprTy _iter,
-	ASDLStmtSeq* _body, AlifIntT _lineNo, AlifIntT _colOffset,
+	ASDLStmtSeq* _body, ASDLStmtSeq* _then, AlifIntT _lineNo, AlifIntT _colOffset,
 	AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) { // 6989
 
 	StmtTy p_{};
@@ -1931,6 +1987,7 @@ StmtTy alifAST_for(ExprTy _target, ExprTy _iter,
 	p_->V.for_.target = _target;
 	p_->V.for_.iter = _iter;
 	p_->V.for_.body = _body;
+	p_->V.for_.then = _then;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -1939,7 +1996,7 @@ StmtTy alifAST_for(ExprTy _target, ExprTy _iter,
 	return p_;
 }
 
-StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
+StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body, ASDLStmtSeq* _then,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7021
 
@@ -1959,6 +2016,7 @@ StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
 	p_->V.asyncFor.target = _target;
 	p_->V.asyncFor.iter = _iter;
 	p_->V.asyncFor.body = _body;
+	p_->V.asyncFor.then = _then;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -1967,7 +2025,7 @@ StmtTy alifAST_asyncFor(ExprTy _target, ExprTy _iter, ASDLStmtSeq* _body,
 	return p_;
 }
 
-StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body,
+StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body, ASDLStmtSeq* _then,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
 	AlifIntT _endColOffset, AlifASTMem* _astMem) { // 7053
 
@@ -1982,6 +2040,7 @@ StmtTy alifAST_while(ExprTy _condetion, ASDLStmtSeq* _body,
 	p_->type = StmtK_::WhileK;
 	p_->V.while_.condition = _condetion;
 	p_->V.while_.body = _body;
+	p_->V.while_.then = _then;
 	p_->lineNo = _lineNo;
 	p_->colOffset = _colOffset;
 	p_->endLineNo = _endLineNo;
@@ -2086,6 +2145,23 @@ StmtTy alifAST_if(ExprTy _condition, ASDLStmtSeq* _body, ASDLStmtSeq* _else,
 	p_->endColOffset = _endColOffset;
 
 	return p_;
+}
+
+StmtTy alifAST_raise(ExprTy _exc, ExprTy _cause,
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	StmtTy p{};
+	p = (StmtTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return nullptr;
+	p->type = RaiseK;
+	p->V.raise.exc = _exc;
+	p->V.raise.cause = _cause;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
 }
 
 StmtTy alifAST_try(ASDLStmtSeq* _body, ASDLExcepthandlerSeq* _handlers,
@@ -2434,6 +2510,28 @@ ExprTy alifAST_listComp(ExprTy _elt, ASDLComprehensionSeq* _generators,
 	return p;
 }
 
+ExprTy alifAST_setComp(ExprTy _elt, ASDLComprehensionSeq* _generators,
+	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo,
+	AlifIntT _endColOffset, AlifASTMem* _astMem) {
+	ExprTy p{};
+	if (!_elt) {
+		alifErr_setString(_alifExcValueError_,
+			"المعامل 'elt' مطلوب للمميزة_الضمنية");
+		return nullptr;
+	}
+	p = (ExprTy)alifASTMem_malloc(_astMem, sizeof(*p));
+	if (!p)
+		return NULL;
+	p->type = ExprK_::SetCompK;
+	p->V.setComp.elts = _elt;
+	p->V.setComp.generators = _generators;
+	p->lineNo = _lineNo;
+	p->colOffset = _colOffset;
+	p->endLineNo = _endLineNo;
+	p->endColOffset = _endColOffset;
+	return p;
+}
+
 ExprTy alifAST_dictComp(ExprTy _key, ExprTy _val, ASDLComprehensionSeq* _generators,
 	AlifIntT _lineNo, AlifIntT _colOffset, AlifIntT _endLineNo, AlifIntT _endColOffset, AlifASTMem* _astMem) {
 
@@ -2730,7 +2828,7 @@ ExprTy alifAST_set(ASDLExprSeq* _elts, AlifIntT _lineNo, AlifIntT _colOffset,
 	ExprTy p{};
 	p = (ExprTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p)
-		return NULL;
+		return nullptr;
 	p->type = ExprK_::SetK;
 	p->V.set.elts = _elts;
 	p->lineNo = _lineNo;
@@ -2995,7 +3093,7 @@ TypeParamTy alifAST_typeVarTuple(Identifier _name, ExprTy _defaultValue,
 	if (!_name) {
 		alifErr_setString(_alifExcValueError_,
 			"الحثل 'name' مطلوب لـ TypeVarTuple");
-		return NULL;
+		return nullptr;
 	}
 	p = (TypeParamTy)alifASTMem_malloc(_astMem, sizeof(*p));
 	if (!p)
@@ -3064,18 +3162,18 @@ AlifObject* ast2obj_mod(ASTState* state, Validator* vstate, void* _o) { // 8712
 			goto failed;
 		ALIF_DECREF(value);
 		break;
-	case ModK_::FunctionK:
+	case ModK_::FunctionTypeK:
 		tp = (AlifTypeObject*)state->FunctionType_type;
 		result = alifType_genericNew(tp, nullptr, nullptr);
 		if (!result) goto failed;
 		value = ast2obj_list(state, vstate,
-			(ASDLSeq*)o->V.function.argTypes,
+			(ASDLSeq*)o->V.functionType.argTypes,
 			ast2obj_expr);
 		if (!value) goto failed;
 		if (alifObject_setAttr(result, state->argtypes, value) == -1)
 			goto failed;
 		ALIF_DECREF(value);
-		value = ast2obj_expr(state, vstate, o->V.function.returns);
+		value = ast2obj_expr(state, vstate, o->V.functionType.returns);
 		if (!value) goto failed;
 		if (alifObject_setAttr(result, state->returns, value) == -1)
 			goto failed;
@@ -3366,12 +3464,12 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		if (alifObject_setAttr(result, state->body, value) == -1)
 			goto failed;
 		ALIF_DECREF(value);
-		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.for_.else_,
-		//	ast2obj_stmt);
-		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->else_, value) == -1)
-		//	goto failed;
-		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.for_.then,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.for_.typeComment);
 		//if (!value) goto failed;
 		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
@@ -3398,12 +3496,12 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		if (alifObject_setAttr(result, state->body, value) == -1)
 			goto failed;
 		ALIF_DECREF(value);
-		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncFor.else_,
-		//	ast2obj_stmt);
-		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->else_, value) == -1)
-		//	goto failed;
-		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.asyncFor.then,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
 		//value = AST2OBJ_STRING(state, vstate, o->V.asyncFor.typeComment);
 		//if (!value) goto failed;
 		//if (alifObject_setAttr(result, state->typeComment, value) == -1)
@@ -3425,12 +3523,12 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		if (alifObject_setAttr(result, state->body, value) == -1)
 			goto failed;
 		ALIF_DECREF(value);
-		//value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.while_.else_,
-		//	ast2obj_stmt);
-		//if (!value) goto failed;
-		//if (alifObject_setAttr(result, state->else_, value) == -1)
-		//	goto failed;
-		//ALIF_DECREF(value);
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.while_.then,
+			ast2obj_stmt);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->else_, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
 		break;
 	case StmtK_::IfK:
 		tp = (AlifTypeObject*)state->If_type;
@@ -3514,21 +3612,21 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 		//		goto failed;
 		//	ALIF_DECREF(value);
 		//	break;
-		//case StmtK_::RaiseK:
-		//	tp = (AlifTypeObject*)state->Raise_type;
-		//	result = alifType_genericNew(tp, nullptr, nullptr);
-		//	if (!result) goto failed;
-		//	value = ast2obj_expr(state, vstate, o->V.raise.exc);
-		//	if (!value) goto failed;
-		//	if (alifObject_setAttr(result, state->exc, value) == -1)
-		//		goto failed;
-		//	ALIF_DECREF(value);
-		//	value = ast2obj_expr(state, vstate, o->V.raise.cause);
-		//	if (!value) goto failed;
-		//	if (alifObject_setAttr(result, state->cause, value) == -1)
-		//		goto failed;
-		//	ALIF_DECREF(value);
-		//	break;
+	case StmtK_::RaiseK:
+		tp = (AlifTypeObject*)state->Raise_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_expr(state, vstate, o->V.raise.exc);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->exc, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		value = ast2obj_expr(state, vstate, o->V.raise.cause);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->cause, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
 	case StmtK_::TryK:
 		tp = (AlifTypeObject*)state->Try_type;
 		result = alifType_genericNew(tp, nullptr, nullptr);
@@ -3645,17 +3743,17 @@ AlifObject* ast2obj_stmt(ASTState* state, Validator* vstate, void* _o) { // 8793
 			goto failed;
 		ALIF_DECREF(value);
 		break;
-		//case StmtK_::NonlocalK:
-		//	tp = (AlifTypeObject*)state->Nonlocal_type;
-		//	result = alifType_genericNew(tp, nullptr, nullptr);
-		//	if (!result) goto failed;
-		//	value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.nonlocal.names,
-		//		AST2OBJ_IDENTIFIER);
-		//	if (!value) goto failed;
-		//	if (alifObject_setAttr(result, state->names, value) == -1)
-		//		goto failed;
-		//	ALIF_DECREF(value);
-		//	break;
+	case StmtK_::NonlocalK:
+		tp = (AlifTypeObject*)state->Nonlocal_type;
+		result = alifType_genericNew(tp, nullptr, nullptr);
+		if (!result) goto failed;
+		value = ast2obj_list(state, vstate, (ASDLSeq*)o->V.nonlocal.names,
+			AST2OBJ_IDENTIFIER);
+		if (!value) goto failed;
+		if (alifObject_setAttr(result, state->names, value) == -1)
+			goto failed;
+		ALIF_DECREF(value);
+		break;
 	case StmtK_::ExprK:
 		tp = (AlifTypeObject*)state->ExprType;
 		result = alifType_genericNew(tp, nullptr, nullptr);
@@ -4760,6 +4858,4702 @@ failed:
 }
 
 
+//AlifIntT obj2ast_mod(ASTState* _state, AlifObject* _obj,
+//	ModuleTy* _out, AlifASTMem* _astMem) { // 10734
+//	AlifIntT isinstance{};
+//
+//	AlifObject* tmp{};
+//	AlifObject* tp{};
+//
+//	if (_obj == ALIF_NONE) {
+//		*_out = nullptr;
+//		return 0;
+//	}
+//	tp = _state->Module_type;
+//	isinstance = alifObject_isInstance(_obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLStmtSeq* body{};
+//		//ASDLTypeIgnoreSeq* typeIgnores{};
+//
+//		if (alifObject_getOptionalAttr(_obj, _state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "مجال الوحدة \"الجسم\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'الوحدة'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(_state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "مجال الوحدة \"الجسم\" قام بتغيير الحجم اثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(_obj, _state->type_ignores, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "مجال الوحدة \"تجاهل_النوع\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			typeIgnores = alifNew_typeIgnoreSeq(len, _astMem);
+//			if (typeIgnores == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				TypeIgnoreTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'الوحدة'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_typeIgnore(_state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "مجال الوحدة \"تجاهل_النوع\" قام بتغيير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(typeIgnores, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*_out = alifAST_module(body, /*typeIgnores,*/ _astMem);
+//		if (*_out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = _state->Interactive_type;
+//	isinstance = alifObject_isInstance(_obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLStmtSeq* body{};
+//
+//		if (alifObject_getOptionalAttr(_obj, _state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "مجال التفاعلي \"الجسم\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'تفاعلي'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(_state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "مجال التفاعلي \"الجسم\" تم تغيير حجمه اثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*_out = alifAST_interactive(body, _astMem);
+//		if (*_out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = _state->Expression_type;
+//	isinstance = alifObject_isInstance(_obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy body{};
+//
+//		if (alifObject_getOptionalAttr(_obj, _state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "المجال المطلوب \"الجسم\" مفقود في التعبير");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'تعبير'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(_state, tmp, &body, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*_out = alifAST_expression(body, _astMem);
+//		if (*_out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = _state->FunctionType_type;
+//	isinstance = alifObject_isInstance(_obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* argtypes{};
+//		ExprTy returns{};
+//
+//		if (alifObject_getOptionalAttr(_obj, _state->argtypes, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "مجال نوع_دالة \"انواع_الوسيطات\" يجب أن تكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			argtypes = alifNew_exprSeq(len, _astMem);
+//			if (argtypes == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'نوع_دالة'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(_state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "مجال نوع_الدالة \"انواع_الوسيطات\" تغير حجمها اثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(argtypes, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(_obj, _state->returns, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "المجال يتطلب \"ارجع\" مفقودة من نوع_الدالة");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" أثناء اجتياز عقدة 'نوع_دالة'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(_state, tmp, &returns, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*_out = alifAST_functionType(argtypes, returns, _astMem);
+//		if (*_out == nullptr) goto failed;
+//		return 0;
+//	}
+//
+//	alifErr_format(_alifExcTypeError_, "متوقع احد انواع الوحدات, ولكن الممرر %R", _obj);
+//failed:
+//	ALIF_XDECREF(tmp);
+//	return -1;
+//}
+
+
+//AlifIntT obj2ast_stmt(ASTState* state, AlifObject* obj, StmtTy* out, AlifASTMem* _astMem) { // 10989
+//	AlifIntT isinstance;
+//
+//	AlifObject* tmp = nullptr;
+//	AlifObject* tp{};
+//	AlifIntT lineno{};
+//	AlifIntT colOffset{};
+//	AlifIntT endLineno{};
+//	AlifIntT endColOffset{};
+//
+//	if (obj == ALIF_NONE) {
+//		*out = nullptr;
+//		return 0;
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->lineno, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr) {
+//		alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"lineno\" مفقود من stmt");
+//		return -1;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'stmt'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &lineno, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->colOffset, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr) {
+//		alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"colOffset\" مفقود من stmt");
+//		return -1;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'stmt'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &colOffset, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->endLineNo, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr or tmp == ALIF_NONE) {
+//		ALIF_CLEAR(tmp);
+//		endLineno = lineno;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'stmt'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &endLineno, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->endColOffset, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr or tmp == ALIF_NONE) {
+//		ALIF_CLEAR(tmp);
+//		endColOffset = colOffset;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'stmt'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &endColOffset, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	tp = state->FunctionDefType;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Identifier name{};
+//		ArgumentsTy args{};
+//		ASDLStmtSeq* body{};
+//		ASDLExprSeq* decoratorList{};
+//		ExprTy returns{};
+//		String type_comment;
+//		ASDLTypeParamSeq* type_params{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->name, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"name\" مفقود من FunctionDef");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &name, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->args, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"args\" مفقود من FunctionDef");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_arguments(state, tmp, &args, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال FunctionDef \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال FunctionDef \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->decorator_list, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "FunctionDef field \"decorator_list\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			decoratorList = alifNew_exprSeq(len, _astMem);
+//			if (decoratorList == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "FunctionDef field \"decorator_list\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(decoratorList, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->returns, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			returns = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &returns, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeParams, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "FunctionDef field \"type_params\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			type_params = alifNew_typeParamSeq(len, _astMem);
+//			if (type_params == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				TypeParamTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_typeParam(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "FunctionDef field \"type_params\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(type_params, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_functionDef(name, args, body, decoratorList, returns,
+//			/*type_comment, type_params,*/ lineno,
+//			colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AsyncFunctionDef_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Identifier name{};
+//		ArgumentsTy args{};
+//		ASDLStmtSeq* body{};
+//		ASDLExprSeq* decoratorList{};
+//		ExprTy returns{};
+//		String type_comment{};
+//		ASDLTypeParamSeq* type_params{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->name, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"name\" مفقود من AsyncFunctionDef");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &name, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->args, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"args\" مفقود من AsyncFunctionDef");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_arguments(state, tmp, &args, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "AsyncFunctionDef field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "AsyncFunctionDef field \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->decorator_list, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "AsyncFunctionDef field \"decorator_list\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			decoratorList = alifNew_exprSeq(len, _astMem);
+//			if (decoratorList == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "AsyncFunctionDef field \"decorator_list\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(decoratorList, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->returns, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			returns = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &returns, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeParams, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال AsyncFunctionDef \"type_params\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			type_params = alifNew_typeParamSeq(len, _astMem);
+//			if (type_params == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				TypeParamTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFunctionDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_typeParam(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال AsyncFunctionDef \"type_params\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(type_params, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_asyncFunctionDef(name, args, body, decoratorList,
+//			returns, /*type_comment, type_params,*/
+//			lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->ClassDef_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Identifier name{};
+//		ASDLExprSeq* bases{};
+//		ASDLKeywordSeq* keywords{};
+//		ASDLStmtSeq* body{};
+//		ASDLExprSeq* decorator_list{};
+//		ASDLTypeParamSeq* type_params{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->name, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"name\" مفقود من ClassDef");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &name, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->bases, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال ClassDef \"bases\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			bases = alifNew_exprSeq(len, _astMem);
+//			if (bases == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "ClassDef field \"bases\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(bases, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->keywords, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "ClassDef field \"keywords\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			keywords = alifNew_keywordSeq(len, _astMem);
+//			if (keywords == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				KeywordTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_keyword(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال ClassDef \"keywords\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(keywords, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "ClassDef field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال ClassDef \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->decorator_list, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال ClassDef \"decorator_list\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			decorator_list = alifNew_exprSeq(len, _astMem);
+//			if (decorator_list == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال ClassDef \"decorator_list\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(decorator_list, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeParams, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "ClassDef field \"type_params\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			type_params = alifNew_typeParamSeq(len, _astMem);
+//			if (type_params == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				TypeParamTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ClassDef'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_typeParam(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "ClassDef field \"type_params\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(type_params, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_classDef(name, bases, keywords, body, decorator_list,
+//			/*type_params,*/ lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->ReturnType;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			value = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Return'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_return(value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->DeleteType;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* targets;
+//
+//		if (alifObject_getOptionalAttr(obj, state->targets, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال Delete \"targets\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			targets = alifNew_exprSeq(len, _astMem);
+//			if (targets == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Delete'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال Delete \"targets\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(targets, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_delete(targets, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AssignType;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* targets{};
+//		ExprTy value{};
+//		String type_comment{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->targets, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال Assign \"targets\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			targets = alifNew_exprSeq(len, _astMem);
+//			if (targets == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Assign'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال Assign \"targets\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(targets, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Assign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Assign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Assign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_assign(targets, value, /*type_comment,*/ lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->TypeAlias_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy name{};
+//		ASDLTypeParamSeq* type_params{};
+//		ExprTy value{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->name, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"name\" مفقود من TypeAlias");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TypeAlias'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &name, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeParams, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال TypeAlias \"type_params\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			type_params = alifNew_typeParamSeq(len, _astMem);
+//			if (type_params == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				TypeParamTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TypeAlias'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_typeParam(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال TypeAlias \"type_params\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(type_params, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من TypeAlias");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TypeAlias'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_typeAlias(name, type_params, value, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AugAssign_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy target{};
+//		Operator_ op{};
+//		ExprTy value{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->target, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"target\" مفقود من AugAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AugAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &target, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->op, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"op\" مفقود من AugAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AugAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_operator(state, tmp, &op, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من AugAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AugAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_augAssign(target, op, value, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AnnAssign_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy target;
+//		ExprTy annotation;
+//		ExprTy value;
+//		AlifIntT simple;
+//
+//		if (alifObject_getOptionalAttr(obj, state->target, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"target\" مفقود من AnnAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AnnAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &target, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->annotation, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"annotation\" مفقود من AnnAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AnnAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &annotation, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			value = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AnnAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->simple, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"simple\" مفقود من AnnAssign");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AnnAssign'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_int(state, tmp, &simple, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_annAssign(target, annotation, value, simple, lineno,
+//			colOffset, endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->For_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy target;
+//		ExprTy iter;
+//		ASDLStmtSeq* body;
+//		ASDLStmtSeq* else_;
+//		String type_comment;
+//
+//		if (alifObject_getOptionalAttr(obj, state->target, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"target\" مفقود من For");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'For'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &target, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->iter, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"iter\" مفقود من For");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'For'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &iter, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "For field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'For'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال For \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال For \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'For'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال For \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'For'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_for(target, iter, body, else_, /*type_comment,*/ lineno,
+//			colOffset, endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AsyncFor_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy target;
+//		ExprTy iter;
+//		ASDLStmtSeq* body;
+//		ASDLStmtSeq* else_;
+//		String type_comment;
+//
+//		if (alifObject_getOptionalAttr(obj, state->target, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"target\" مفقود من AsyncFor");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFor'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &target, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->iter, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"iter\" مفقود من AsyncFor");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFor'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &iter, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال AsyncFor \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFor'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال AsyncFor \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال AsyncFor \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFor'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "AsyncFor field \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncFor'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_asyncFor(target, iter, body, else_, /*type_comment,*/
+//			lineno, colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->While_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy test;
+//		ASDLStmtSeq* body;
+//		ASDLStmtSeq* else_;
+//
+//		if (alifObject_getOptionalAttr(obj, state->test, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"test\" مفقود من While");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'While'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &test, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "While field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'While'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "While field \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال While \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'While'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "While field \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_while(test, body, else_, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->If_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy test{};
+//		ASDLStmtSeq* body{};
+//		ASDLStmtSeq* else_{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->test, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"test\" مفقود من If");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'If'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &test, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال If \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'If'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال If \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "If field \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'If'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "If field \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_if(test, body, else_, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->With_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLWithItemSeq* items{};
+//		ASDLStmtSeq* body{};
+//		String type_comment{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->items, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال With \"items\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			items = alifNew_withItemSeq(len, _astMem);
+//			if (items == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				WithItemTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'With'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_withitem(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال With \"items\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(items, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "المجال With \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'With'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "المجال With \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'With'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_with(items, body, /*type_comment,*/ lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->AsyncWith_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLWithItemSeq* items{};
+//		ASDLStmtSeq* body{};
+//		String type_comment{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->items, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "AsyncWith field \"items\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			items = alifNew_withItemSeq(len, _astMem);
+//			if (items == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				WithItemTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncWith'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_withitem(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "AsyncWith field \"items\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(items, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "AsyncWith field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncWith'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "AsyncWith field \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->typeComment, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			type_comment = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'AsyncWith'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &type_comment, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_asyncWith(items, body, /*type_comment,*/ lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Match_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy subject;
+//		ASDLMatchCaseSeq* cases;
+//
+//		if (alifObject_getOptionalAttr(obj, state->subject, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"subject\" مفقود من Match");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Match'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &subject, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->cases, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Match field \"cases\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			cases = alifNew_matchCaseSeq(len, _astMem);
+//			if (cases == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				MatchCaseTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Match'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_matchCase(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Match field \"cases\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(cases, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_match(subject, cases, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Raise_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy exc;
+//		ExprTy cause;
+//
+//		if (alifObject_getOptionalAttr(obj, state->exc, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			exc = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Raise'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &exc, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->cause, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			cause = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Raise'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &cause, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = _PyAST_Raise(exc, cause, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Try_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLStmtSeq* body{};
+//		ASDLExcepthandlerSeq* handlers{};
+//		ASDLStmtSeq* else_{};
+//		ASDLStmtSeq* finalbody{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Try field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Try'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Try field \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->handlers, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Try field \"handlers\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			handlers = alifNew_excepthandlerSeq(len, _astMem);
+//			if (handlers == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExcepthandlerTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Try'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_excepthandler(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Try field \"handlers\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(handlers, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Try field \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Try'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Try field \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->finalbody, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Try field \"finalbody\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			finalbody = alifNew_stmtSeq(len, _astMem);
+//			if (finalbody == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Try'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Try field \"finalbody\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(finalbody, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_try(body, handlers, else_, finalbody, lineno,
+//			colOffset, endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->TryStar_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLStmtSeq* body{};
+//		ASDLExcepthandlerSeq* handlers{};
+//		ASDLStmtSeq* else_{};
+//		ASDLStmtSeq* finalbody{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "TryStar field \"body\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			body = alifNew_stmtSeq(len, _astMem);
+//			if (body == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TryStar'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "TryStar field \"body\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(body, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->handlers, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "TryStar field \"handlers\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			handlers = alifNew_excepthandlerSeq(len, _astMem);
+//			if (handlers == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExcepthandlerTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TryStar'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_excepthandler(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "TryStar field \"handlers\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(handlers, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "TryStar field \"else_\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			else_ = alifNew_stmtSeq(len, _astMem);
+//			if (else_ == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TryStar'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "TryStar field \"else_\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(else_, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->finalbody, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "TryStar field \"finalbody\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			finalbody = alifNew_stmtSeq(len, _astMem);
+//			if (finalbody == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				StmtTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'TryStar'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_stmt(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "TryStar field \"finalbody\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(finalbody, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_tryStar(body, handlers, else_, finalbody, lineno,
+//			colOffset, endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Assert_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy test;
+//		ExprTy msg;
+//
+//		if (alifObject_getOptionalAttr(obj, state->test, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"test\" مفقود من Assert");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Assert'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &test, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->msg, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			msg = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Assert'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &msg, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_assert(test, msg, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Import_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLAliasSeq* names{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->names, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Import field \"names\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			names = alifNew_aliasSeq(len, _astMem);
+//			if (names == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				AliasTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Import'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_alias(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Import field \"names\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(names, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_import(names, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->ImportFrom_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Identifier module{};
+//		ASDLAliasSeq* names{};
+//		AlifIntT level{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->module, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			module = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ImportFrom'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &module, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->names, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "ImportFrom field \"names\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			names = alifNew_aliasSeq(len, _astMem);
+//			if (names == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				AliasTy val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ImportFrom'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_alias(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "ImportFrom field \"names\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(names, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->level, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			level = 0;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ImportFrom'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_int(state, tmp, &level, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_importFrom(module, names, level, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Global_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLIdentifierSeq* names{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->names, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Global field \"names\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			names = alifNew_identifierSeq(len, _astMem);
+//			if (names == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				Identifier val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Global'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_identifier(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Global field \"names\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(names, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_global(names, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Nonlocal_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLIdentifierSeq* names;
+//
+//		if (alifObject_getOptionalAttr(obj, state->names, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Nonlocal field \"names\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			names = alifNew_identifierSeq(len, _astMem);
+//			if (names == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				Identifier val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Nonlocal'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_identifier(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Nonlocal field \"names\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(names, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_nonlocal(names, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->ExprType;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Expr");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Expr'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_expr(value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Pass_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//
+//		*out = alifAST_pass(lineno, colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Break_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//
+//		*out = alifAST_break(lineno, colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Continue_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//
+//		*out = alifAST_continue(lineno, colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//
+//	alifErr_format(_alifExcTypeError_, "expected some sort of stmt, but got %R", obj);
+//failed:
+//	ALIF_XDECREF(tmp);
+//	return -1;
+//}
+
+
+//AlifIntT obj2ast_expr(ASTState* state, AlifObject* obj,
+//	ExprTy* out, AlifASTMem* _astMem) { // 13647
+//	AlifIntT isinstance{};
+//
+//	AlifObject* tmp = nullptr;
+//	AlifObject* tp{};
+//	AlifIntT lineno{};
+//	AlifIntT colOffset{};
+//	AlifIntT endLineno{};
+//	AlifIntT endColOffset{};
+//
+//	if (obj == ALIF_NONE) {
+//		*out = nullptr;
+//		return 0;
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->lineno, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr) {
+//		alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"lineno\" مفقود من expr");
+//		return -1;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'expr'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &lineno, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->colOffset, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr) {
+//		alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"colOffset\" مفقود من expr");
+//		return -1;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'expr'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &colOffset, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->endLineNo, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr or tmp == ALIF_NONE) {
+//		ALIF_CLEAR(tmp);
+//		endLineno = lineno;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'expr'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &endLineno, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	if (alifObject_getOptionalAttr(obj, state->endColOffset, &tmp) < 0) {
+//		return -1;
+//	}
+//	if (tmp == nullptr or tmp == ALIF_NONE) {
+//		ALIF_CLEAR(tmp);
+//		endColOffset = colOffset;
+//	}
+//	else {
+//		AlifIntT res{};
+//		if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'expr'")) {
+//			goto failed;
+//		}
+//		res = obj2ast_int(state, tmp, &endColOffset, _astMem);
+//		_alif_leaveRecursiveCall();
+//		if (res != 0) goto failed;
+//		ALIF_CLEAR(tmp);
+//	}
+//	tp = state->BoolOp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		BoolOp_ op{};
+//		ASDLExprSeq* values{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->op, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"op\" مفقود من BoolOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'BoolOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_boolop(state, tmp, &op, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->values, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "BoolOp field \"values\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			values = alifNew_exprSeq(len, _astMem);
+//			if (values == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'BoolOp'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "BoolOp field \"values\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(values, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_boolOp(op, values, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->NamedExpr_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy target;
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->target, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"target\" مفقود من NamedExpr");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'NamedExpr'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &target, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من NamedExpr");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'NamedExpr'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_namedExpr(target, value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->BinOp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy left;
+//		Operator_ op;
+//		ExprTy right;
+//
+//		if (alifObject_getOptionalAttr(obj, state->left, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"left\" مفقود من BinOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'BinOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &left, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->op, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"op\" مفقود من BinOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'BinOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_operator(state, tmp, &op, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->right, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"right\" مفقود من BinOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'BinOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &right, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_binOp(left, op, right, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->UnaryOp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		UnaryOp_ op{};
+//		ExprTy operand{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->op, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"op\" مفقود من UnaryOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'UnaryOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_unaryop(state, tmp, &op, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->operand, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"operand\" مفقود من UnaryOp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'UnaryOp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &operand, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_unaryOp(op, operand, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Lambda_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ArgumentsTy args;
+//		ExprTy body;
+//
+//		if (alifObject_getOptionalAttr(obj, state->args, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"args\" مفقود من Lambda");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Lambda'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_arguments(state, tmp, &args, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"body\" مفقود من Lambda");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Lambda'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &body, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_lambda(args, body, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->IfExp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy test{};
+//		ExprTy body{};
+//		ExprTy else_{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->test, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"test\" مفقود من IfExp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'IfExp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &test, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->body, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"body\" مفقود من IfExp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'IfExp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &body, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->else_, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"else_\" مفقود من IfExp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'IfExp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &else_, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_ifExpr(test, body, else_, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Dict_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* keys{};
+//		ASDLExprSeq* values{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->keys, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Dict field \"keys\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			keys = alifNew_exprSeq(len, _astMem);
+//			if (keys == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Dict'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Dict field \"keys\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(keys, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->values, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Dict field \"values\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			values = alifNew_exprSeq(len, _astMem);
+//			if (values == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Dict'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Dict field \"values\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(values, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_dict(keys, values, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Set_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* elts;
+//
+//		if (alifObject_getOptionalAttr(obj, state->elts, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Set field \"elts\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			elts = alifNew_exprSeq(len, _astMem);
+//			if (elts == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Set'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Set field \"elts\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(elts, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_set(elts, lineno, colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->ListComp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy elt{};
+//		ASDLComprehensionSeq* generators{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->elt, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"elt\" مفقود من ListComp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ListComp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &elt, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->generators, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "ListComp field \"generators\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			generators = alifNew_ComprehensionSeq(len, _astMem);
+//			if (generators == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ComprehensionTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'ListComp'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_comprehension(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "ListComp field \"generators\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(generators, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_listComp(elt, generators, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->SetComp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy elt;
+//		ASDLComprehensionSeq* generators;
+//
+//		if (alifObject_getOptionalAttr(obj, state->elt, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"elt\" مفقود من SetComp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'SetComp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &elt, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->generators, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "SetComp field \"generators\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			generators = alifNew_ComprehensionSeq(len, _astMem);
+//			if (generators == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ComprehensionTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'SetComp'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_comprehension(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "SetComp field \"generators\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(generators, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_setComp(elt, generators, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->DictComp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy key{};
+//		ExprTy value{};
+//		ASDLComprehensionSeq* generators;
+//
+//		if (alifObject_getOptionalAttr(obj, state->key, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"key\" مفقود من DictComp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'DictComp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &key, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من DictComp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'DictComp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->generators, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "DictComp field \"generators\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			generators = alifNew_ComprehensionSeq(len, _astMem);
+//			if (generators == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ComprehensionTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'DictComp'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_comprehension(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "DictComp field \"generators\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(generators, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_dictComp(key, value, generators, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->GeneratorExp_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy elt;
+//		ASDLComprehensionSeq* generators;
+//
+//		if (alifObject_getOptionalAttr(obj, state->elt, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"elt\" مفقود من GeneratorExp");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'GeneratorExp'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &elt, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->generators, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "GeneratorExp field \"generators\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			generators = alifNew_ComprehensionSeq(len, _astMem);
+//			if (generators == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ComprehensionTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'GeneratorExp'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_comprehension(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "GeneratorExp field \"generators\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(generators, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_generatorExp(elt, generators, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Await_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Await");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Await'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_await(value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Yield_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			value = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Yield'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_yield(value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->YieldFrom_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value;
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من YieldFrom");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'YieldFrom'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_yieldFrom(value, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Compare_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy left{};
+//		ASDLIntSeq* ops{};
+//		ASDLExprSeq* comparators{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->left, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"left\" مفقود من Compare");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Compare'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &left, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ops, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Compare field \"ops\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			ops = alifNew_intSeq(len, _astMem);
+//			if (ops == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				CmpOp_ val{};
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Compare'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_cmpop(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Compare field \"ops\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(ops, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->comparators, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Compare field \"comparators\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			comparators = alifNew_exprSeq(len, _astMem);
+//			if (comparators == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Compare'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Compare field \"comparators\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(comparators, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_compare(left, ops, comparators, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Call_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy func;
+//		ASDLExprSeq* args;
+//		ASDLKeywordSeq* keywords;
+//
+//		if (alifObject_getOptionalAttr(obj, state->func, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"func\" مفقود من Call");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Call'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &func, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->args, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Call field \"args\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			args = alifNew_exprSeq(len, _astMem);
+//			if (args == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Call'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Call field \"args\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(args, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->keywords, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Call field \"keywords\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			keywords = alifNew_keywordSeq(len, _astMem);
+//			if (keywords == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				KeywordTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Call'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_keyword(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Call field \"keywords\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(keywords, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_call(func, args, keywords, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->FormattedValue_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value{};
+//		AlifIntT conversion{};
+//		ExprTy format_spec{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من FormattedValue");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FormattedValue'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->conversion, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"conversion\" مفقود من FormattedValue");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FormattedValue'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_int(state, tmp, &conversion, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->format_spec, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			format_spec = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'FormattedValue'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &format_spec, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_formattedValue(value, conversion, format_spec, lineno,
+//			colOffset, endLineno, endColOffset,
+//			_astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->JoinedStr_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* values;
+//
+//		if (alifObject_getOptionalAttr(obj, state->values, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "JoinedStr field \"values\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			values = alifNew_exprSeq(len, _astMem);
+//			if (values == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'JoinedStr'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "JoinedStr field \"values\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(values, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_joinedStr(values, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Constant_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Constant value{};
+//		String kind{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Constant");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Constant'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_constant(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->kind, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			kind = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Constant'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_string(state, tmp, &kind, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_constant(value, kind, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Attribute_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value{};
+//		Identifier attr{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Attribute");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Attribute'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->attr, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"attr\" مفقود من Attribute");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Attribute'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &attr, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من Attribute");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Attribute'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_attribute(value, attr, ctx, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Subscript_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value{};
+//		ExprTy slice{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Subscript");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Subscript'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->slice, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"slice\" مفقود من Subscript");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Subscript'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &slice, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من Subscript");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Subscript'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_subScript(value, slice, ctx, lineno, colOffset,
+//			endLineno, endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Starred_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy value{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->value, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"value\" مفقود من Starred");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Starred'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &value, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من Starred");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Starred'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_star(value, ctx, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Name_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		Identifier id{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->id, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"id\" مفقود من Name");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Name'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_identifier(state, tmp, &id, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من Name");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Name'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_name(id, ctx, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->List_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* elts{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->elts, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "List field \"elts\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			elts = alifNew_exprSeq(len, _astMem);
+//			if (elts == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'List'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "List field \"elts\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(elts, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من List");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'List'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_list(elts, ctx, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Tuple_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ASDLExprSeq* elts{};
+//		ExprContext_ ctx{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->elts, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			tmp = alifList_new(0);
+//			if (tmp == nullptr) {
+//				return -1;
+//			}
+//		}
+//		{
+//			AlifIntT res{};
+//			AlifSizeT len{};
+//			AlifSizeT i{};
+//			if (!ALIFLIST_CHECK(tmp)) {
+//				alifErr_format(_alifExcTypeError_, "Tuple field \"elts\" يجب أن يكون مصفوفة, وليس %.200s", _alifType_name(ALIF_TYPE(tmp)));
+//				goto failed;
+//			}
+//			len = ALIFLIST_GET_SIZE(tmp);
+//			elts = alifNew_exprSeq(len, _astMem);
+//			if (elts == nullptr) goto failed;
+//			for (i = 0; i < len; i++) {
+//				ExprTy val;
+//				AlifObject* tmp2 = ALIF_NEWREF(ALIFLIST_GET_ITEM(tmp, i));
+//				if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Tuple'")) {
+//					goto failed;
+//				}
+//				res = obj2ast_expr(state, tmp2, &val, _astMem);
+//				_alif_leaveRecursiveCall();
+//				ALIF_DECREF(tmp2);
+//				if (res != 0) goto failed;
+//				if (len != ALIFLIST_GET_SIZE(tmp)) {
+//					alifErr_setString(_alifExcRuntimeError_, "Tuple field \"elts\" تغير الحجم أثناء التكرار");
+//					goto failed;
+//				}
+//				ASDL_SEQ_SET(elts, i, val);
+//			}
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->ctx, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr) {
+//			alifErr_setString(_alifExcTypeError_, "مجال مطلوب \"ctx\" مفقود من Tuple");
+//			return -1;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Tuple'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_exprContext(state, tmp, &ctx, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_tuple(elts, ctx, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//	tp = state->Slice_type;
+//	isinstance = alifObject_isInstance(obj, tp);
+//	if (isinstance == -1) {
+//		return -1;
+//	}
+//	if (isinstance) {
+//		ExprTy lower{};
+//		ExprTy upper{};
+//		ExprTy step{};
+//
+//		if (alifObject_getOptionalAttr(obj, state->lower, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			lower = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Slice'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &lower, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->upper, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			upper = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Slice'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &upper, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		if (alifObject_getOptionalAttr(obj, state->step, &tmp) < 0) {
+//			return -1;
+//		}
+//		if (tmp == nullptr or tmp == ALIF_NONE) {
+//			ALIF_CLEAR(tmp);
+//			step = nullptr;
+//		}
+//		else {
+//			AlifIntT res{};
+//			if (_alif_enterRecursiveCall(" بينما يجتاز عقدة 'Slice'")) {
+//				goto failed;
+//			}
+//			res = obj2ast_expr(state, tmp, &step, _astMem);
+//			_alif_leaveRecursiveCall();
+//			if (res != 0) goto failed;
+//			ALIF_CLEAR(tmp);
+//		}
+//		*out = alifAST_slice(lower, upper, step, lineno, colOffset, endLineno,
+//			endColOffset, _astMem);
+//		if (*out == nullptr) goto failed;
+//		return 0;
+//	}
+//
+//	alifErr_format(_alifExcTypeError_, "expected some sort of expr, but got %R", obj);
+//failed:
+//	ALIF_XDECREF(tmp);
+//	return -1;
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4791,4 +9585,48 @@ AlifObject* alifAST_mod2obj(ModuleTy _t) { // 18130
 		return nullptr;
 	}
 	return result;
+}
+
+/* mode is 0 for "exec", 1 for "eval" and 2 for "single" input */
+//ModuleTy alifAST_obj2mod(AlifObject* _ast, AlifASTMem* _astMem, AlifIntT _mode) { // 18160
+//	const char* const req_name[] = { "Module", "Expression", "Interactive" };
+//	AlifIntT isinstance{};
+//
+//	//if (alifSys_audit("ترجم", "OO", _ast, ALIF_NONE) < 0) {
+//	//	return nullptr;
+//	//}
+//
+//	ASTState* state = get_astState();
+//	if (state == nullptr) {
+//		return nullptr;
+//	}
+//
+//	AlifObject* reqType[3];
+//	reqType[0] = state->Module_type;
+//	reqType[1] = state->Expression_type;
+//	reqType[2] = state->Interactive_type;
+//
+//	isinstance = alifObject_isInstance(_ast, reqType[_mode]);
+//	if (isinstance == -1)
+//		return nullptr;
+//	if (!isinstance) {
+//		alifErr_format(_alifExcTypeError_, "المتوقع عقدة %s, ولكن النوع هو %.400s",
+//			req_name[_mode], _alifType_name(ALIF_TYPE(_ast)));
+//		return nullptr;
+//	}
+//
+//	ModuleTy res = nullptr;
+//	if (obj2ast_mod(state, _ast, &res, _astMem) != 0)
+//		return nullptr;
+//	else
+//		return res;
+//}
+
+
+AlifIntT alifAST_check(AlifObject* _obj) { // 18197
+	ASTState* state = get_astState();
+	if (state == nullptr) {
+		return -1;
+	}
+	return alifObject_isInstance(_obj, state->astType);
 }

@@ -262,7 +262,51 @@ static AlifObject* _random_randomSeedImpl(RandomObject* _self,
 
 
 
+static AlifObject* _random_randomGetRandBitsImpl(RandomObject* _self,
+	AlifIntT _k) { // 505
+	AlifIntT i{}, words{};
+	uint32_t r{};
+	uint32_t* wordarray{};
+	AlifObject* result{};
 
+	if (_k < 0) {
+		alifErr_setString(_alifExcValueError_,
+			"عدد البتات يجب أن يكون اكبر من صفر");
+		return nullptr;
+	}
+
+	if (_k == 0)
+		return alifLong_fromLong(0);
+
+	if (_k <= 32)  /* Fast path */
+		return alifLong_fromUnsignedLong(genrand_uint32(_self) >> (32 - _k));
+
+	words = (_k - 1) / 32 + 1;
+	wordarray = (uint32_t*)alifMem_dataAlloc(words * 4);
+	if (wordarray == nullptr) {
+		//alifErr_noMemory();
+		return nullptr;
+	}
+
+	/* Fill-out bits of long integer, by 32-bit words, from least significant
+	to most significant. */
+#if ALIF_LITTLE_ENDIAN
+	for (i = 0; i < words; i++, _k -= 32)
+	#else
+	for (i = words - 1; i >= 0; i--, _k -= 32)
+	#endif
+	{
+		r = genrand_uint32(_self);
+		if (_k < 32)
+			r >>= (32 - _k);  /* Drop least significant bits */
+		wordarray[i] = r;
+	}
+
+	result = _alifLong_fromByteArray((unsigned char*)wordarray, words * 4,
+		ALIF_LITTLE_ENDIAN, 0 /* unsigned */);
+	alifMem_dataFree(wordarray);
+	return result;
+}
 
 static AlifIntT random_init(RandomObject *self,
 	AlifObject *args, AlifObject *kwds) { // 553
@@ -289,6 +333,7 @@ static AlifIntT random_init(RandomObject *self,
 static AlifMethodDef _randomMethods_[] = { // 577
 	_RANDOM_RANDOM_RANDOM_METHODDEF,
 	_RANDOM_RANDOM_SEED_METHODDEF,
+	_RANDOM_RANDOM_GETRANDBITS_METHODDEF,
 	{nullptr,              nullptr}           /* sentinel */
 };
 
@@ -362,6 +407,6 @@ AlifModuleDef __randomModule_ = { // 671
 	.slots = __randomSlots_,
 };
 
-AlifObject* alifInit__random(void) { // 683
+ALIFMODINIT_FUNC alifInit__random(void) { // 683
 	return alifModuleDef_init(&__randomModule_);
 }

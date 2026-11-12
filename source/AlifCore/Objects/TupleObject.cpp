@@ -7,6 +7,7 @@
 #include "AlifCore_Object.h"
 
 
+#include "clinic/TupleObject.cpp.h"
 
 static inline AlifIntT maybe_freeListPush(AlifTupleObject*); // 21
 
@@ -276,7 +277,7 @@ AlifObject* _alifTuple_fromArray(AlifObject* const* _src, AlifSizeT _n) { // 371
 
 
 
-AlifObject* alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) { // 392
+AlifObject* _alifTuple_fromStackRefSteal(const AlifStackRef* _src, AlifSizeT _n) { // 392
 	if (_n == 0) {
 		return tuple_getEmpty();
 	}
@@ -319,6 +320,52 @@ AlifObject* alifTuple_getSlice(AlifObject* _op,
 	}
 	return tuple_slice((AlifTupleObject*)_op, _i, _j);
 }
+
+
+static AlifObject* tuple_concat(AlifObject* _aa, AlifObject* _bb) { // 462
+	AlifTupleObject* a = ALIFTUPLE_CAST(_aa);
+	if (ALIF_SIZE(a) == 0 and ALIFTUPLE_CHECKEXACT(_bb)) {
+		return ALIF_NEWREF(_bb);
+	}
+	if (!ALIFTUPLE_CHECK(_bb)) {
+		alifErr_format(_alifExcTypeError_,
+			"يمكن جمع مترابطة فقط (وليس \"%.200s\") لمترابطة",
+			ALIF_TYPE(_bb)->name);
+		return nullptr;
+	}
+	AlifTupleObject* b = (AlifTupleObject*)_bb;
+
+	if (ALIF_SIZE(b) == 0 and ALIFTUPLE_CHECKEXACT(a)) {
+		return ALIF_NEWREF(a);
+	}
+	AlifSizeT size = ALIF_SIZE(a) + ALIF_SIZE(b);
+	if (size == 0) {
+		return tuple_getEmpty();
+	}
+
+	AlifTupleObject* np = tuple_alloc(size);
+	if (np == nullptr) {
+		return nullptr;
+	}
+
+	AlifObject** src = a->item;
+	AlifObject** dest = np->item;
+	for (AlifSizeT i = 0; i < ALIF_SIZE(a); i++) {
+		AlifObject* v = src[i];
+		dest[i] = ALIF_NEWREF(v);
+	}
+
+	src = b->item;
+	dest = np->item + ALIF_SIZE(a);
+	for (AlifSizeT i = 0; i < ALIF_SIZE(b); i++) {
+		AlifObject* v = src[i];
+		dest[i] = ALIF_NEWREF(v);
+	}
+
+	ALIFOBJECT_GC_TRACK(np);
+	return (AlifObject*)np;
+}
+
 
 
 static AlifObject* tuple_subTypeNew(AlifTypeObject*, AlifObject*); // 690
@@ -381,7 +428,7 @@ static AlifObject* tuple_subTypeNew(AlifTypeObject* _type, AlifObject* _iterable
 
 static AlifSequenceMethods tupleAsSequence = { // 777
 	tuple_length,
-	0,//tuple_concat,
+	tuple_concat,
 	0,//tuple_repeat,
 	tuple_item,
 	0,
@@ -390,6 +437,16 @@ static AlifSequenceMethods tupleAsSequence = { // 777
 	0,//tuple_contains,
 };
 
+
+static AlifObject* tuple___getnewargs__Impl(AlifTupleObject* _self) { // 846
+	return alif_buildValue("(N)", tuple_slice(_self, 0, ALIF_SIZE(_self)));
+}
+
+
+static AlifMethodDef _tupleMethods_[] = { // 853
+	TUPLE___GETNEWARGS___METHODDEF
+	{nullptr,              nullptr}           /* sentinel */
+};
 
 
 static AlifObject* tuple_iter(AlifObject* _seq); // 863
@@ -408,12 +465,15 @@ AlifTypeObject _alifTupleType_ = { // 865
 		ALIF_TPFLAGS_BASETYPE | ALIF_TPFLAGS_TUPLE_SUBCLASS |
 		_ALIF_TPFLAGS_MATCH_SELF | ALIF_TPFLAGS_SEQUENCE,
 	.iter = tuple_iter,
+	.methods = _tupleMethods_,
+	.new_ = tuple_new,
 	.free = alifObject_gcDel,
+	.versionTag = _ALIF_TYPE_VERSION_TUPLE,
 	.vectorCall = tuple_vectorCall,
 };
 
 
-AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
+AlifIntT _alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 922
 	AlifTupleObject* v_{};
 	AlifTupleObject* sv_{};
 	AlifSizeT i_{};
@@ -449,13 +509,15 @@ AlifIntT alifTuple_resize(AlifObject** _pv, AlifSizeT _newSize) { // 918
 	for (i_ = _newSize; i_ < oldSize; i_++) {
 		ALIF_CLEAR(v_->item[i_]);
 	}
+	_ALIFREFTRACERTRACK((AlifObject*)v_, AlifRefTracerEvent_::Alif_RefTracer_Destroy);
+
 	sv_ = ALIFOBJECT_GC_RESIZE(AlifTupleObject, v_, _newSize);
 	if (sv_ == nullptr) {
 		*_pv = nullptr;
 		alifObject_gcDel(v_);
 		return -1;
 	}
-	alif_newReferenceNoTotal((AlifObject*)sv_);
+	_alif_newReferenceNoTotal((AlifObject*)sv_);
 	if (_newSize > oldSize)
 		memset(&sv_->item[oldSize], 0,
 			sizeof(*sv_->item) * (_newSize - oldSize));

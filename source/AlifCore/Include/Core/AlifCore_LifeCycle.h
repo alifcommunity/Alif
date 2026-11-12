@@ -30,11 +30,13 @@ extern AlifStatus _alif_preInitializeFromConfig(const AlifConfig*, const AlifArg
 
 extern AlifIntT _alif_handleSystemExit(AlifIntT*); // 78
 
-AlifIntT _alifOS_uRandomNonBlock(void*, AlifSizeT); // 105
+extern void _alifErr_print(AlifThread*); // 82
+
+ALIFAPI_FUNC(AlifIntT) _alifOS_uRandomNonBlock(void*, AlifSizeT); // 105
 
 extern AlifIntT _alif_coerceLegacyLocale(AlifIntT); // 108
 extern AlifIntT _alif_legacyLocaleDetected(AlifIntT);
 
-char* _alif_setLocaleFromEnv(AlifIntT); // 112
+ALIFAPI_FUNC(char*) _alif_setLocaleFromEnv(AlifIntT); // 112
 
 AlifIntT _alifRun_simpleStringFlagsWithName(const char*, const char*, AlifCompilerFlags*); // 115

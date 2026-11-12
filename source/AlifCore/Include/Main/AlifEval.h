@@ -3,19 +3,28 @@
 
 
 
-AlifObject* alifEval_evalCode(AlifObject*, AlifObject*, AlifObject*); // 10
+ALIFAPI_FUNC(AlifObject*) alifEval_evalCode(AlifObject*, AlifObject*, AlifObject*); // 10
 
-AlifObject* alifEval_getBuiltins(); // 20
-AlifObject* alifEval_getGlobals(); // 21
+ALIFAPI_FUNC(AlifObject*) alifEval_evalCodeEx(AlifObject*, AlifObject*, AlifObject*,
+	AlifObject* const*, AlifIntT, AlifObject* const*, AlifIntT,
+	AlifObject* const*, AlifIntT, AlifObject*, AlifObject*);
 
-AlifIntT alif_makePendingCalls(); // 30
+ALIFAPI_FUNC(AlifObject*) alifEval_getBuiltins(); // 20
+ALIFAPI_FUNC(AlifObject*) alifEval_getGlobals(); // 21
+
+ALIFAPI_FUNC(AlifIntT) alif_makePendingCalls(); // 30
 
 
-AlifThread* alifEval_saveThread(); // 111
-void alifEval_restoreThread(AlifThread*); // 112
 
-void alifEval_acquireThread(AlifThread*); // 116
-void alifEval_releaseThread(AlifThread*); // 117
+
+
+
+
+ALIFAPI_FUNC(AlifThread*) alifEval_saveThread(); // 111
+ALIFAPI_FUNC(void) alifEval_restoreThread(AlifThread*); // 112
+
+ALIFAPI_FUNC(void) alifEval_acquireThread(AlifThread*); // 116
+ALIFAPI_FUNC(void) alifEval_releaseThread(AlifThread*); // 117
 
  // 119
 #define ALIF_BEGIN_ALLOW_THREADS { \
@@ -39,7 +48,12 @@ void alifEval_releaseThread(AlifThread*); // 117
 #define FVS_HAVE_SPEC 0x4
 
 
-
+/* Special methods used by LOAD_SPECIAL */
+#define SPECIAL___ENTER__   0
+#define SPECIAL___EXIT__    1
+#define SPECIAL___AENTER__  2
+#define SPECIAL___AEXIT__   3
+#define SPECIAL_MAX   3
 
 
 /* ----------------------------------------------------------------------------------------------------- */
@@ -48,10 +62,10 @@ void alifEval_releaseThread(AlifThread*); // 117
 
 
 
+ALIFAPI_FUNC(AlifIntT) alifEval_mergeCompilerFlags(AlifCompilerFlags*); // 13
+
+ALIFAPI_FUNC(AlifObject*) alifEval_evalFrameDefault(AlifThread*, class AlifInterpreterFrame*, AlifIntT); // 15
 
 
-AlifObject* alifEval_evalFrameDefault(AlifThread*, class AlifInterpreterFrame*, AlifIntT); // 15
 
-
-
-AlifIntT _alifEval_sliceIndex(AlifObject*, AlifSizeT*); // 24
+ALIFAPI_FUNC(AlifIntT) _alifEval_sliceIndex(AlifObject*, AlifSizeT*); // 24

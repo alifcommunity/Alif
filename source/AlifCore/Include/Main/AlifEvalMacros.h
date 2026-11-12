@@ -32,7 +32,14 @@
 #define DISPATCH() \
     { \
         NEXTOPARG(); \
-        /*PRE_DISPATCH_GOTO();*/ \
+        PRE_DISPATCH_GOTO(); \
+        DISPATCH_GOTO(); \
+    }
+// 117
+#define DISPATCH_SAME_OPARG() \
+    { \
+        opcode = nextInstr->op.code; \
+        PRE_DISPATCH_GOTO(); \
         DISPATCH_GOTO(); \
     }
 
@@ -53,7 +60,7 @@
 
 
 
-#define INSTR_OFFSET() ((AlifIntT)(nextInstr - ALIFCODE_CODE(_alifFrame_getCode(_frame)))) // 154
+#define INSTR_OFFSET() ((AlifIntT)(nextInstr - _alifFrame_getBytecode(_frame))) // 154
  // 155
 #define NEXTOPARG()  do { \
         AlifCodeUnit word  = {.cache = alifAtomic_loadUint16Relaxed(&*(uint16_t*)nextInstr)}; \
@@ -101,6 +108,16 @@
                                      GETLOCAL(_i) = _value; \
                                      ALIFSTACKREF_XCLOSE(tmp); } while (0)
 
+#define GO_TO_INSTRUCTION(_op) goto PREDICT_ID(_op) // 262
+
+// 278
+#define DEOPT_IF(_cond, _instname)                            \
+    if (_cond) {                                           \
+        /* This is only a single jump on release builds! */ \
+       /* UPDATE_MISS_STATS((_instname));*/                      \
+        GO_TO_INSTRUCTION(_instname);                        \
+    }
+
 
 #define GLOBALS() _frame->globals // 286
 #define BUILTINS() _frame->builtins
@@ -109,7 +126,30 @@
 #define NAMES() _alifFrame_getCode(_frame)->names
 
 
+#define ADAPTIVE_COUNTER_TRIGGERS(_counter) \
+    backoff_counterTriggers(forge_backoffCounter((_counter))) // 301
 
+// 304
+#define ADVANCE_ADAPTIVE_COUNTER(_counter) \
+    do { \
+        (_counter) = advance_backoffCounter((_counter)); \
+    } while (0);
+
+
+#ifdef ENABLE_SPECIALIZATION_FT
+ /* Multiple threads may execute these concurrently if thread-local bytecode is
+ * disabled and they all execute the main copy of the bytecode. Specialization
+ * is disabled in that case so the value is unused, but the RMW cycle should be
+ * free of data races.
+ */
+#define RECORD_BRANCH_TAKEN(bitset, flag) \
+    alifAtomic_storeUint16Relaxed(       \
+        &bitset, (alifAtomic_loadUint16Relaxed(&bitset) << 1) | (flag))
+#else
+#define RECORD_BRANCH_TAKEN(bitset, flag)
+#endif
+
+#define NAME_ERROR_MSG "الاسم '%.200s' غير معرف"
 
 static inline AlifIntT _alif_enterRecursiveAlif(AlifThread* _thread) { // 368
 	return (_thread->alifRecursionRemaining-- <= 0) and

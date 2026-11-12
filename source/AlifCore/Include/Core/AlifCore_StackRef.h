@@ -97,6 +97,10 @@ static inline AlifStackRef alifStackRef_dup(AlifStackRef _stackRef) { // 135
 
 
 
+#define ALIFSTACKREF_CLOSE_SPECIALIZED(_stackref, _dealloc) \
+    _alif_decrefSpecialized(alifStackRef_asAlifObjectBorrow(_stackref), _dealloc)
+
+
 
 #define ALIFSTACKREF_IS(_a, _b) ((_a).bits == (_b).bits) // 195
 

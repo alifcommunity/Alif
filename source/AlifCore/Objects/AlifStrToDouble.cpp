@@ -21,7 +21,7 @@ double _alifParse_infOrNan(const char* p, char** endptr) { // 27
 	}
 	if (strcmp(s, "لانهائي") == 0) { //* alif
 		s += 14;
-		retval = negate ? -ALIF_HUGE_VAL : ALIF_HUGE_VAL;
+		retval = negate ? -ALIF_INFINITY : ALIF_INFINITY;
 	}
 	else if (strcmp(s, "عدم") == 0) { //* alif
 		s += 6;

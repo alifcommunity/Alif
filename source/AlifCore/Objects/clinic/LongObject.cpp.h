@@ -33,3 +33,16 @@ static AlifObject* int___format__(AlifObject *self, AlifObject *arg) {
 exit:
 	return returnValue;
 }
+
+
+
+// 192
+#define INT_BIT_LENGTH_METHODDEF    \
+    {"طول_الثنائي", (AlifCPPFunction)int_bitLength, METHOD_NOARGS},
+
+static AlifObject* int_bitLengthImpl(AlifObject*);
+
+static AlifObject* int_bitLength(AlifObject* self,
+	AlifObject* ALIF_UNUSED(ignored)) { // 198
+	return int_bitLengthImpl(self);
+}

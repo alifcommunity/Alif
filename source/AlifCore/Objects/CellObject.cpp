@@ -20,6 +20,24 @@ AlifObject* alifCell_new(AlifObject* _obj) { // 10
 }
 
 
+static AlifObject* cell_new(AlifTypeObject* _type,
+	AlifObject* _args, AlifObject* _kwargs) { // 36
+	AlifObject* returnValue{};
+	AlifObject* obj{};
+
+	if (!_ALIFARG_NOKEYWORDS("خلية", _kwargs)) {
+		goto exit;
+	}
+	/* min = 0: we allow the cell to be empty */
+	if (!alifArg_unpackTuple(_args, "خلية", 0, 1, &obj)) {
+		goto exit;
+	}
+	returnValue = alifCell_new(obj);
+
+exit:
+	return returnValue;
+}
+
 
 AlifIntT alifCell_set(AlifObject* _op, AlifObject* _value) { // 63
 	if (!ALIFCELL_CHECK(_op)) {
@@ -33,6 +51,14 @@ AlifIntT alifCell_set(AlifObject* _op, AlifObject* _value) { // 63
 
 
 
+static AlifIntT cell_traverse(AlifObject* _self,
+	VisitProc visit, void* arg) { // 118
+	AlifCellObject* op = ALIFCELL_CAST(_self);
+	ALIF_VISIT(op->ref);
+	return 0;
+}
+
+
 
 
 AlifTypeObject _alifCellType_ = { // 151
@@ -43,4 +69,6 @@ AlifTypeObject _alifCellType_ = { // 151
 	//.repr = (ReprFunc)cell_repr,
 	.getAttro = alifObject_genericGetAttr,
 	.flags = ALIF_TPFLAGS_DEFAULT | ALIF_TPFLAGS_HAVE_GC,
+	.traverse = cell_traverse,
+	.new_ = cell_new
 };

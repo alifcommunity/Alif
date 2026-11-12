@@ -27,7 +27,7 @@ public:
 };
 
 
-void _alifFloat_exactDealloc(AlifObject*); // 36
+ALIFAPI_FUNC(void) _alifFloat_exactDealloc(AlifObject*); // 36
 
 
 extern AlifIntT _alifFloat_formatAdvancedWriter(AlifUStrWriter*, AlifObject*,
