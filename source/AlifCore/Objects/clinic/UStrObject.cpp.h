@@ -302,6 +302,55 @@ exit:
 }
 
 
+
+
+// 1009
+#define UNICODE_REMOVEPREFIX_METHODDEF    \
+    {"ازل_لاحقة", (AlifCPPFunction)uStr_removePrefix, METHOD_O},
+
+static AlifObject* uStr_removePrefixImpl(AlifObject*, AlifObject*);
+
+static AlifObject* uStr_removePrefix(AlifObject* _self, AlifObject* _arg) {
+    AlifObject* returnValue{};
+    AlifObject* prefix{};
+
+    if (!ALIFUSTR_CHECK(_arg)) {
+        // _alifArg_badArgument("ازل_لاحقة", "وسيط", "نص", _arg);
+        goto exit;
+    }
+    prefix = _arg;
+    returnValue = uStr_removePrefixImpl(_self, prefix);
+
+exit:
+    return returnValue;
+}
+
+// 1042
+#define UNICODE_REMOVESUFFIX_METHODDEF    \
+    {"ازل_سابقة", (AlifCPPFunction)uStr_removeSuffix, METHOD_O},
+
+static AlifObject* uStr_removeSuffixImpl(AlifObject*, AlifObject*);
+
+static AlifObject* uStr_removeSuffix(AlifObject* _self,
+	AlifObject* _arg) { // 1048
+    AlifObject* returnValue{};
+    AlifObject* suffix{};
+
+    if (!ALIFUSTR_CHECK(_arg)) {
+        // _alifArg_badArgument("ازل_سابقة", "وسيط", "نص", _arg);
+        goto exit;
+    }
+    suffix = _arg;
+    returnValue = uStr_removeSuffixImpl(_self, suffix);
+
+exit:
+    return returnValue;
+}
+
+
+
+
+
 // 1245
 #define UNICODE_SPLIT_METHODDEF    \
     {"افصل", ALIF_CPPFUNCTION_CAST(uStr_split), METHOD_FASTCALL|METHOD_KEYWORDS},
