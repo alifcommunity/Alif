@@ -11,3 +11,4 @@ DerivedData
 *.xopp
 *.DS_Store
 /linuxBuild/build
+/examples/aliflang-5_4_0-winx64
