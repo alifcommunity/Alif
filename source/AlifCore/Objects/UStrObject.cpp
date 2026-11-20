@@ -6982,6 +6982,39 @@ static AlifObject* unicode_replaceImpl(AlifObject* _self,
 
 
 
+
+
+static AlifObject* uStr_removePrefixImpl(AlifObject* _self,
+	AlifObject* _prefix) { // 12606
+    AlifIntT match = tail_match(_self, _prefix, 0, ALIF_SIZET_MAX, -1);
+    if (match == -1) {
+        return nullptr;
+    }
+    if (match) {
+        return alifUStr_subString(_self, ALIFUSTR_GET_LENGTH(_prefix),
+                                   ALIFUSTR_GET_LENGTH(_self));
+    }
+    return uStr_resultUnchanged(_self);
+}
+
+
+static AlifObject* uStr_removeSuffixImpl(AlifObject* _self,
+	AlifObject* _suffix) { // 12634
+    AlifIntT match = tail_match(_self, _suffix, 0, ALIF_SIZET_MAX, +1);
+    if (match == -1) {
+        return nullptr;
+    }
+    if (match) {
+        return alifUStr_subString(_self, 0, ALIFUSTR_GET_LENGTH(_self)
+                                            - ALIFUSTR_GET_LENGTH(_suffix));
+    }
+    return uStr_resultUnchanged(_self);
+}
+
+
+
+
+
 static AlifObject* uStr_repr(AlifObject* _UStr) { // 12621
 	AlifSizeT isize = ALIFUSTR_GET_LENGTH(_UStr);
 	const void* idata = ALIFUSTR_DATA(_UStr);
@@ -7733,6 +7766,9 @@ static AlifMethodDef _uStrMethods_[] = { // 13987
 	//UNICODE_ISDECIMAL_METHODDEF
 	UNICODE_PARTITION_METHODDEF
 	UNICODE_RPARTITION_METHODDEF
+	
+	UNICODE_REMOVEPREFIX_METHODDEF
+	UNICODE_REMOVESUFFIX_METHODDEF
 
 	UNICODE_ISASCII_METHODDEF
 	UNICODE_LOWER_METHODDEF
